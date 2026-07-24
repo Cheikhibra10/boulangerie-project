@@ -1,0 +1,11 @@
+package com.boulangerie.comptabilite.model;
+
+public enum TypeMouvement {
+    PAIEMENT,
+    PAIEMENT_ABONNEMENT,
+    VERSEMENT_LIVREUR,
+    PAIEMENT_FOURNISSEUR,
+    DEPENSE_PERIODE,
+    REPORT_BENEFICE,
+    VERSEMENT_ABONNEMENT, REVERSEMENT_ABONNEMENT
+}

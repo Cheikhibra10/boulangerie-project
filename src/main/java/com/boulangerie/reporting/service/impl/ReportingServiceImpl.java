@@ -1,0 +1,44 @@
+// reporting/application/service/ReportingApplicationService.java
+package com.boulangerie.reporting.service.impl;
+
+import com.boulangerie.reporting.dto.*;
+import com.boulangerie.reporting.service.KpiCalculator;
+import com.boulangerie.reporting.service.ReportingService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.time.LocalDate;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ReportingServiceImpl implements ReportingService {
+
+    private final KpiCalculator kpiCalculator;
+
+    @Override
+    public KpiDto getKPIs(LocalDate dateDebut, LocalDate dateFin) {
+        log.info("Génération des KPIs pour la période {} - {}", dateDebut, dateFin);
+        return kpiCalculator.calculerKPIs(dateDebut, dateFin);
+    }
+
+    @Override
+    public DashboardDto getDashboard(LocalDate dateDebut, LocalDate dateFin) {
+        log.info("Génération du tableau de bord pour la période {} - {}", dateDebut, dateFin);
+
+        KpiDto kpis = kpiCalculator.calculerKPIs(dateDebut, dateFin);
+        List<TopProduitDto> topProduits = kpiCalculator.getTopProduits(dateDebut, dateFin, 5);
+        List<EvolutionVenteDto> evolution = kpiCalculator.getEvolutionVentes(dateDebut, dateFin);
+        List<StatutStatDto> statuts = kpiCalculator.getStatutsAchats();
+
+        return DashboardDto.builder()
+                .kpis(kpis)
+                .topProduits(topProduits)
+                .evolutionVentes(evolution)
+                .statutsAchats(statuts)
+                .build();
+    }
+}
