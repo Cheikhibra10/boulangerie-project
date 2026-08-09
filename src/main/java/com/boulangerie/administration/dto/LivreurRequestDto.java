@@ -1,4 +1,3 @@
-// administration/dto/LivreurDto.java
 package com.boulangerie.administration.dto;
 
 import lombok.Data;

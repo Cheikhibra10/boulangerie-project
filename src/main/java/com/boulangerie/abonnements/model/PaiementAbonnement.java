@@ -30,23 +30,13 @@ public class PaiementAbonnement extends TransactionMonetaire {
             TypePaiement modePaiement
     ) {
 
-        super(
-                montant,
-                modePaiement,
-                "Paiement abonnement"
-        );
-
+        super(montant, modePaiement, "Paiement abonnement");
         this.ligne = ligne;
     }
 
 
 
-    public static PaiementAbonnement creer(
-            LigneAbonnement ligne,
-            BigDecimal montant,
-            TypePaiement modePaiement
-    ) {
-
+    public static PaiementAbonnement creer(LigneAbonnement ligne, BigDecimal montant, TypePaiement modePaiement) {
         return new PaiementAbonnement(
                 ligne,
                 montant,

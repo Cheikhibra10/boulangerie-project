@@ -4,6 +4,7 @@ package com.boulangerie.ventes.dto;
 import com.boulangerie.shared.dto.AbstractAuditingDto;
 import com.boulangerie.shared.model.TypePaiement;
 import com.boulangerie.ventes.model.StatutVente;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -20,9 +21,11 @@ public class VenteDto extends AbstractAuditingDto {
     private Long id;
     private String numero;
     private LocalDate date;
+    @JsonFormat(pattern = "HH:mm:ss")
     private LocalTime heure;
     private String caissier;
     private StatutVente statut;
+    private String motifAnnulation;
     private BigDecimal articlesVendus;
     private BigDecimal total;
     private PaiementDto paiement;

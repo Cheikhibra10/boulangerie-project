@@ -19,7 +19,6 @@ public class PaiementFactory {
         paiement.setMontant(vente.getTotal());
         paiement.setModePaiement(dto.getModePaiement());
         paiement.setLibelle("Vente boutique #" + vente.getId());
-
         return paiement;
     }
 }

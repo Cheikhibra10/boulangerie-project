@@ -1,4 +1,3 @@
-// administration/service/impl/IngredientServiceImpl.java
 package com.boulangerie.administration.service.Impl;
 
 import com.boulangerie.administration.dto.IngredientDto;

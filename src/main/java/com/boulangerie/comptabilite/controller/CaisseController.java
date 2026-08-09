@@ -5,11 +5,9 @@ import com.boulangerie.comptabilite.dto.CaisseDto;
 import com.boulangerie.comptabilite.dto.FermetureCaisseDto;
 import com.boulangerie.comptabilite.dto.JournalCaisseDto;
 import com.boulangerie.comptabilite.dto.OuvertureCaisseDto;
-import com.boulangerie.comptabilite.dto.MouvementCaisseDto;
 import com.boulangerie.comptabilite.service.CaisseService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
-import com.boulangerie.shared.model.TypePaiement;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -20,13 +18,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1/caisses")
 @RequiredArgsConstructor
-@Tag(name = "Caisse", description = "Gestion des caisses")
+@Tag(name = "Caisse", description = "Gestion des caisses ADMIN-MANAGER-CAISSIER")
 @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
 public class CaisseController {
 
@@ -74,45 +71,6 @@ public class CaisseController {
         return ResponseEntity.ok((caisseService.getCaisses(page, size)));
     }
 
-    // ===================== MOUVEMENTS =====================
-    @Operation(summary = "Enregistrer un paiement en caisse")
-    @PostMapping("/{id}/paiements")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
-    public ResponseEntity<ApiResponse<MouvementCaisseDto>> enregistrerPaiement(
-            @PathVariable Long id,
-            @RequestParam @Valid BigDecimal montant,
-            @RequestParam(required = false) String libelle,
-            @RequestParam @Valid TypePaiement modePaiement) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Paiement enregistré",
-                        caisseService.enregistrerPaiement(id, montant, libelle, modePaiement)));
-    }
-
-    @Operation(summary = "Enregistrer une dépense en caisse")
-    @PostMapping("/{id}/depenses")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
-    public ResponseEntity<ApiResponse<MouvementCaisseDto>> enregistrerDepense(
-            @PathVariable Long id,
-            @RequestParam Long categorieId,
-            @RequestParam @Valid BigDecimal montant,
-            @RequestParam String libelle) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Dépense enregistrée",
-                        caisseService.enregistrerDepense(id, categorieId, montant, libelle)));
-    }
-
-    @Operation(summary = "Enregistrer un versement livreur en caisse")
-    @PostMapping("/{id}/versements-livreur")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
-    public ResponseEntity<ApiResponse<MouvementCaisseDto>> enregistrerVersementLivreur(
-            @PathVariable Long id,
-            @RequestParam Long livreurId,
-            @RequestParam @Valid BigDecimal montant,
-            @RequestParam @Valid TypePaiement modePaiement) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Versement livreur enregistré",
-                        caisseService.enregistrerVersementLivreur(id, livreurId, montant, modePaiement)));
-    }
 
     // ===================== JOURNAL =====================
     @Operation(summary = "Consulter le journal de caisse (paginé)")

@@ -21,6 +21,9 @@ public abstract class LigneVenteMapper implements EntityMapper<LigneVenteDto, Li
     @Override
     @Mapping(target = "produitId", source = "produitId")
     @Mapping(target = "produitLibelle", source = "produitLibelle")
+    @Mapping(target = "quantiteRetournee", source = "quantiteRetournee")
+    @Mapping(target = "quantiteDisponibleRetour", expression = "java(entity.getQuantiteDisponibleRetour())"
+    )
     @Mapping(target="total", expression = "java(entity.getTotal())")
     public abstract LigneVenteDto toDto(LigneVenteBoutique entity);
 

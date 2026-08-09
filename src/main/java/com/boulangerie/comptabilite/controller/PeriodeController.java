@@ -23,7 +23,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/periodes")
 @RequiredArgsConstructor
-@Tag(name = "Période", description = "Gestion des périodes comptables, clôtures et résultats")
+@Tag(name = "Période", description = "Gestion des périodes comptables, clôtures et résultats ADMIN-MANAGER")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
 public class PeriodeController {
 
@@ -31,7 +31,7 @@ public class PeriodeController {
     private final PeriodeClosureService periodeClosureService;
     private final ResultatQueryService resultatQueryService;
 
-    @Operation(summary = "Créer une nouvelle période mensuelle")
+    @Operation(summary = "Créer une nouvelle période mensuelle ADMIN-MANAGER")
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ApiResponse<PeriodeDto>> creerPeriode(@Valid @RequestBody CreationPeriodeDto dto) {
@@ -42,21 +42,21 @@ public class PeriodeController {
 
     @Operation(summary = "Obtenir une période par ID")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<PeriodeDto> getPeriode(@PathVariable Long id) {
         return ResponseEntity.ok(periodeManagementService.getPeriode(id));
     }
 
     @Operation(summary = "Obtenir la période ouverte en cours")
     @GetMapping("/courante")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<PeriodeDto> getPeriodeOuverte() {
         return ResponseEntity.ok(periodeManagementService.getPeriodeOuverte());
     }
 
     @Operation(summary = "Obtenir la période pour une date donnée")
     @GetMapping("/date")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<PeriodeDto> getPeriodeByDate(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(periodeManagementService.getPeriodeByDate(date));
@@ -64,7 +64,7 @@ public class PeriodeController {
 
     @Operation(summary = "Lister toutes les périodes (paginated)")
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<PageResponse<PeriodeDto>> getPeriodes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -97,14 +97,14 @@ public class PeriodeController {
 
     @Operation(summary = "Obtenir le résultat d'une période")
     @GetMapping("/resultats/{periodeId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ResultatDto> getResultat(@PathVariable Long periodeId) {
         return ResponseEntity.ok(resultatQueryService.getResultat(periodeId));
     }
 
     @Operation(summary = "Lister tous les résultats (paginated)")
     @GetMapping("/resultats")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<PageResponse<ResultatDto>> getResultats(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

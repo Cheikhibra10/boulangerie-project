@@ -1,11 +1,12 @@
 package com.boulangerie.production.internal;
 
-import com.boulangerie.production.api.DestinationBoutiqueDto;
+import com.boulangerie.production.api.BoutiqueStockDto;
 import com.boulangerie.production.api.ProductionAllocationApi;
 import com.boulangerie.production.api.AllocationDetails;
 import com.boulangerie.production.model.CanalDistribution;
 import com.boulangerie.production.model.DestinationProduction;
 import com.boulangerie.production.repository.DestinationProductionRepository;
+import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -47,11 +48,11 @@ class ProductionAllocationApiImpl implements ProductionAllocationApi {
 
     @Override
     @Transactional(readOnly = true)
-    public DestinationBoutiqueDto getDestinationBoutique(Long produitId) {
+    public BoutiqueStockDto getDestinationBoutique(Long produitId) {
 
         DestinationProduction destination = chargerDestinationBoutique(produitId);
 
-        return new DestinationBoutiqueDto(
+        return new BoutiqueStockDto(
                 destination.getId(),
                 destination.getProduitId(),
                 destination.getQuantite(),
@@ -63,18 +64,11 @@ class ProductionAllocationApiImpl implements ProductionAllocationApi {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean verifierDisponibiliteBoutique(Long produitId, BigDecimal quantite) {
+    public void verifierDisponibiliteBoutique(Long produitId, BigDecimal quantite) {
         DestinationProduction destination = chargerDestinationBoutique(produitId);
-        return destination.getQuantiteDisponible()
-                .compareTo(quantite) >= 0;
-    }
-
-    @Override
-    public void enregistrerVenteBoutique(Long produitId, BigDecimal quantite) {
-
-        DestinationProduction destination = chargerDestinationBoutique(produitId);
-        destination.enregistrerVente(quantite);
-        repository.save(destination);
+         if(quantite.compareTo(destination.getQuantiteDisponible()) >= 0) {
+             throw new BadRequestException("Stock insuffisant pour la destination BOUTIQUE");
+         }
     }
 
     private DestinationProduction chargerDestinationBoutique(Long produitId) {
@@ -85,5 +79,19 @@ class ProductionAllocationApiImpl implements ProductionAllocationApi {
                 .orElseThrow(() ->
                         new EntityNotFoundException("Aucune destination BOUTIQUE trouvée pour le produit "
                                         + produitId));
+    }
+
+    @Override
+    @Transactional
+    public void vendre(Long produitId, BigDecimal quantite) {
+        DestinationProduction destination = chargerDestinationBoutique(produitId);
+        destination.enregistrerVente(quantite);
+    }
+
+    @Override
+    @Transactional
+    public void retourner(Long produitId, BigDecimal quantite) {
+        DestinationProduction destination = chargerDestinationBoutique(produitId);
+        destination.retourner(quantite);
     }
 }

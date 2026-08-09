@@ -40,111 +40,46 @@ public class Abonnement extends AbstractAuditingEntity {
     @Column(nullable = false)
     private Boolean actif = true;
 
-    @OneToMany(
-            mappedBy = "abonnement",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "abonnement", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<LigneAbonnement> lignes = new ArrayList<>();
 
-
-
-    @OneToOne(
-            mappedBy = "abonnement",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            optional = false
-    )
+    @OneToOne(mappedBy = "abonnement", cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
     private CompteAbonnement compte;
 
 
-    public LigneAbonnement ajouterClient(
-            Client client,
-            BigDecimal prixUnitaire
-    ) {
-
+    public LigneAbonnement ajouterClient(Client client, BigDecimal prixUnitaire) {
         verifierActif();
-
         verifierClientAbsent(client);
-        LigneAbonnement ligne = LigneAbonnement.creer(
-                        client,
-                        prixUnitaire
-                );
-
+        LigneAbonnement ligne = LigneAbonnement.creer(client, prixUnitaire);
         ligne.rattacherA(this);
         lignes.add(ligne);
         return ligne;
     }
 
-
-
-    public void supprimerClient(
-            Long ligneId
-    ) {
-
-        if(lignes.size() == 1) {
-
-            throw new IllegalStateException(
-                    "Un abonnement doit avoir au moins un client"
-            );
-        }
-
-
-        lignes.removeIf(
-                ligne -> ligne.getId().equals(ligneId)
-        );
-    }
-
-
-
-    public boolean estValidePour(
-            LocalDate date
-    ) {
-
-        if(!actif) {
-            return false;
-        }
-
-
+    public boolean estValidePour(LocalDate date) {
+        if(!actif) {return false;}
         if(date.isBefore(dateDebut)) {
             return false;
         }
-
-
-        return dateFin == null ||
-                !date.isAfter(dateFin);
+        return dateFin == null || !date.isAfter(dateFin);
     }
-
-
 
     public BigDecimal getChiffreAffaires() {
-
         return lignes.stream()
                 .map(LigneAbonnement::getChiffreAffaires)
-                .reduce(
-                        BigDecimal.ZERO,
-                        BigDecimal::add
-                );
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-
-
     public void desactiver() {
-
         actif = false;
     }
 
-
-
     public boolean estActif() {
-
         return Boolean.TRUE.equals(actif);
     }
 
 
-
     private void verifierClientAbsent(Client client) {
-
         boolean existe = lignes.stream()
                         .anyMatch(
                                 ligne ->
@@ -153,49 +88,25 @@ public class Abonnement extends AbstractAuditingEntity {
                                                 .equals(client.getId())
                         );
 
-
         if(existe) {
-
-            throw new IllegalStateException(
-                    "Client déjà abonné"
-            );
+            throw new IllegalStateException("Client déjà abonné");
         }
     }
 
+    public void transfererVersBoulangerie(BigDecimal montant) {
+        compte.debiter(montant);
+    }
 
-
-    private void verifierActif() {
+    public void verifierActif() {
 
         if(!estActif()) {
-
-            throw new IllegalStateException(
-                    "Abonnement inactif"
-            );
-        }
-    }
-
-
-
-    private static void verifierDates(
-            LocalDate debut,
-            LocalDate fin
-    ) {
-
-        if(fin != null &&
-                fin.isBefore(debut)) {
-
-            throw new IllegalArgumentException(
-                    "Date fin invalide"
-            );
+            throw new IllegalStateException("Abonnement inactif");
         }
     }
 
     public BigDecimal getQuantiteConsommee(LocalDate date) {
-
         return lignes.stream()
-
                 .flatMap(l -> l.getConsommations().stream())
-
                 .filter(c -> c.getDate().equals(date))
                 .map(ConsommationJournaliere::getQuantite)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -206,11 +117,8 @@ public class Abonnement extends AbstractAuditingEntity {
             BigDecimal nouvelleQuantite,
             BigDecimal quantiteDistribuee
     )  {
-
         BigDecimal quantiteConsommee = getQuantiteConsommee(date);
-
         BigDecimal total = quantiteConsommee.add(nouvelleQuantite);
-
         if (total.compareTo(quantiteDistribuee) > 0) {
             throw new DepassementQuantiteAbonnementException(
                     this.id,

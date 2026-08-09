@@ -14,8 +14,9 @@ public interface VenteService {
 
     // ===== INVENTAIRE RESTANTS =====
     InventaireResultDto enregistrerRestants(Long venteId, InventaireDto dto);
-
+    VenteDto annulerVente(Long venteId, AnnulationVenteRequestDto dto);
     // ===== CONSULTATION =====
     VenteDto getVente(Long id);
+    VenteDto retournerVente(Long venteId, RetourVenteRequestDto dto);
     PageResponse<VenteDto> getVentes(LocalDate date, Long produitId, int page, int size);
 }

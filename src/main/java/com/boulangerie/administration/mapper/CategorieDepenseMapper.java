@@ -1,4 +1,3 @@
-// administration/mapper/CategorieDepenseMapper.java
 package com.boulangerie.administration.mapper;
 
 import com.boulangerie.administration.dto.CategorieDepenseDto;

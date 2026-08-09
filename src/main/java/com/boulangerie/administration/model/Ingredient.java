@@ -1,6 +1,6 @@
-// administration/model/Ingredient.java
 package com.boulangerie.administration.model;
 
+import com.boulangerie.administration.service.ProductionConstants;
 import com.boulangerie.shared.dto.ValeursStock;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.model.AbstractAuditingEntity;
@@ -75,7 +75,16 @@ public class Ingredient extends AbstractAuditingEntity implements GenericEntity<
         );
     }
 
-
+    public BigDecimal convertirEnSacs(BigDecimal quantiteKg) {
+        if (quantiteKg == null || quantiteKg.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return quantiteKg.divide(
+                this.equivalenceStock,
+                2,
+                RoundingMode.HALF_UP
+        );
+    }
 
     public BigDecimal getSeuilAlerteParDefaut() {
         String libelle = this.libelle.toLowerCase();

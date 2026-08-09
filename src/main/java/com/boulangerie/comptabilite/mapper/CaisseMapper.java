@@ -1,14 +1,15 @@
 // caisse/mapper/CaisseMapper.java
 package com.boulangerie.comptabilite.mapper;
 
+import com.boulangerie.administration.model.Utilisateur;
 import com.boulangerie.comptabilite.dto.CaisseDto;
 import com.boulangerie.comptabilite.model.Caisse;
 import com.boulangerie.shared.mapper.EntityMapper;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
+
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Mapper(componentModel = "spring")
 public abstract class CaisseMapper implements EntityMapper<CaisseDto, Caisse> {
@@ -26,9 +27,9 @@ public abstract class CaisseMapper implements EntityMapper<CaisseDto, Caisse> {
     // ===== TO DTO =====
     @Override
     @Mapping(target = "ouverteParId", source = "ouvertePar.id")
-    @Mapping(target = "ouverteParNom", source = "ouvertePar.nom")
+    @Mapping(target = "ouverteParNom", source = "ouvertePar", qualifiedByName = "utilisateurToNomComplet")
     @Mapping(target = "fermeeParId", source = "fermeePar.id")
-    @Mapping(target = "fermeeParNom", source = "fermeePar.nom")
+    @Mapping(target = "fermeeParNom", source = "fermeePar", qualifiedByName = "utilisateurToNomComplet")
     public abstract CaisseDto toDto(Caisse entity);
 
     // ===== PUT: full update (nulls are explicitly set) =====
@@ -38,5 +39,15 @@ public abstract class CaisseMapper implements EntityMapper<CaisseDto, Caisse> {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     public abstract void patch(CaisseDto dto, @MappingTarget Caisse entity);
 
+
+    @Named("utilisateurToNomComplet")
+    public String utilisateurToNomComplet(Utilisateur utilisateur) {
+        if (utilisateur == null) {
+            return null;
+        }
+        return Stream.of(utilisateur.getPrenom(), utilisateur.getNom())
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(" "));
+    }
 
 }

@@ -1,4 +1,3 @@
-// administration/controller/CategorieDepenseController.java
 package com.boulangerie.administration.controller;
 
 import com.boulangerie.administration.dto.CategorieDepenseDto;
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/categories-depense")
-@Tag(name = "Catégories Dépense", description = "Gestion des catégories de dépenses")
+@Tag(name = "Catégories Dépense", description = "Gestion des catégories de dépenses ADMIN-MANAGER")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
 public class CategorieDepenseController
         extends GenericCrudController<CategorieDepense, CategorieDepenseDto> {

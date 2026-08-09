@@ -1,4 +1,3 @@
-// administration/mapper/RecetteMapper.java
 package com.boulangerie.administration.mapper;
 
 import com.boulangerie.administration.dto.RecetteDto;

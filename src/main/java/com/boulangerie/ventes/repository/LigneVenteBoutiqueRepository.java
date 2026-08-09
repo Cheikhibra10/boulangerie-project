@@ -1,6 +1,7 @@
 // ventes/repository/LigneVenteBoutiqueRepository.java
 package com.boulangerie.ventes.repository;
 
+import com.boulangerie.ventes.service.TopProduitProjection;
 import com.boulangerie.ventes.model.LigneVenteBoutique;
 import com.boulangerie.ventes.model.TypeVenteLigne;
 import org.springframework.data.domain.Pageable;
@@ -27,9 +28,16 @@ public interface LigneVenteBoutiqueRepository extends JpaRepository<LigneVenteBo
     @Query("SELECT l FROM LigneVenteBoutique l JOIN FETCH l.produitId WHERE l.vente.id = :venteId")
     List<LigneVenteBoutique> findByVenteIdWithProduit(@Param("venteId") Long venteId);
 
-    @Query("SELECT COALESCE(SUM(l.quantite * l.prixUnitaire), 0) FROM LigneVenteBoutique l " +
-            "JOIN l.vente v " +
-            "WHERE v.date BETWEEN :debut AND :fin AND l.typeVente = :type")
+    @Query("""
+    SELECT COALESCE(
+        SUM((l.quantite - COALESCE(l.quantiteRetournee, 0)) * l.prixUnitaire),
+        0
+    )
+    FROM LigneVenteBoutique l
+    JOIN l.vente v
+    WHERE v.date BETWEEN :debut AND :fin
+      AND l.typeVente = :type
+""")
     BigDecimal sumCaBoutiqueBetweenDates(
             @Param("debut") LocalDate debut,
             @Param("fin") LocalDate fin,
@@ -37,19 +45,18 @@ public interface LigneVenteBoutiqueRepository extends JpaRepository<LigneVenteBo
     );
 
     @Query("""
-    SELECT COALESCE(SUM(l.quantite * l.prixUnitaire), 0)
-    FROM LigneVenteBoutique l
-    JOIN l.vente v
-    WHERE v.date BETWEEN :debut AND :fin
-      AND l.produitId NOT IN :excludedProductIds
+SELECT COALESCE(SUM(l.quantite * l.prixUnitaire), 0)
+FROM LigneVenteBoutique l
+JOIN l.vente v
+WHERE v.date BETWEEN :debut AND :fin
+  AND l.produitId NOT IN (:painIds)
 """)
-    BigDecimal sumCaAutresProduitsBetweenDates(
+    BigDecimal sumCaAutresProduits(
             @Param("debut") LocalDate debut,
             @Param("fin") LocalDate fin,
-            @Param("excludedProductIds") Collection<Long> excludedProductIds
-    );
+            @Param("painIds") Collection<Long> painIds);
 
-    @Query("SELECT COALESCE(SUM(l.quantite), 0) FROM LigneVenteBoutique l " +
+    @Query("SELECT COALESCE(SUM(l.quantite - l.quantiteRetournee), 0) FROM LigneVenteBoutique l " +
             "JOIN l.vente v " +
             "WHERE v.date BETWEEN :debut AND :fin")
     BigDecimal sumQuantiteVendueBetweenDates(
@@ -58,18 +65,18 @@ public interface LigneVenteBoutiqueRepository extends JpaRepository<LigneVenteBo
     );
 
     @Query("""
-    SELECT l.produitId,
-           COALESCE(SUM(l.quantite), 0),
-           COALESCE(SUM(l.quantite * l.prixUnitaire), 0)
-    FROM LigneVenteBoutique l
-    JOIN l.vente v
-    WHERE v.date BETWEEN :debut AND :fin
-    GROUP BY l.produitId
-    ORDER BY COALESCE(SUM(l.quantite * l.prixUnitaire), 0) DESC
+SELECT
+    l.produitId AS produitId,
+    SUM(l.quantite) AS quantiteVendue,
+    SUM(l.quantite * l.prixUnitaire) AS caTotal
+FROM LigneVenteBoutique l
+JOIN l.vente v
+WHERE v.date BETWEEN :debut AND :fin
+GROUP BY l.produitId
+ORDER BY SUM(l.quantite * l.prixUnitaire) DESC
 """)
-    List<Object[]> findTopProduitsByCa(
-            @Param("debut") LocalDate debut,
-            @Param("fin") LocalDate fin,
-            Pageable pageable
-    );
+    List<TopProduitProjection> findTopProduitsByCa(
+            LocalDate debut,
+            LocalDate fin,
+            Pageable pageable);
 }

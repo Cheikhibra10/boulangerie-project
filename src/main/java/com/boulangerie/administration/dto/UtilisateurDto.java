@@ -1,4 +1,3 @@
-// administration/dto/UtilisateurDto.java
 package com.boulangerie.administration.dto;
 
 import com.boulangerie.administration.model.RoleUtilisateur;

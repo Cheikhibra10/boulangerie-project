@@ -1,4 +1,3 @@
-// administration/dto/RecetteIngredientDto.java
 package com.boulangerie.administration.dto;
 
 import jakarta.validation.constraints.*;

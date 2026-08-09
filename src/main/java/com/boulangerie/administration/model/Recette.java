@@ -1,4 +1,3 @@
-// administration/model/Recette.java
 package com.boulangerie.administration.model;
 
 import com.boulangerie.shared.dto.ConsommationIngredient;

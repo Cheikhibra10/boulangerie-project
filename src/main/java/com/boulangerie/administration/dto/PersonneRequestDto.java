@@ -1,4 +1,3 @@
-// administration/dto/PersonneDto.java
 package com.boulangerie.administration.dto;
 
 import jakarta.validation.constraints.NotBlank;

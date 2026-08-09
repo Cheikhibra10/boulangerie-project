@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/abonnements")
 @RequiredArgsConstructor
-@Tag(name = "Abonnements", description = "Gestion des abonnements clients")
+@Tag(name = "Abonnements", description = "Gestion des abonnements clients ADMIN-MANAGER")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
 public class AbonnementController {
 

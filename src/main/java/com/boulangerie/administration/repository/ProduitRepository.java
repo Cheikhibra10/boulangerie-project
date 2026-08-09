@@ -1,8 +1,8 @@
-// administration/repository/ProduitRepository.java
 package com.boulangerie.administration.repository;
 
 import com.boulangerie.administration.model.CategorieProduit;
 import com.boulangerie.administration.model.Produit;
+import com.boulangerie.administration.model.TypeProduit;
 import com.boulangerie.shared.repository.GenericRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface ProduitRepository extends GenericRepository<Produit> {
@@ -80,4 +81,9 @@ public interface ProduitRepository extends GenericRepository<Produit> {
         WHERE p.libelle = :libelle
         """)
     Optional<Long> findIdByLibelle(@Param("libelle") String libelle);
+
+    @Query("SELECT p.id FROM Produit p WHERE p.typeProduit = :type")
+    Set<Long> findIdsByType(@Param("type") TypeProduit type);
+
+    Produit getProduitByid(Long id);
 }

@@ -1,23 +1,13 @@
-// caisse/service/impl/MouvementCaisseServiceImpl.java
 package com.boulangerie.comptabilite.service.impl;
 
-import com.boulangerie.administration.model.CategorieDepense;
-import com.boulangerie.comptabilite.model.Periode;
-import com.boulangerie.administration.service.CategorieDepenseService;
-import com.boulangerie.comptabilite.exception.CaisseFermeeException;
 import com.boulangerie.comptabilite.model.*;
-import com.boulangerie.comptabilite.repository.CaisseRepository;
-import com.boulangerie.comptabilite.service.PeriodeService;
 import com.boulangerie.comptabilite.dto.MouvementCaisseDto;
 import com.boulangerie.comptabilite.mapper.MouvementCaisseMapper;
-import com.boulangerie.comptabilite.repository.DepensePeriodeRepository;
 import com.boulangerie.comptabilite.repository.MouvementCaisseRepository;
 import com.boulangerie.comptabilite.service.MouvementCaisseService;
 import com.boulangerie.comptabilite.specification.MouvementCaisseSpecification;
 import com.boulangerie.shared.dto.PageResponse;
-import com.boulangerie.shared.exception.BadRequestException;
-import com.boulangerie.shared.exception.EntityNotFoundException;
-import com.boulangerie.shared.model.TypePaiement;
+import com.boulangerie.shared.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,111 +26,7 @@ import java.util.Optional;
 public class MouvementCaisseServiceImpl implements MouvementCaisseService {
 
     private final MouvementCaisseRepository repository;
-    private final CaisseRepository caisseRepository;
-    private final PeriodeService periodeService;
     private final MouvementCaisseMapper mouvementMapper;
-    private final CategorieDepenseService categorieDepenseService;
-    private final DepensePeriodeRepository depensePeriodeRepository;
-
-    @Override
-    @Transactional
-    public MouvementCaisseDto enregistrerPaiement(
-            Long caisseId,
-            BigDecimal montant,
-            String libelle,
-            TypePaiement modePaiement) {
-        Caisse caisse = findCaisseOrThrow(caisseId);
-        verifierCaisseOuverte(caisse);
-        return mouvementMapper.toDto(
-                creerMouvement(
-                        TypeMouvement.PAIEMENT,
-                        SensMouvement.ENTREE,
-                        modePaiement,
-                        caisse,
-                        libelle,
-                        montant
-                )
-        );
-    }
-
-    private void verifierCaisseOuverte(Caisse caisse) {
-        if (caisse.getStatut() != StatutCaisse.OUVERTE) {
-            throw new CaisseFermeeException();
-        }
-    }
-
-
-    @Override
-    @Transactional
-    public MouvementCaisseDto enregistrerPaiementAbonnement(
-            Long caisseId,
-            BigDecimal montant,
-            String libelle,
-            TypePaiement modePaiement) {
-        Caisse caisse = findCaisseOrThrow(caisseId);
-        return mouvementMapper.toDto(
-                creerMouvement(
-                        TypeMouvement.PAIEMENT_ABONNEMENT,
-                        SensMouvement.ENTREE,
-                        modePaiement,
-                        caisse,
-                        libelle,
-                        montant
-                )
-        );
-    }
-
-
-    @Override
-    @Transactional
-    public MouvementCaisseDto enregistrerVersementLivreur(
-            Long caisseId,
-            Long livreurId,
-            BigDecimal montant,
-            TypePaiement modePaiement) {
-        Caisse caisse = findCaisseOrThrow(caisseId);
-        return mouvementMapper.toDto(
-                creerMouvement(
-                        TypeMouvement.VERSEMENT_LIVREUR,
-                        SensMouvement.ENTREE,
-                        modePaiement,
-                        caisse,
-                        "Versement livreur #" + livreurId,
-                        montant
-                )
-        );
-    }
-
-    @Transactional
-    @Override
-    public MouvementCaisseDto enregistrerDepense(
-            Long caisseId,
-            Long categorieId,
-            BigDecimal montant,
-            String libelle) {
-
-        Caisse caisse = findCaisseOrThrow(caisseId);
-        CategorieDepense categorie = categorieDepenseService.findCategorieDepenseOrThrow(categorieId);
-        Periode periode = periodeService.getPeriodeOuverte();
-
-        MouvementCaisse mouvement = creerMouvement(
-                TypeMouvement.DEPENSE_PERIODE,
-                SensMouvement.SORTIE,
-                TypePaiement.CASH,
-                caisse,
-                libelle,
-                montant
-        );
-
-        depensePeriodeRepository.save(
-                new DepensePeriode()
-                        .setPeriode(periode)
-                        .setCategorie(categorie)
-                        .setMouvement(mouvement)
-        );
-
-        return mouvementMapper.toDto(mouvement);
-    }
 
     @Transactional
     @Override
@@ -154,82 +40,19 @@ public class MouvementCaisseServiceImpl implements MouvementCaisseService {
         repository.save(mouvement);
     }
 
-    @Override
+
     @Transactional
-    public void enregistrerPaiementFournisseur(BigDecimal montant, TypePaiement modePaiement, String libelle, Instant date) {
-        Caisse caisse = getCaisseOuverte();
-
-        MouvementCaisse mouvement = new MouvementCaisse();
-        mouvement.setMontant(montant);
-        mouvement.setModePaiement(modePaiement);
-        mouvement.setLibelle(libelle);
-        mouvement.setTypeMouvement(TypeMouvement.PAIEMENT_FOURNISSEUR);
-        mouvement.setSens(SensMouvement.SORTIE);
-        mouvement.setCaisse(caisse);
-        repository.save(mouvement);
-    }
-
-    private Caisse findCaisseOrThrow(Long id) {
-        return caisseRepository.findById(id)
-                .orElseThrow(() ->
-                        new EntityNotFoundException("Caisse introuvable : " + id));
-    }
-
-    private Caisse getCaisseOuverte() {
-        return caisseRepository.findByStatut(StatutCaisse.OUVERTE)
-                .orElseThrow(CaisseFermeeException::new);
-    }
-
-    private MouvementCaisse creerMouvement(
+    @Override
+    public MouvementCaisse creerMouvement(
             TypeMouvement type,
             SensMouvement sens,
             TypePaiement modePaiement,
             Caisse caisse,
             String libelle,
-            BigDecimal montant) {
-        verifierMontant(montant);
-        MouvementCaisse mouvement = new MouvementCaisse();
-        mouvement.setTypeMouvement(type);
-        mouvement.setSens(sens);
-        mouvement.setModePaiement(modePaiement);
-        mouvement.setMontant(montant);
-        mouvement.setLibelle(libelle);
-        mouvement.setCaisse(caisse);
-        return repository.save(mouvement);
+            BigDecimal montant)
+    {
+        return repository.save(MouvementCaisse.creer(type, sens, modePaiement, caisse, libelle, montant));
     }
-
-
-    @Override
-    @Transactional
-    public MouvementCaisse creerMouvementCaisse(
-            TypeMouvement type,
-            SensMouvement sens,
-            TypePaiement modePaiement,
-            Caisse caisse,
-            Periode periode,
-            String libelle,
-            BigDecimal montant
-    ) {
-        verifierMontant(montant);
-
-        MouvementCaisse mouvement =  new MouvementCaisse();
-        mouvement.setMontant(montant);
-        mouvement.setModePaiement(modePaiement);
-        mouvement.setTypeMouvement(TypeMouvement.PAIEMENT_ABONNEMENT);
-        mouvement.setSens(SensMouvement.ENTREE);
-        mouvement.setLibelle("Paiement abonnement");
-        mouvement.setCaisse(caisse);
-
-        return repository.save(mouvement);
-    }
-
-    private void verifierMontant(BigDecimal montant){
-        if(montant == null || montant.compareTo(BigDecimal.ZERO) <= 0){
-            throw new BadRequestException("Le montant doit être positif");
-        }
-
-    }
-
 
 
     @Override

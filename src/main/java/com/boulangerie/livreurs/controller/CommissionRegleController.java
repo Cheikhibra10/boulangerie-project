@@ -17,14 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/commissions")
 @RequiredArgsConstructor
-@Tag(name = "Commissions", description = "Gestion des commissions")
+@Tag(name = "Commissions", description = "Gestion des commissions ADMIN-MANAGER")
 public class CommissionRegleController {
 
     private final CommissionRegleService service;
 
     @Operation(summary = "Créer commission pour un livreur")
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<CommissionRegleDto> create(@Valid @RequestBody CommissionRegleRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.creer(dto));
     }

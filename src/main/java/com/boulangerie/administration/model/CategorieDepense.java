@@ -1,4 +1,3 @@
-// administration/model/CategorieDepense.java
 package com.boulangerie.administration.model;
 
 import com.boulangerie.shared.model.AbstractAuditingEntity;

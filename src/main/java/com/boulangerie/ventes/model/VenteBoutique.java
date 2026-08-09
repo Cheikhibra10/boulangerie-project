@@ -11,6 +11,8 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +54,9 @@ public class VenteBoutique extends AbstractAuditingEntity {
     @Column(nullable=false, precision=15, scale=2)
     private BigDecimal total = BigDecimal.ZERO;
 
+    @Column(length = 255)
+    private String motifAnnulation;
+
     public void ajouterLigne(LigneVenteBoutique ligne){
         ligne.setVente(this);
         lignes.add(ligne);
@@ -73,6 +78,26 @@ public class VenteBoutique extends AbstractAuditingEntity {
         recalculerTotal();
     }
 
+    public void annuler(String motif) {
+
+        verifierAnnulationPossible();
+
+        if (motif == null || motif.isBlank()) {
+            throw new BadRequestException("Le motif d'annulation est obligatoire.");
+        }
+
+        this.statut = StatutVente.ANNULEE;
+        this.motifAnnulation = motif;
+    }
+
+    private void verifierAnnulationPossible() {
+
+        if (statut != StatutVente.PAYEE) {
+            throw new BadRequestException(
+                    "Seule une vente payée peut être annulée.");
+        }
+    }
+
     public void encaisser(Paiement paiement) {
         verifierModifiable();
         if (paiement.getMontant().compareTo(total) != 0) {
@@ -89,4 +114,38 @@ public class VenteBoutique extends AbstractAuditingEntity {
         }
     }
 
+    public LigneVenteBoutique getLigne(Long produitId) {
+
+        return lignes.stream()
+                .filter(l -> l.getProduitId().equals(produitId))
+                .findFirst()
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Produit introuvable dans cette vente."));
+    }
+
+    public BigDecimal getMontantNet() {
+        return total.subtract(getMontantRetourne());
+    }
+
+    public BigDecimal getMontantRetourne() {
+        return lignes.stream()
+                .map(LigneVenteBoutique::getMontantRetourne)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public void verifierRetourPossible() {
+
+        if(statut != StatutVente.PAYEE) {
+            throw new BadRequestException("Seule une vente payée peut être retournée.");
+        }
+
+        Instant limiteRetour = getCreatedAt().plus(Duration.ofMinutes(10));
+        if (Instant.now().isAfter(limiteRetour)) {
+            throw new BadRequestException("Le délai maximal de retour (10 minutes) est dépassé.");
+        }
+    }
+
+    public String getNumero() {
+        return "VENTE-0000" + getId();
+    }
 }

@@ -1,4 +1,3 @@
-// administration/service/FournisseurService.java
 package com.boulangerie.administration.service;
 
 import com.boulangerie.administration.dto.FournisseurDto;

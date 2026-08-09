@@ -1,4 +1,3 @@
-// administration/controller/LivreurController.java
 package com.boulangerie.administration.controller;
 
 import com.boulangerie.administration.dto.LivreurDto;
@@ -15,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/livreurs")
-@Tag(name = "Livreurs", description = "Gestion des livreurs")
+@Tag(name = "Livreurs", description = "Gestion des livreurs ADMIN-MANAGER")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
 public class LivreurController
         extends GenericCrudController<Livreur, LivreurDto> {

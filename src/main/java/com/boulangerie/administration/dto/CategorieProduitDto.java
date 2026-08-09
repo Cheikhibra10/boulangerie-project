@@ -1,4 +1,3 @@
-// administration/dto/CategorieProduitDto.java
 package com.boulangerie.administration.dto;
 
 import com.boulangerie.shared.dto.AbstractAuditingDto;

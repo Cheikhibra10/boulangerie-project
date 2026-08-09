@@ -12,6 +12,8 @@
                 "shared::model",
                 "comptabilite::api",
                 "comptabilite::dto",
+                "comptabilite::model",
+                "comptabilite::event",
                 "production::api"
         }
 )

@@ -17,11 +17,12 @@ import java.time.temporal.ChronoUnit;
 
 
 @Entity
-@Table(name = "periodes",
+@Table(
+        name = "periodes",
         indexes = {
-                @Index(name = "idx_periode_date_debut", columnList = "dateDebut"),
+                @Index(name = "idx_periode_date_debut", columnList = "date_debut"),
                 @Index(name = "idx_periode_statut", columnList = "statut"),
-                @Index(name = "idx_periode_dates_statut", columnList = "dateDebut, dateFin, statut")
+                @Index(name = "idx_periode_dates_statut", columnList = "date_debut,date_fin,statut")
         }
 )
 @Getter
@@ -36,120 +37,122 @@ public class Periode extends AbstractAuditingEntity {
     @Column(name = "date_debut", nullable = false, unique = true)
     private LocalDate dateDebut;
 
-    @Column(name = "date_fin", nullable = false)
+    @Column(name = "date_fin", nullable =false)
     private LocalDate dateFin;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "statut", nullable = false)
-    private StatutPeriode statut = StatutPeriode.OUVERTE;
+    @Column(nullable = false)
+    private StatutPeriode statut;
 
-    @Column(name = "benefice_report", precision = 15, scale = 2)
-    private BigDecimal beneficeReport = BigDecimal.ZERO;
+    @Column(name = "benefice_report", precision = 15, scale = 2, nullable = false)
+    private BigDecimal beneficeReport;
 
     @OneToOne(mappedBy = "periode", cascade = CascadeType.ALL, orphanRemoval = true)
     private ResultatPeriode resultat;
 
-    // ===== FACTORY METHOD =====
-    public static Periode nouvellePeriode(LocalDate dateDebut, LocalDate dateFin) {
-        validerDates(dateDebut, dateFin);
-        validerDureeMensuelle(dateDebut, dateFin);
+    public static Periode creer(
+            LocalDate debut,
+            LocalDate fin) {
+
+        verifierDates(debut, fin);
 
         Periode periode = new Periode();
-        periode.dateDebut = dateDebut;
-        periode.dateFin = dateFin;
+        periode.dateDebut = debut;
+        periode.dateFin = fin;
         periode.statut = StatutPeriode.OUVERTE;
-        periode.beneficeReport = FinancialConstants.ZERO;
+        periode.beneficeReport = BigDecimal.ZERO;
+
         return periode;
     }
 
-    // ===== BUSINESS METHODS =====
+    public void fermer() {
 
-    public void ouvrir() {
-        if (this.statut == StatutPeriode.OUVERTE) {
-            throw new PeriodeDejaOuverteException(this.id);
+        if (statut != StatutPeriode.OUVERTE) {
+            throw new PeriodeDejaFermeeException(id);
         }
-        if (this.statut == StatutPeriode.CLOTUREE) {
-            throw new PeriodeDejaClotureeException(this.id);
-        }
-        this.statut = StatutPeriode.OUVERTE;
+
+        statut = StatutPeriode.FERMEE;
     }
 
-    public void fermer() {
-        if (this.statut == StatutPeriode.FERMEE) {
-            throw new PeriodeDejaFermeeException(this.id);
+    public void rouvrir() {
+
+        if (statut != StatutPeriode.FERMEE) {
+            throw new IllegalStateException(
+                    "Seule une période fermée peut être rouverte.");
         }
-        if (this.statut == StatutPeriode.CLOTUREE) {
-            throw new PeriodeDejaClotureeException(this.id);
-        }
-        this.statut = StatutPeriode.FERMEE;
+
+        statut = StatutPeriode.OUVERTE;
     }
 
     public void cloturer() {
-        if (this.statut == StatutPeriode.CLOTUREE) {
-            throw new PeriodeDejaClotureeException(this.id);
+
+        if (statut != StatutPeriode.FERMEE) {
+            throw new IllegalStateException("Une période doit être fermée avant sa clôture.");
         }
-        if (this.statut == StatutPeriode.FERMEE) {
-            throw new PeriodeDejaFermeeException(this.id);
+
+        if (resultat == null) {throw new IllegalStateException("Impossible de clôturer une période sans résultat.");
         }
-        this.statut = StatutPeriode.CLOTUREE;
+
+        statut = StatutPeriode.CLOTUREE;
     }
 
-    public void reporterBenefice(BigDecimal montant) {
-        if (montant == null || montant.compareTo(FinancialConstants.MIN_BENEFIT_THRESHOLD) < 0) {
+    public void enregistrerResultat(ResultatPeriode resultat) {
+
+        if (this.resultat != null) {
+            throw new ResultatDejaGenereException(id);
+        }
+
+        this.resultat = resultat;
+    }
+
+    public void initialiserBeneficeReport(BigDecimal montant) {
+
+        if (montant == null || montant.signum() <= 0) {
+            this.beneficeReport = BigDecimal.ZERO;
             return;
         }
-        this.beneficeReport = this.beneficeReport.add(montant)
-                .setScale(FinancialConstants.FINANCIAL_SCALE, FinancialConstants.FINANCIAL_ROUNDING);
+
+        this.beneficeReport = montant;
     }
 
-
-
-    public void attacherResultat(ResultatPeriode resultat) {
-        if (this.statut != StatutPeriode.OUVERTE && this.statut != StatutPeriode.FERMEE) {
-            throw new PeriodeNonModifiableException(this.id, this.statut);
-        }
-        if (this.resultat != null) {
-            throw new ResultatDejaGenereException(this.id);
-        }
-        this.resultat = resultat;
-        resultat.setPeriode(this);
-    }
-
-    public boolean hasResultat() {
-        return this.resultat != null;
-    }
-
-    // ===== QUERY METHODS =====
 
     public boolean estOuverte() {
-        return this.statut == StatutPeriode.OUVERTE;
+        return statut == StatutPeriode.OUVERTE;
     }
 
+    public boolean estFermee() {
+        return statut == StatutPeriode.FERMEE;
+    }
 
-    // ===== PRIVATE HELPERS =====
+    public boolean estCloturee() {
+        return statut == StatutPeriode.CLOTUREE;
+    }
 
-    private static void validerDates(LocalDate debut, LocalDate fin) {
-        if (fin.isBefore(debut)) {
-            throw new DateInvalideException("La date de fin doit être après la date de début");
+    public boolean contientResultat() {
+        return resultat != null;
+    }
+
+    private static void verifierDates(
+            LocalDate debut,
+            LocalDate fin) {
+
+        if (debut == null || fin == null) {
+            throw new DateInvalideException("Dates obligatoires.");
         }
-        if (debut.isBefore(LocalDate.now())) {
-            throw new DateInvalideException("La date de début ne peut pas être dans le passé");
+
+        if (!fin.equals(debut.plusMonths(1).minusDays(1))) {
+            throw new DateInvalideException("Une période doit durer exactement un mois.");
         }
     }
 
-    private static void validerDureeMensuelle(LocalDate debut, LocalDate fin) {
-        // Validate it's approximately one month
-        long totalJours = ChronoUnit.DAYS.between(debut, fin) + 1;
+    public void verifierCloturable() {
 
-        // A month is between 28 and 31 days
-        if (totalJours < 28 || totalJours > 31) {
-            throw new DateInvalideException("La période doit être mensuelle (28-31 jours)" );
+        if (!estFermee()) {
+            throw new PeriodeNonCloturableException(id, statut);
         }
 
-        // Validate it's exactly one month (same day of month)
-        LocalDate debutPlusMonth = debut.plusMonths(1).minusDays(1);
-        if (!fin.equals(debutPlusMonth)) {
-            throw new DateInvalideException("La période doit être d'un mois exact.");
+        if (resultat != null) {
+            throw new ResultatDejaGenereException(id);
         }
     }
 }

@@ -23,8 +23,6 @@ public abstract class VenteMapper implements EntityMapper<VenteDto, VenteBoutiqu
 
     @Mapping(target = "heure", source = "createdAt", qualifiedByName = "heure")
 
-    @Mapping(target = "modePaiement", source = "paiement.modePaiement")
-
     @Mapping(target = "articlesVendus", source = ".", qualifiedByName = "articlesVendus")
 
     @Mapping(target = "paiement", source = "paiement")

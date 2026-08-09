@@ -1,7 +1,9 @@
 package com.boulangerie.livreurs.service.impl;
 
 import com.boulangerie.administration.service.LivreurService;
+import com.boulangerie.comptabilite.api.CaisseApi;
 import com.boulangerie.livreurs.dto.*;
+import com.boulangerie.livreurs.event.CompteRenduLivreurClotureEvent;
 import com.boulangerie.livreurs.mapper.CompteRenduMapper;
 import com.boulangerie.livreurs.mapper.LigneCompteRenduMapper;
 import com.boulangerie.livreurs.model.*;
@@ -13,9 +15,12 @@ import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.administration.security.CurrentUserService;
+import com.boulangerie.shared.model.*;
 import com.boulangerie.shared.utils.PageUtils;
+import com.boulangerie.shared.dto.MouvementCaisseEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -38,10 +43,9 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
     private final CommissionCalculator commissionCalculator;
     private final VersementLivreurService versementLivreurService;
     private final CompteLivreurService compteLivreurService;
-
+    private final ApplicationEventPublisher publisher;
     private final CompteRenduMapper compteRenduMapper;
     private final LigneCompteRenduMapper ligneMapper;
-
     private final CurrentUserService currentUserService;
 
     @Override
@@ -61,7 +65,6 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
 
     @Override
     public CompteRenduDto cloturerCompteRendu(Long journalierId, ClotureCompteRenduDto dto) {
-
         CompteLivreurJournalier journalier = findJournalierOrThrow(journalierId);
         journalier.verifierNonCloture();
         VersementLivreur versement = versementLivreurService.creerVersement(journalier, dto);
@@ -73,7 +76,17 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
                 journalier.getTotalAVerser(),
                 journalier.getReliquatFin(),
                 currentUserService.getCurrentUser().getNom());
+        publisher.publishEvent(
+                new CompteRenduLivreurClotureEvent(
+                        journalier.getVersementsDuJour(),
+                        TypeMouvement.VERSEMENT_LIVREUR,
+                        SensMouvement.ENTREE,
+                        TypePaiement.CASH,
+                        "Versement livreur #" + journalier.getLivreurId()
+                                )
+        );
         return compteRenduMapper.toDto(journalier);
+
     }
 
     @Override

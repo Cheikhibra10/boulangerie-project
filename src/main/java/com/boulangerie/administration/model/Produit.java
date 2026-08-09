@@ -1,4 +1,3 @@
-// administration/model/Produit.java
 package com.boulangerie.administration.model;
 
 import com.boulangerie.shared.model.AbstractAuditingEntity;
@@ -24,8 +23,11 @@ public class Produit extends AbstractAuditingEntity implements GenericEntity<Pro
     @Column(name = "libelle", length = 100, nullable = false)
     private String libelle;
 
-    @Column(name = "image", columnDefinition = "TEXT")
-    private String image;
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
+
+    @Column(name = "image_public_id", length = 255)
+    private String imagePublicId;
 
     @Column(name = "prix_detail", precision = 15, scale = 2, nullable = false)
     private BigDecimal prixDetail;
@@ -35,6 +37,10 @@ public class Produit extends AbstractAuditingEntity implements GenericEntity<Pro
 
     @Column(name = "prix_livreur", precision = 15, scale = 2)
     private BigDecimal prixLivreur;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_produit", nullable = false,length = 20)
+    private TypeProduit typeProduit;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categorie_id", nullable = false)

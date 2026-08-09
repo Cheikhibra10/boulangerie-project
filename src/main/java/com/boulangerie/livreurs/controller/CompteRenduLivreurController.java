@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/comptes-rendus-livreurs")
 @RequiredArgsConstructor
-@Tag(name = "Compte Rendu Livreurs", description = "Gestion des comptes rendus livreurs")
+@Tag(name = "Compte Rendu Livreurs", description = "Gestion des comptes rendus livreurs ADMIN-MANAGER")
 public class CompteRenduLivreurController {
 
     private final CompteRenduLivreurService compteRenduLivreurService;

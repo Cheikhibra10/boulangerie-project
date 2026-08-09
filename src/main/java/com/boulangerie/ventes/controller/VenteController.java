@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/ventes")
 @RequiredArgsConstructor
-@Tag(name = "Ventes Boutique", description = "Gestion des ventes en boutique")
+@Tag(name = "Ventes Boutique", description = "Gestion des ventes en boutique ADMIN-MANAGER-CAISSIER")
 public class VenteController {
 
     private final VenteService venteService;
@@ -66,5 +66,31 @@ public class VenteController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(venteService.getVentes(dateDebut, produitId, page, size));
+    }
+
+    @Operation(summary = "Retourner une vente")
+    @PostMapping("/{venteId}/retours")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','CAISSIER')")
+    public ResponseEntity<ApiResponse<VenteDto>> retourner(
+            @PathVariable Long venteId,
+            @Valid @RequestBody RetourVenteRequestDto dto) {
+        VenteDto response = venteService.retournerVente(venteId, dto);
+
+        return ResponseEntity.ok(ApiResponse.success("Retour traité avec succès", response));
+    }
+
+    @Operation(summary = "Annuler une vente")
+    @PostMapping("/{venteId}/annulation")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    public ResponseEntity<ApiResponse<VenteDto>> annuler(
+            @PathVariable Long venteId,
+            @Valid @RequestBody AnnulationVenteRequestDto dto) {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Vente annulée avec succès",
+                        venteService.annulerVente(venteId, dto)
+                )
+        );
     }
 }

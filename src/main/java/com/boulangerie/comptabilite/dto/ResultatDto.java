@@ -8,7 +8,6 @@ import java.time.LocalDate;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResultatDto extends AbstractAuditingDto {

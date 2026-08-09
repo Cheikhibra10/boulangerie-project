@@ -22,7 +22,7 @@ public class PaiementAbonnementFactory {
             PaiementAbonnement paiementAbonnemt = new PaiementAbonnement();
             paiementAbonnemt.setMontant(montant);
             paiementAbonnemt.setModePaiement(modePaiement);
-            paiementAbonnemt.setLibelle("Paiement abonnement - " + ligne.getClient().getId());
+            paiementAbonnemt.setLibelle("Paiement abonnement - " + ligne.getClient().getPrenom() + " " + ligne.getClient().getNom());
             paiementAbonnemt.setLigne(ligne);
          return paiementAbonnemt;
     }

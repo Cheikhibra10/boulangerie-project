@@ -2,10 +2,8 @@
 package com.boulangerie.reporting.service;
 
 import com.boulangerie.abonnements.api.AbonnementStatisticsApi;
-import com.boulangerie.achats.model.StatutAchat;
-import com.boulangerie.achats.model.StatutPaiement;
-import com.boulangerie.achats.model.StatutReception;
 import com.boulangerie.achats.repository.AchatRepository;
+import com.boulangerie.administration.service.ProduitService;
 import com.boulangerie.comptabilite.repository.MouvementCaisseRepository;
 import com.boulangerie.livreurs.repository.CompteLivreurRepository;
 import com.boulangerie.production.repository.LotProductionRepository;
@@ -37,7 +35,7 @@ public class KpiCalculator {
     private final LotProductionRepository lotProductionRepository;
     private final AchatRepository achatRepository;
     private final MouvementCaisseRepository mouvementCaisseRepository;
-
+    private final ProduitService produitService;
     /**
      * Calcule les KPIs pour une période donnée
      */
@@ -65,8 +63,8 @@ public class KpiCalculator {
                 .map(s -> AlerteStockDto.builder()
                         .ingredientId(s.getIngredient().getId())
                         .ingredientLibelle(s.getIngredient().getLibelle())
-                        .quantiteActuelle(s.getQuantite())
-                        .seuilAlerte(s.getSeuilAlerte())
+                        .quantiteActuelle(s.getQuantiteDansUniteMetier())
+                        .seuilAlerte(s.getSeuilDansUniteMetier())
                         .unite(s.getIngredient().getUnite())
                         .build())
                 .toList();
@@ -87,25 +85,25 @@ public class KpiCalculator {
         BigDecimal totalSorties = mouvementCaisseRepository.sumChargesBetweenDates(dateDebut, dateFin);
         BigDecimal soldeTheorique = totalEntrees.subtract(totalSorties);
 
-        return KpiDto.builder()
-                .caTotal(caTotal)
-                .caBoutique(caBoutique)
-                .caRestants(caRestants)
-                .caLivreurs(caLivreurs)
-                .caAbonnements(caAbonnements)
-                .quantiteProduite(quantiteProduite)
-                .quantiteVendue(quantiteVendue)
-                .tauxEcoulement(tauxEcoulement)
-                .alertesStocks(alertes)
-                .nbIngredientsSousSeuil(nbIngredientsSousSeuil)
-                .reliquatTotalLivreurs(reliquatTotal)
-                .nbLivreursActifs(nbLivreursActifs)
-                .creditsClientsTotal(creditsClients)
-                .nbAbonnementsActifs(nbAbonnementsActifs)
-                .totalEntrees(totalEntrees)
-                .totalSorties(totalSorties)
-                .soldeTheorique(soldeTheorique)
-                .build();
+        return new KpiDto()
+                .setCaTotal(caTotal)
+                .setCaBoutique(caBoutique)
+                .setCaRestants(caRestants)
+                .setCaLivreurs(caLivreurs)
+                .setCaAbonnements(caAbonnements)
+                .setQuantiteProduite(quantiteProduite)
+                .setQuantiteVendue(quantiteVendue)
+                .setTauxEcoulement(tauxEcoulement)
+                .setAlertesStocks(alertes)
+                .setNbIngredientsSousSeuil(nbIngredientsSousSeuil)
+                .setReliquatTotalLivreurs(reliquatTotal)
+                .setNbLivreursActifs(nbLivreursActifs)
+                .setCreditsClientsTotal(creditsClients)
+                .setNbAbonnementsActifs(nbAbonnementsActifs)
+                .setTotalEntrees(totalEntrees)
+                .setTotalSorties(totalSorties)
+                .setSoldeTheorique(soldeTheorique);
+
     }
 
     private Double calculerTauxEcoulement(BigDecimal produit, BigDecimal vendu) {
@@ -124,11 +122,11 @@ public class KpiCalculator {
     public List<TopProduitDto> getTopProduits(LocalDate dateDebut, LocalDate dateFin, int limit) {
         return ligneVenteRepository.findTopProduitsByCa(dateDebut, dateFin, PageRequest.of(0, limit))
                 .stream()
-                .map(row -> TopProduitDto.builder()
-                        .produitId((Long) row[0])
-                        .produitNom((String) row[1])
-                        .quantiteVendue((BigDecimal) row[2])
-                        .caTotal((BigDecimal) row[3])
+                .map(p -> TopProduitDto.builder()
+                        .produitId(p.getProduitId())
+                        .produitNom(produitService.findProduitOrThrow(p.getProduitId()).getLibelle())
+                        .quantiteVendue(p.getQuantiteVendue())
+                        .caTotal(p.getCaTotal())
                         .build())
                 .toList();
     }
@@ -151,47 +149,26 @@ public class KpiCalculator {
      * Calcule les statistiques des achats par statut
      */
     @Transactional(readOnly = true)
-    public List<StatutStatDto> getStatutsAchats() {
-        return achatRepository.countAndSumByStatutAchat()
-                .stream()
-                .map(row -> StatutStatDto.builder()
-                        .statut(((StatutAchat) row[0]).name())
-                        .nombre((Long) row[1])
-                        .montant((BigDecimal) row[2])
-                        .build())
-                .toList();
-    }
-
-    public List<StatutStatDto> getStatutsReception() {
-
-        return achatRepository.countAndSumByStatutReception()
-                .stream()
-                .map(row -> StatutStatDto.builder()
-                        .statut(((StatutReception) row[0]).name())
-                        .nombre((Long) row[1])
-                        .montant((BigDecimal) row[2])
-                        .build())
-                .toList();
-    }
-
-    public List<StatutStatDto> getStatutsPaiement() {
-
-        return achatRepository.countAndSumByStatutPaiement()
-                .stream()
-                .map(row -> StatutStatDto.builder()
-                        .statut(((StatutPaiement) row[0]).name())
-                        .nombre((Long) row[1])
-                        .montant((BigDecimal) row[2])
-                        .build())
-                .toList();
-    }
-
     public AchatStatistiquesDto getStatistiques() {
 
         return AchatStatistiquesDto.builder()
-                .achats(getStatutsAchats())
-                .receptions(getStatutsReception())
-                .paiements(getStatutsPaiement())
+                .achats(mapStatistiques(
+                        achatRepository.countAndSumByStatutAchat()))
+                .receptions(mapStatistiques(
+                        achatRepository.countAndSumByStatutReception()))
+                .paiements(mapStatistiques(
+                        achatRepository.countAndSumByStatutPaiement()))
                 .build();
+    }
+
+    private <E extends Enum<E>> List<StatutStatDto> mapStatistiques(List<Object[]> rows) {
+
+        return rows.stream()
+                .map(row -> StatutStatDto.builder()
+                        .statut(((E) row[0]).name())
+                        .nombre(((Number) row[1]).longValue())
+                        .montant((BigDecimal) row[2])
+                        .build())
+                .toList();
     }
 }

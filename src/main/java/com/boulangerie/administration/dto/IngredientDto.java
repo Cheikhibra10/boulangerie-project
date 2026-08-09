@@ -1,4 +1,3 @@
-// administration/dto/IngredientDto.java
 package com.boulangerie.administration.dto;
 
 import com.boulangerie.administration.model.UniteMesure;

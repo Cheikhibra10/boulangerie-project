@@ -21,6 +21,6 @@ public interface AchatService {
     AchatDto annulerAchat(Long achatId);
     AchatDto getAchat(Long id);
     List<LigneAchatDto> getLignesByAchat(Long achatId);
-    @Transactional(readOnly = true)
-    PageResponse<AchatDto> getAchats(AchatSearchCriteria criteria, int page, int size);
+
+    PageResponse<AchatDto> getAchats(AchatSearchRequest request, int page, int size);
 }

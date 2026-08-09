@@ -1,6 +1,7 @@
 package com.boulangerie.abonnements.model;
 
 
+import com.boulangerie.abonnements.exception.SoldeCompteAbonnementInsuffisantException;
 import com.boulangerie.shared.model.AbstractAuditingEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,63 +19,41 @@ import java.math.BigDecimal;
 @Accessors(chain = true)
 public class CompteAbonnement extends AbstractAuditingEntity {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "abonnement_id",
-            nullable = false,
-            unique = true
-    )
+    @JoinColumn(name = "abonnement_id", nullable = false, unique = true)
     private Abonnement abonnement;
 
-
-
-    @Column(
-            nullable = false,
-            precision = 15,
-            scale = 2
-    )
+    @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal soldeActuel = BigDecimal.ZERO;
 
-
     public void crediter(BigDecimal montant) {
-
         verifierMontant(montant);
-
         soldeActuel = soldeActuel.add(montant);
     }
 
 
 
     public void debiter(BigDecimal montant) {
-
         verifierMontant(montant);
-
+        if(!peutVerser(montant)) {
+            throw new SoldeCompteAbonnementInsuffisantException(abonnement.getId(), soldeActuel, montant
+            );
+        }
         soldeActuel = soldeActuel.subtract(montant);
     }
 
 
-
-    public boolean estCrediteur() {
-
-        return soldeActuel.compareTo(
-                BigDecimal.ZERO
-        ) > 0;
+    public boolean peutVerser(BigDecimal montant) {
+        return soldeActuel.compareTo(montant) >= 0;
     }
-
-
 
     private void verifierMontant(BigDecimal montant) {
         if (montant == null || montant.signum() <= 0) {
-            throw new IllegalArgumentException(
-                    "Montant invalide"
-            );
+            throw new IllegalArgumentException("Montant invalide");
         }
     }
 }

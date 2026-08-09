@@ -1,4 +1,3 @@
-// administration/repository/CategorieDepenseRepository.java
 package com.boulangerie.administration.repository;
 
 import com.boulangerie.administration.model.CategorieDepense;

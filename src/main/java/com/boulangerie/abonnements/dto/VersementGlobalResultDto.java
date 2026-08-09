@@ -16,6 +16,5 @@ import java.util.List;
 public class VersementGlobalResultDto extends AbstractAuditingDto {
     private Long abonnementId;
     private BigDecimal montantVerse;
-    private BigDecimal montantRestant;
-    private List<LigneAbonnementDto> clientsRepartis;
+    private BigDecimal nouveauSoldeCompte;
 }

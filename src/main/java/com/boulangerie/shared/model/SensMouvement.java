@@ -1,5 +1,5 @@
 // caisse/model/SensMouvement.java
-package com.boulangerie.comptabilite.model;
+package com.boulangerie.shared.model;
 
 public enum SensMouvement {
     ENTREE,

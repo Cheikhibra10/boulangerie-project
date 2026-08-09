@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/production")
 @RequiredArgsConstructor
-@Tag(name = "Production", description = "Gestion des lots de production")
+@Tag(name = "Production", description = "Gestion des lots de production ADMIN-MANAGER-GESTIONNAIRE_PRODUCTION")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN','GESTIONNAIRE_PRODUCTION')")
 public class ProductionController {
 

@@ -1,4 +1,3 @@
-// administration/service/impl/CategorieDepenseServiceImpl.java
 package com.boulangerie.administration.service.Impl;
 
 import com.boulangerie.administration.dto.CategorieDepenseDto;

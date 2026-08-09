@@ -19,7 +19,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/reporting")
 @RequiredArgsConstructor
-@Tag(name = "Reporting", description = "Tableau de bord et indicateurs clés")
+@Tag(name = "Reporting", description = "Tableau de bord et indicateurs clés ADMIN-MANAGER")
 public class ReportingController {
 
     private final ReportingService reportingService;

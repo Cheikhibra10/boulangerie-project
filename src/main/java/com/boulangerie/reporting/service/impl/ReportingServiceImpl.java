@@ -32,13 +32,12 @@ public class ReportingServiceImpl implements ReportingService {
         KpiDto kpis = kpiCalculator.calculerKPIs(dateDebut, dateFin);
         List<TopProduitDto> topProduits = kpiCalculator.getTopProduits(dateDebut, dateFin, 5);
         List<EvolutionVenteDto> evolution = kpiCalculator.getEvolutionVentes(dateDebut, dateFin);
-        List<StatutStatDto> statuts = kpiCalculator.getStatutsAchats();
+        AchatStatistiquesDto achats = kpiCalculator.getStatistiques();
 
-        return DashboardDto.builder()
-                .kpis(kpis)
-                .topProduits(topProduits)
-                .evolutionVentes(evolution)
-                .statutsAchats(statuts)
-                .build();
+        return new  DashboardDto()
+                .setKpis(kpis)
+                .setTopProduits(topProduits)
+                .setEvolutionVentes(evolution)
+                .setStatutsAchats(achats);
     }
 }

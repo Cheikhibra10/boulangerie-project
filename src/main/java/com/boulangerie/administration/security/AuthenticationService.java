@@ -19,7 +19,7 @@ import org.springframework.web.client.RestClientResponseException;
 @Slf4j
 public class AuthenticationService {
 
-    private final RestClient restClient;
+    private final RestClient securityRestClient;
 
     @Value("${keycloak.server-url}")
     private String serverUrl;
@@ -43,7 +43,7 @@ public class AuthenticationService {
         form.add("username",request.getEmail());
         form.add("password",request.getPassword());
 
-        AccessTokenResponse response = restClient.post()
+        AccessTokenResponse response = securityRestClient.post()
                         .uri(serverUrl +
                                 "/realms/" +
                                 realm +
@@ -73,7 +73,7 @@ public class AuthenticationService {
         form.add("refresh_token",refreshToken);
 
         AccessTokenResponse response =
-                restClient.post()
+                securityRestClient.post()
                         .uri(serverUrl +
                                 "/realms/" +
                                 realm +
@@ -96,7 +96,7 @@ public class AuthenticationService {
         form.add("client_secret",clientSecret);
         form.add("refresh_token",refreshToken);
 
-        restClient.post()
+        securityRestClient.post()
                 .uri(serverUrl +
                         "/realms/" +
                         realm +
@@ -120,7 +120,7 @@ public class AuthenticationService {
     }
     private AccessTokenResponse requestToken(MultiValueMap<String, String> form) {
 
-        AccessTokenResponse response = restClient.post()
+        AccessTokenResponse response = securityRestClient.post()
                 .uri(serverUrl + "/realms/" + realm + "/protocol/openid-connect/token")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(form)

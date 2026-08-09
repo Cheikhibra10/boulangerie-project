@@ -20,4 +20,5 @@ public class FermetureCaisseDto {
     @PositiveOrZero(message = "Le solde physique doit être positif ou nul")
     private BigDecimal soldePhysique;
 
+    private String motifEcart;
 }

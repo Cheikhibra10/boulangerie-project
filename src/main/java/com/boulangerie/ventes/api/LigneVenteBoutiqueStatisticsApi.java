@@ -7,5 +7,5 @@ import java.util.Collection;
 public interface LigneVenteBoutiqueStatisticsApi {
     BigDecimal calculerCAVentesBoutique(LocalDate debut, LocalDate fin);
     BigDecimal calculerCAVenteRestants(LocalDate debut, LocalDate fin);
-    BigDecimal calculerCAAutresProduits(LocalDate debut, LocalDate fin, Collection<Long> excludedProductIds);
+    BigDecimal calculerCAAutresProduits(LocalDate debut, LocalDate fin, Collection<Long> painIds);
 }

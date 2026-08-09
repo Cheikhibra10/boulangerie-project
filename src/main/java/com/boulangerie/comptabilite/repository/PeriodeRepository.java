@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-// comptabilite/domain/repository/PeriodeRepository.java
 @Repository
 public interface PeriodeRepository extends JpaRepository<Periode, Long> {
     long countByStatut(StatutPeriode statut);
@@ -38,9 +37,6 @@ public interface PeriodeRepository extends JpaRepository<Periode, Long> {
 
     @Query("SELECT p FROM Periode p WHERE p.statut = 'OUVERTE' ORDER BY p.dateDebut ASC")
     List<Periode> findAllOpen();
-
-    @Query("SELECT p FROM Periode p WHERE p.dateFin < :date AND p.statut != 'CLOTUREE'")
-    List<Periode> findExpiredOpenPeriods(@Param("date") LocalDate date);
 
     boolean existsByDateDebut(LocalDate dateDebut);
 

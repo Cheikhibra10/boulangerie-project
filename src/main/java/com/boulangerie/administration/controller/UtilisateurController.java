@@ -1,4 +1,3 @@
-// administration/controller/UtilisateurController.java
 package com.boulangerie.administration.controller;
 
 import com.boulangerie.administration.dto.RegisterUtilisateurRequestDto;
@@ -21,7 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/utilisateurs")
-@Tag(name = "Utilisateurs", description = "Gestion des utilisateurs du système")
+@Tag(name = "Utilisateurs", description = "Gestion des utilisateurs du système ADMIN-MANAGER")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
 public class UtilisateurController
         extends GenericCrudController<Utilisateur, UtilisateurDto> {

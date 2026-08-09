@@ -34,10 +34,6 @@ public interface AchatRepository extends JpaRepository<Achat, Long>, JpaSpecific
     @Deprecated
     Page<Achat> findByCreatedAtBetween(Instant createdAt, Instant createdAt2, Pageable pageable);
 
-    // New method using Specification
-    default Page<Achat> findByCriteria(AchatSearchCriteria criteria, Pageable pageable) {
-        return findAll(criteria.toSpecification(), pageable);
-    }
 
     @Query("""
     SELECT a.statutAchat,

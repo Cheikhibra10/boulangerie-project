@@ -31,7 +31,6 @@
         <jjwt.version>0.12.6</jjwt.version>
     </properties>
 
-    <!-- Spring Modulith BOM -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -45,10 +44,6 @@
     </dependencyManagement>
 
     <dependencies>
-
-        <!-- ========================= -->
-        <!-- SPRING BOOT -->
-        <!-- ========================= -->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -84,9 +79,7 @@
             <artifactId>keycloak-admin-client</artifactId>
             <version>26.0.5</version>
         </dependency>
-        <!-- ========================= -->
-        <!-- SPRING MODULITH -->
-        <!-- ========================= -->
+
 
         <dependency>
             <groupId>org.springframework.modulith</groupId>
@@ -109,9 +102,6 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
-        <!-- ========================= -->
-        <!-- JWT -->
-        <!-- ========================= -->
 
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -133,19 +123,11 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- ========================= -->
-        <!-- MAPSTRUCT -->
-        <!-- ========================= -->
-
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${mapstruct.version}</version>
         </dependency>
-
-        <!-- ========================= -->
-        <!-- LOMBOK -->
-        <!-- ========================= -->
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -161,10 +143,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ========================= -->
-        <!-- UTILS -->
-        <!-- ========================= -->
-
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -175,9 +153,6 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.7.0</version>
         </dependency>
-        <!-- ========================= -->
-        <!-- TESTS -->
-        <!-- ========================= -->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

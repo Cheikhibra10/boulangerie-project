@@ -1,4 +1,3 @@
-// administration/controller/CategorieProduitController.java
 package com.boulangerie.administration.controller;
 
 import com.boulangerie.administration.dto.CategorieProduitDto;
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/categories-produit")
-@Tag(name = "Catégories Produit", description = "Gestion des catégories de produits")
+@Tag(name = "Catégories Produit", description = "Gestion des catégories de produits ADMIN-MANAGER")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
 public class CategorieProduitController
         extends GenericCrudController<CategorieProduit, CategorieProduitDto> {

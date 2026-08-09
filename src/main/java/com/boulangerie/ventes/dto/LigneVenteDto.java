@@ -17,6 +17,8 @@ public class LigneVenteDto {
     private Long produitId;
     private String produitLibelle;
     private BigDecimal quantite;
+    private BigDecimal quantiteRetournee;
+    private BigDecimal quantiteDisponibleRetour;
     private BigDecimal prixUnitaire;
     private BigDecimal total;
     private TypeVenteLigne typeVente;

@@ -2,7 +2,7 @@ package com.boulangerie.production.api;
 
 import java.math.BigDecimal;
 
-public record DestinationBoutiqueDto(
+public record BoutiqueStockDto(
 
         Long destinationId,
 

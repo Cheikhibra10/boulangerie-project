@@ -74,6 +74,14 @@ public class StockIngredient extends AbstractAuditingEntity {
         }
     }
 
+    public BigDecimal getQuantiteDansUniteMetier() {
+        return ingredient.convertirEnSacs(quantite);
+    }
+
+    public BigDecimal getSeuilDansUniteMetier() {
+        return ingredient.convertirEnSacs(seuilAlerte);
+    }
+
     public boolean estSousSeuil() {
 
         return quantite.compareTo(seuilAlerte) < 0;

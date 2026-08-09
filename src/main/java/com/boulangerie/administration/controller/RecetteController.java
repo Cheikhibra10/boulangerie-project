@@ -1,4 +1,3 @@
-// administration/controller/RecetteController.java
 package com.boulangerie.administration.controller;
 
 import com.boulangerie.administration.dto.RecetteDto;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/recettes")
-@Tag(name = "Recettes", description = "Gestion des recettes de fabrication")
+@Tag(name = "Recettes", description = "Gestion des recettes de fabrication ADMIN-MANAGER")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
 public class RecetteController
         extends GenericCrudController<Recette, RecetteDto> {

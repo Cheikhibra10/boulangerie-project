@@ -1,7 +1,7 @@
-// administration/dto/ProduitDto.java
 package com.boulangerie.administration.dto;
 
 import com.boulangerie.shared.dto.AbstractAuditingDto;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,7 +23,7 @@ public class ProduitDto extends AbstractAuditingDto {
     @Size(max = 100, message = "Le libelle ne doit pas dépasser 100 caractères")
     private String libelle;
 
-    private String image;
+    private String imageUrl;
 
     @NotNull(message = "Le prix détail est obligatoire")
     @Positive(message = "Le prix détail doit être positif")

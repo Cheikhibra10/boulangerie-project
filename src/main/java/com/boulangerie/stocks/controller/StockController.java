@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 @RestController
 @RequestMapping("/api/v1/stocks")
 @RequiredArgsConstructor
-@Tag(name = "Gestion des Stocks", description = "API pour la gestion des stocks")
+@Tag(name = "Gestion des Stocks", description = "API pour la gestion des stocks ADMIN-MANAGER-GESTIONNAIRE_PRODUCTION")
 public class StockController {
 
     private final StockService stockService;

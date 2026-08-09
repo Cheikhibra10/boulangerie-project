@@ -1,7 +1,5 @@
 package com.boulangerie.livreurs.service;
 
-import com.boulangerie.administration.model.Livreur;
-import com.boulangerie.administration.model.Produit;
 import com.boulangerie.livreurs.exception.CommissionNotFoundException;
 import com.boulangerie.livreurs.model.CommissionRegle;
 import com.boulangerie.livreurs.repository.CommissionRegleRepository;

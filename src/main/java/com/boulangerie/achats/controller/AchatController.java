@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/achats")
 @RequiredArgsConstructor
-@Tag(name = "Achats", description = "Gestion des achats fournisseurs")
+@Tag(name = "Achats", description = "Gestion des achats fournisseurs - MANAGER - ADMIN")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
 public class AchatController {
 
@@ -89,7 +89,7 @@ public class AchatController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<PageResponse<AchatDto>> getAchats(
-            @RequestParam(required = false) AchatSearchCriteria criteria,
+            @ModelAttribute AchatSearchRequest criteria,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(achatService.getAchats(criteria, page, size));

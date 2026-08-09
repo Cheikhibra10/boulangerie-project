@@ -43,4 +43,5 @@ public interface DestinationProductionRepository extends JpaRepository<Destinati
 
     @Query("SELECT d FROM DestinationProduction d JOIN FETCH d.lot JOIN FETCH d.produitId WHERE d.id = :id")
     Optional<DestinationProduction> findByIdWithDetails(@Param("id") Long id);
+
 }

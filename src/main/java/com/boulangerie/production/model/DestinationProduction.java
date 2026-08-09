@@ -177,4 +177,17 @@ public class DestinationProduction extends AbstractAuditingEntity {
             case AUMONE, VENTE_FAST_FOOD, RATION_PERSONNELLE, BOUTIQUE, AUTRES -> true;
         };
     }
+
+    public void retourner(BigDecimal quantite) {
+        verifierBoutique();
+        if (quantite == null || quantite.signum() <= 0) {
+            throw new BadRequestException("Quantité invalide.");
+        }
+
+        if (quantite.compareTo(quantiteConsommee) > 0) {
+            throw new BadRequestException(
+                    "Retour supérieur à la quantité vendue.");
+        }
+        quantiteConsommee = quantiteConsommee.subtract(quantite);
+    }
 }

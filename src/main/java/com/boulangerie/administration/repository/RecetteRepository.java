@@ -1,4 +1,3 @@
-// administration/repository/RecetteRepository.java
 package com.boulangerie.administration.repository;
 
 import com.boulangerie.administration.model.Produit;

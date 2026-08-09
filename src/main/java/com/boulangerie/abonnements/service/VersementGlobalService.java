@@ -4,6 +4,8 @@ import com.boulangerie.abonnements.event.VersementAbonnementEnregistreEvent;
 import com.boulangerie.abonnements.model.CompteAbonnement;
 import com.boulangerie.abonnements.model.VersementAbonnement;
 import com.boulangerie.abonnements.repository.VersementAbonnementRepository;
+import com.boulangerie.shared.model.SensMouvement;
+import com.boulangerie.shared.model.TypeMouvement;
 import com.boulangerie.shared.model.TypePaiement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,23 +30,17 @@ public class VersementGlobalService {
             BigDecimal montant,
             TypePaiement modePaiement) {
 
-        VersementAbonnement versement =
-                repository.save(
-                        factory.create(compte, montant, modePaiement)
-                );
+        VersementAbonnement versement = repository.save(factory.create(compte, montant, modePaiement));
 
         publisher.publishEvent(
                 new VersementAbonnementEnregistreEvent(
-                        versement.getId(),
-                        compte.getAbonnement().getId(),
-                        compte.getId(),
+                        TypeMouvement.VERSEMENT_ABONNEMENT,
+                        SensMouvement.ENTREE,
                         versement.getMontant(),
                         versement.getModePaiement(),
-                        versement.getLibelle(),
-                        Instant.now()
+                        versement.getLibelle()
                 )
         );
-
         return versement;
     }
 }

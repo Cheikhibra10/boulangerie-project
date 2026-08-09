@@ -2,22 +2,21 @@ package com.boulangerie.ventes.service.impl;
 
 import com.boulangerie.production.api.ProductionAllocationApi;
 import com.boulangerie.shared.dto.PageResponse;
-import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.administration.security.CurrentUserService;
+import com.boulangerie.shared.model.*;
 import com.boulangerie.shared.utils.PageUtils;
+import com.boulangerie.stocks.dto.StockMovement;
 import com.boulangerie.stocks.service.StockService;
 import com.boulangerie.ventes.dto.*;
-import com.boulangerie.ventes.event.VentePayeeEvent;
+import com.boulangerie.shared.dto.MouvementCaisseEvent;
 import com.boulangerie.ventes.mapper.StockMovementMapper;
 import com.boulangerie.ventes.mapper.VenteMapper;
 import com.boulangerie.ventes.model.LigneVenteBoutique;
 import com.boulangerie.ventes.model.Paiement;
 import com.boulangerie.ventes.model.VenteBoutique;
 import com.boulangerie.ventes.repository.VenteBoutiqueRepository;
-import com.boulangerie.ventes.service.PaiementFactory;
-import com.boulangerie.ventes.service.VenteFactory;
-import com.boulangerie.ventes.service.VenteService;
+import com.boulangerie.ventes.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -46,6 +45,9 @@ public class VenteServiceImpl implements VenteService {
     private final PaiementFactory paiementFactory;
     private final ApplicationEventPublisher publisher;
     private final ProductionAllocationApi productionApi;
+    private final RestaurationVenteService restaurationService;
+    private final PaiementVenteService paiementService;
+    private final CalculerPaiementService calculateurPaiement;
 
     @Transactional
     @Override
@@ -58,32 +60,126 @@ public class VenteServiceImpl implements VenteService {
         enregistrerConsommationBoutique(vente.getLignes());
         stockService.decrementerStock(stockMovementMapper.toStockMovements(vente.getLignes()));
         publisher.publishEvent(
-                new VentePayeeEvent(
-                        vente.getId(),
+                new MouvementCaisseEvent(
                         vente.getCaisseId(),
-                        paiement.getMontant(),
-                        paiement.getModePaiement(),
-                        paiement.getLibelle()
+                        TypeMouvement.PAIEMENT,
+                        SensMouvement.ENTREE,
+                        TypePaiement.CASH,
+                        vente.getPaiement().getMontant(),
+                        "Paiement vente #" + vente.getNumero()
                 )
         );
         return venteMapper.toDto(vente);
     }
 
+    @Transactional
+    @Override
+    public VenteDto retournerVente(Long venteId, RetourVenteRequestDto dto) {
+
+        VenteBoutique vente = chargerVente(venteId);
+
+        vente.verifierRetourPossible();
+
+        appliquerRetours(vente, dto.getRetours());
+
+        restaurationService.restaurerStock(dto.getRetours());
+
+        restaurationService.restaurerBoutique(dto.getRetours());
+
+        if (!dto.getEchanges().isEmpty()) {
+            verifierDisponibiliteEchange(dto.getEchanges());
+            consommerEchanges(dto.getEchanges());
+            enregistrerConsommationBoutiqueEchange(dto.getEchanges());
+        }
+
+        BigDecimal difference = calculateurPaiement.calculerDifference(vente, dto);
+
+        if (difference.signum() > 0) {
+            paiementService.complementPaiement(vente, difference);
+        } else if (difference.signum() < 0) {
+            paiementService.rembourserRetour(vente, difference.abs());
+        }
+
+        return venteMapper.toDto(vente);
+    }
+
+
+
+    @Transactional
+    @Override
+    public VenteDto annulerVente(Long venteId, AnnulationVenteRequestDto dto) {
+
+        VenteBoutique vente = chargerVente(venteId);
+        vente.annuler(dto.getMotif());
+        restaurationService.restaurerStockAnnulation(vente.getLignes());
+
+        restaurationService.restaurerBoutiqueAnnulation(vente.getLignes());
+
+        paiementService.rembourserAnnulation(vente, dto.getMotif());
+        return venteMapper.toDto(vente);
+    }
+
+    private void appliquerRetours(
+            VenteBoutique vente,
+            List<LigneRetourRequestDto> retours) {
+
+        for (LigneRetourRequestDto retour : retours) {
+            LigneVenteBoutique ligne = vente.getLigne(retour.getProduitId());
+            ligne.retourner(retour.getQuantite());
+        }
+    }
+
+    private void verifierDisponibiliteEchange(List<LigneVenteRequestDto> echanges) {
+
+        echanges.forEach(ligne ->
+                stockService.verifierStockSuffisant(
+                        ligne.getProduitId(),
+                        ligne.getQuantite()));
+    }
+
+    private void consommerEchanges(List<LigneVenteRequestDto> echanges) {
+        List<StockMovement> mouvements = echanges.stream()
+                .map(ligne -> new StockMovement(
+                        ligne.getProduitId(),
+                        ligne.getQuantite()))
+                .toList();
+        stockService.decrementerStock(mouvements);
+    }
+
+    private VenteBoutique chargerVente(Long venteId) {
+        return venteRepository.findById(venteId)
+                .orElseThrow(() -> new EntityNotFoundException("Vente introuvable" +venteId));
+    }
+
+
+    private void enregistrerConsommationBoutique(List<LigneVenteBoutique> lignes) {
+        for (LigneVenteBoutique ligne : lignes) {
+            productionApi.vendre(
+                    ligne.getProduitId(),
+                    ligne.getQuantite());
+        }
+    }
+
+    private void enregistrerConsommationBoutiqueEchange(
+            List<LigneVenteRequestDto> lignes) {
+
+        for (LigneVenteRequestDto ligne : lignes) {
+            productionApi.vendre(
+                    ligne.getProduitId(),
+                    ligne.getQuantite());
+        }
+    }
+
+    private void retournerConsommationBoutique(List<LigneRetourRequestDto> retours){
+        for (LigneRetourRequestDto retour : retours) {
+            productionApi.retourner(retour.getProduitId(), retour.getQuantite());
+        }
+    }
 
     private void verifierDisponibilite(List<LigneVenteBoutique> lignes) {
 
         for (LigneVenteBoutique ligne : lignes) {
-            if (!productionApi.verifierDisponibiliteBoutique(ligne.getProduitId(), ligne.getQuantite())) {
-                throw new BadRequestException("Stock boutique insuffisant pour le produit "
-                                + ligne.getProduitId());
-            }
-        }
-    }
-
-    private void enregistrerConsommationBoutique(
-            List<LigneVenteBoutique> lignes) {
-        for (LigneVenteBoutique ligne : lignes) {
-            productionApi.enregistrerVenteBoutique(ligne.getProduitId(), ligne.getQuantite());
+            productionApi.verifierDisponibiliteBoutique(ligne.getProduitId(), ligne.getQuantite());
         }
     }
 

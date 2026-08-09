@@ -6,11 +6,11 @@ import com.boulangerie.achats.mapper.*;
 import com.boulangerie.achats.model.*;
 import com.boulangerie.achats.repository.*;
 import com.boulangerie.achats.service.*;
+import com.boulangerie.achats.specification.AchatSpecificationBuilder;
 import com.boulangerie.administration.model.Ingredient;
 import com.boulangerie.administration.repository.IngredientRepository;
 import com.boulangerie.administration.security.CurrentUserService;
 import com.boulangerie.shared.dto.PageResponse;
-import com.boulangerie.shared.dto.ValeursStock;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.shared.utils.PageUtils;
@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -225,15 +226,15 @@ public class AchatServiceImpl implements AchatService {
                 .toList();
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public PageResponse<AchatDto> getAchats(AchatSearchCriteria criteria, int page, int size) {
-        Page<Achat> pageResult = achatRepository.findByCriteria(
-                criteria,
-                PageRequest.of(page, size)
-        );
+    @Override
+    public PageResponse<AchatDto> getAchats(AchatSearchRequest request, int page, int size) {
 
-        return PageUtils.toPageResponse(pageResult.map(achatMapper::toDto));
+        Specification<Achat> specification = AchatSpecificationBuilder.build(request);
+
+        Page<Achat> achats = achatRepository.findAll(specification, PageRequest.of(page, size));
+
+        return PageUtils.toPageResponse(achats.map(achatMapper::toDto));
     }
 
     private Achat findAchatOrThrow(Long id) {

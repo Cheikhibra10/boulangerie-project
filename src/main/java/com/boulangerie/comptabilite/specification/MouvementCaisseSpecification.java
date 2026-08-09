@@ -2,8 +2,7 @@
 package com.boulangerie.comptabilite.specification;
 
 import com.boulangerie.comptabilite.model.MouvementCaisse;
-import com.boulangerie.comptabilite.model.SensMouvement;
-import com.boulangerie.comptabilite.model.TypeMouvement;
+import com.boulangerie.shared.model.*;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Instant;

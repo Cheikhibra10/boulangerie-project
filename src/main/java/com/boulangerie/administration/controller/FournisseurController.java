@@ -1,4 +1,3 @@
-// administration/controller/FournisseurController.java
 package com.boulangerie.administration.controller;
 
 import com.boulangerie.administration.dto.FournisseurDto;
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/fournisseurs")
-@Tag(name = "Fournisseurs", description = "Gestion des fournisseurs")
+@Tag(name = "Fournisseurs", description = "Gestion des fournisseurs ADMIN-MANAGER")
 @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
 public class FournisseurController
         extends GenericCrudController<Fournisseur, FournisseurDto> {

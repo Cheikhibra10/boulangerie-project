@@ -1,4 +1,3 @@
-// administration/mapper/FournisseurMapper.java
 package com.boulangerie.administration.mapper;
 
 import com.boulangerie.administration.dto.FournisseurDto;

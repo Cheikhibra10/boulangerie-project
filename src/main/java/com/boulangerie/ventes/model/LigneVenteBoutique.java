@@ -28,6 +28,7 @@ public class LigneVenteBoutique extends AbstractAuditingEntity {
 
     @Column(nullable = false)
     private Long produitId;
+
     @Column(name = "produit_libelle", nullable = false, length = 150)
     private String produitLibelle;
 
@@ -40,6 +41,7 @@ public class LigneVenteBoutique extends AbstractAuditingEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "type_vente", nullable = false)
     private TypeVenteLigne typeVente = TypeVenteLigne.NORMALE;
+
     @Column(name = "quantite_retournee", precision = 10, scale = 2, nullable = false)
     private BigDecimal quantiteRetournee = BigDecimal.ZERO;
 
