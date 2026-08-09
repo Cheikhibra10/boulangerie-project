@@ -1,0 +1,10 @@
+#.dockerignore
+target/
+.git/
+.gitignore
+.idea/
+*.iml
+.env
+application-dev.properties
+README.md
+*.log

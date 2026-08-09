@@ -55,7 +55,7 @@ public class VenteBoutique extends AbstractAuditingEntity {
     private BigDecimal total = BigDecimal.ZERO;
 
     @Column(length = 255)
-    private String motifAnnulation;
+    private String motif_annulation;
 
     public void ajouterLigne(LigneVenteBoutique ligne){
         ligne.setVente(this);
@@ -87,7 +87,7 @@ public class VenteBoutique extends AbstractAuditingEntity {
         }
 
         this.statut = StatutVente.ANNULEE;
-        this.motifAnnulation = motif;
+        this.motif_annulation = motif;
     }
 
     private void verifierAnnulationPossible() {
