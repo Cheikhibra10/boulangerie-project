@@ -1,1 +1,0 @@
-Alter Table caisses Drop Column ecart;
