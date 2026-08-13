@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict mR1KeMsVIbekrX7jqcUfw4G1QwI2aBc9ikCAHPRylpxQk66wmTUhcuyI8MQ3O4B
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 16.14 (Debian 16.14-1.pgdg13+1)
@@ -2088,5 +2087,4 @@ ALTER TABLE ONLY public.lignes_achat
 -- PostgreSQL database dump complete
 --
 
-\unrestrict mR1KeMsVIbekrX7jqcUfw4G1QwI2aBc9ikCAHPRylpxQk66wmTUhcuyI8MQ3O4B
 
