@@ -65,13 +65,12 @@ public class LigneAbonnement extends AbstractAuditingEntity {
         this.abonnement = Objects.requireNonNull(abonnement);
     }
 
-    public ConsommationJournaliere enregistrerConsommation(LocalDate date, BigDecimal quantite) {
+    public void enregistrerConsommation(LocalDate date, BigDecimal quantite) {
 
         verifierConsommationExistante(date);
         ConsommationJournaliere consommation = ConsommationJournaliere.creer(this, date, quantite);
         consommations.add(consommation);
         ajouterDette(calculerMontant(quantite));
-        return consommation;
     }
 
 

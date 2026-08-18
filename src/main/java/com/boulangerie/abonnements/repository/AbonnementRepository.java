@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -30,4 +31,16 @@ public interface AbonnementRepository extends JpaRepository<Abonnement, Long> {
 
     @Query("SELECT a FROM Abonnement a JOIN FETCH a.lignes l JOIN FETCH l.client.id WHERE a.id = :id")
     Optional<Abonnement> findByIdWithLignesAndClients(@Param("id") Long id);
+
+    @Query("""
+    SELECT a
+    FROM Abonnement a
+    WHERE a.dateDebut <= :fin
+      AND (a.dateFin IS NULL OR a.dateFin >= :debut)
+    ORDER BY a.nom
+""")
+    List<Abonnement> findAbonnementsActifsPourPeriode(
+            @Param("debut") LocalDate debut,
+            @Param("fin") LocalDate fin
+    );
 }

@@ -5,6 +5,7 @@ import com.boulangerie.abonnements.dto.*;
 import com.boulangerie.abonnements.event.VersementEvent;
 import com.boulangerie.abonnements.exception.AbonnementExpireException;
 import com.boulangerie.abonnements.exception.AbonnementInactifException;
+import com.boulangerie.abonnements.exception.DepassementConsommationException;
 import com.boulangerie.abonnements.mapper.AbonnementMapper;
 import com.boulangerie.abonnements.mapper.LigneAbonnementMapper;
 import com.boulangerie.abonnements.model.*;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +46,7 @@ public class AbonnementServiceImpl implements AbonnementService {
     private final LigneAbonnementRepository ligneRepository;
     private final ClientRepository clientRepository;
     private final CompteAbonnementRepository compteRepository;
-
+    private final ConsommationJournaliereRepository consommationRepository;
 
     private final LivreurService livreurService;
 
@@ -124,6 +126,79 @@ public class AbonnementServiceImpl implements AbonnementService {
 
     @Override
     @Transactional
+    public void synchroniserConsommation(
+            Long ligneId,
+            ConsommationDto dto
+    ) {
+        LigneAbonnement ligne = findLigneOrThrow(ligneId);
+
+        Abonnement abonnement = ligne.getAbonnement();
+
+        if (!abonnement.estValidePour(dto.getDate())) {
+            throw new AbonnementExpireException(
+                    abonnement.getId()
+            );
+        }
+
+        ConsommationJournaliere consommationExistante =
+                ligne.getConsommations()
+                        .stream()
+                        .filter(c ->
+                                dto.getDate().equals(c.getDate())
+                        )
+                        .findFirst()
+                        .orElse(null);
+
+        /*
+         * Rien n'existe pour cette ligne/date.
+         * → création normale.
+         */
+        if (consommationExistante == null) {
+
+            verifierQuantiteDisponible(
+                    abonnement,
+                    dto.getDate(),
+                    dto.getQuantite()
+            );
+
+            ligne.enregistrerConsommation(
+                    dto.getDate(),
+                    dto.getQuantite()
+            );
+
+            ligneRepository.save(ligne);
+
+            return;
+        }
+
+        /*
+         * Même valeur que celle déjà enregistrée.
+         * → aucune modification nécessaire.
+         */
+        if (consommationExistante.getQuantite()
+                .compareTo(dto.getQuantite()) == 0) {
+
+            return;
+        }
+
+        /*
+         * La valeur Excel est différente.
+         * → validation de la nouvelle quantité.
+         */
+        verifierQuantiteDisponiblePourModification(
+                abonnement,
+                consommationExistante,
+                dto.getDate(),
+                dto.getQuantite()
+        );
+
+        consommationExistante.setQuantite(dto.getQuantite());
+
+        ligneRepository.save(ligne);
+    }
+
+    @Override
+    @Transactional
     public PaiementClientResultDto enregistrerPaiementClient(Long ligneId, PaiementClientDto dto) {
 
         LigneAbonnement ligne = findLigneOrThrow(ligneId);
@@ -189,6 +264,61 @@ public class AbonnementServiceImpl implements AbonnementService {
                 .orElseThrow(
                         () -> new EntityNotFoundException("LigneAbonnement introuvable: " + ligneId)
                 );
+    }
+
+    private void verifierQuantiteDisponible(
+            Abonnement abonnement,
+            LocalDate date,
+            BigDecimal quantite
+    ) {
+        BigDecimal quantiteDistribuee =
+                distributionService.getQuantiteDistribuee(
+                        abonnement.getId(),
+                        date
+                );
+
+        abonnement.verifierQuantiteDisponible(
+                date,
+                quantite,
+                quantiteDistribuee
+        );
+    }
+
+    private void verifierQuantiteDisponiblePourModification(
+            Abonnement abonnement,
+            ConsommationJournaliere consommationExistante,
+            LocalDate date,
+            BigDecimal nouvelleQuantite
+    ) {
+        BigDecimal quantiteDistribuee = distributionService.getQuantiteDistribuee(
+                        abonnement.getId(),
+                        date
+                );
+
+
+
+        /*
+         * On retire l'ancienne valeur du client
+         * que nous sommes en train de modifier.
+         */
+        BigDecimal total = consommationRepository.sumQuantiteByAbonnementIdAndDate(
+                abonnement.getId(), date
+        );
+
+        BigDecimal nouveauTotal = total.subtract(consommationExistante.getQuantite())
+                .add(nouvelleQuantite);
+
+        if (nouveauTotal.compareTo(
+                quantiteDistribuee
+        ) > 0) {
+
+            throw new DepassementConsommationException(
+                    abonnement.getId(),
+                    date,
+                    quantiteDistribuee,
+                    nouveauTotal
+            );
+        }
     }
 
     private Abonnement findAbonnementOrThrow(Long abonnementId) {

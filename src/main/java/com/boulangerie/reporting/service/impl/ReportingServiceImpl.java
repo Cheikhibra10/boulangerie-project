@@ -1,6 +1,8 @@
 // reporting/application/service/ReportingApplicationService.java
 package com.boulangerie.reporting.service.impl;
 
+import com.boulangerie.abonnements.api.AbonnementConsommationReportDto;
+import com.boulangerie.abonnements.api.ConsommationMensuelleReportDto;
 import com.boulangerie.reporting.dto.*;
 import com.boulangerie.reporting.service.KpiCalculator;
 import com.boulangerie.reporting.service.ReportingService;
@@ -8,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 
@@ -39,5 +44,50 @@ public class ReportingServiceImpl implements ReportingService {
                 .setTopProduits(topProduits)
                 .setEvolutionVentes(evolution)
                 .setStatutsAchats(achats);
+    }
+
+    private ConsommationMensuelleReportDto construireRapportGlobal(
+            YearMonth periode,
+            List<AbonnementConsommationReportDto> abonnements
+    ) {
+        ConsommationMensuelleReportDto report =
+                new ConsommationMensuelleReportDto()
+                        .setPeriode(periode)
+                        .setAbonnements(
+                                new ArrayList<>(abonnements)
+                        );
+
+        for (AbonnementConsommationReportDto abonnement : abonnements) {
+
+            report.setQuantiteTotale(
+                    report.getQuantiteTotale()
+                            .add(
+                                    abonnement.getQuantiteTotale()
+                            )
+            );
+
+            report.setMontantMensuelTotal(
+                    report.getMontantMensuelTotal()
+                            .add(
+                                    abonnement.getMontantMensuelTotal()
+                            )
+            );
+
+            report.setMontantVerseTotal(
+                    report.getMontantVerseTotal()
+                            .add(
+                                    abonnement.getMontantVerseTotal()
+                            )
+            );
+
+            report.setReliquatTotal(
+                    report.getReliquatTotal()
+                            .add(
+                                    abonnement.getReliquatTotal()
+                            )
+            );
+        }
+
+        return report;
     }
 }

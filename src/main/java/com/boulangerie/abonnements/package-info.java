@@ -13,7 +13,8 @@
                 "administration::service",
                 "administration::security",
                 "livreurs::repository",
-                "production::api"
+                "production::api",
+                "production::exception"
         }
 )
 package com.boulangerie.abonnements;

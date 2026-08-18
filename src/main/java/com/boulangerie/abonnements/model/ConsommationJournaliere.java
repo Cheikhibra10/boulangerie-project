@@ -24,7 +24,8 @@ import java.util.Objects;
         }
 )
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class ConsommationJournaliere extends AbstractAuditingEntity {
 
 

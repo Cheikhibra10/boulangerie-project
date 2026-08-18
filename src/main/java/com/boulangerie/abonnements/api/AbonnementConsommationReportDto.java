@@ -4,19 +4,18 @@ import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
-import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @Setter
 @Accessors(chain = true)
-public class ConsommationMensuelleReportDto {
+public class AbonnementConsommationReportDto {
 
-    private YearMonth periode;
+    private Long abonnementId;
 
-    private List<AbonnementConsommationReportDto> abonnements =
-            new ArrayList<>();
+    private String abonnementNom;
+
+    private List<ConsommationMensuelleLigneDto> lignes = new ArrayList<>();
     private BigDecimal quantiteTotale = BigDecimal.ZERO;
 
     private BigDecimal montantMensuelTotal = BigDecimal.ZERO;

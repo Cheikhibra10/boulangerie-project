@@ -1,18 +1,24 @@
-// abonnements/controller/AbonnementController.java
 package com.boulangerie.abonnements.controller;
 
+import com.boulangerie.abonnements.service.AbonnementReportingService;
 import com.boulangerie.abonnements.dto.*;
 import com.boulangerie.abonnements.service.AbonnementService;
+import com.boulangerie.abonnements.service.ExcelImportService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.YearMonth;
 
 @RestController
 @RequestMapping("/api/abonnements")
@@ -22,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class AbonnementController {
 
     private final AbonnementService abonnementService;
-
+    private final ExcelImportService excelImportService;
     // ===================== ABONNEMENT =====================
 
     @Operation(summary = "Créer un abonnement")
@@ -99,5 +105,51 @@ public class AbonnementController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(abonnementService.getAbonnements(page, size));
+    }
+
+    @PostMapping(
+            value = "/{abonnementId}/consommations/mensuel/excel",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ConsommationImportResultDto> importerConsommationMensuelle(
+            @PathVariable Long abonnementId,
+            @RequestParam
+            @DateTimeFormat(pattern = "yyyy-MM")
+            YearMonth periode,
+            @RequestParam("file")
+            MultipartFile fichier
+    ) {
+
+        ConsommationImportResultDto result =
+                excelImportService.importerConsommationMensuelle(
+                        abonnementId,
+                        fichier,
+                        periode
+                );
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping(
+            value = "/consommations/mensuel/excel",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ConsommationImportResultDto> importerConsommationMensuelle(
+            @RequestParam
+            @DateTimeFormat(pattern = "yyyy-MM")
+            YearMonth periode,
+            @RequestParam("file")
+            MultipartFile fichier
+    ) {
+
+        ConsommationImportResultDto result =
+                excelImportService.importerConsommationMensuelle(
+                        fichier,
+                        periode
+                );
+
+        return ResponseEntity.ok(result);
     }
 }

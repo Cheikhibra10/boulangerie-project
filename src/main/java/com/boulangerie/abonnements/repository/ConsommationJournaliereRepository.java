@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -28,4 +29,22 @@ public interface ConsommationJournaliereRepository extends JpaRepository<Consomm
             @Param("debut") LocalDate debut,
             @Param("fin") LocalDate fin
     );
+
+    @Query("""
+    SELECT c
+    FROM ConsommationJournaliere c
+    JOIN FETCH c.ligne l
+    WHERE l.abonnement.id IN :abonnementIds
+      AND c.date BETWEEN :debut AND :fin
+    ORDER BY c.date
+""")
+    List<ConsommationJournaliere> findByAbonnementIdInAndDateBetween(
+            @Param("abonnementIds") List<Long> abonnementIds,
+            @Param("debut") LocalDate debut,
+            @Param("fin") LocalDate fin
+    );
+
+
+    @Query("SELECT SUM(c.quantite) FROM ConsommationJournaliere c WHERE c.ligne.abonnement.id = :abonnementId AND c.date = :date")
+    BigDecimal sumQuantiteByAbonnementIdAndDate(Long abonnementId, LocalDate date);
 }

@@ -11,6 +11,7 @@
                 "achats::model",
                 "comptabilite::model",
                 "abonnements::api",
+                "abonnements::service",
                 "comptabilite::repository",
                 "stocks::model",
                 "administration::model",

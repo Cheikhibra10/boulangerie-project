@@ -14,6 +14,7 @@ public interface AbonnementService {
     // ===== CONSOMMATION =====
     void enregistrerConsommation(Long ligneId, ConsommationDto dto);
 
+    void synchroniserConsommation(Long ligneId, ConsommationDto dto);
     // ===== PAIEMENT CLIENT =====
     PaiementClientResultDto enregistrerPaiementClient(Long ligneId, PaiementClientDto dto);
 
