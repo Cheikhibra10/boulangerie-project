@@ -1,4 +1,3 @@
-// livreurs/repository/CompteLivreurJournalierRepository.java
 package com.boulangerie.livreurs.repository;
 
 import com.boulangerie.administration.model.Livreur;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -37,6 +37,17 @@ public interface CompteLivreurJournalierRepository extends JpaRepository<CompteL
     Optional<CompteLivreurJournalier> findById(Long id);
 
     Optional<CompteLivreurJournalier> findTopByLivreurIdOrderByDateDesc(Long livreurId);
+
+    /*
+     * Pour le rapport mensuel VERSEMENTS/FRAIS : tous les livreurs
+     * confondus, contrairement à findByLivreurIdAndDateBetween qui
+     * est scopé à un seul livreur.
+     */
+    @EntityGraph(attributePaths = {"versement"})
+    List<CompteLivreurJournalier> findByDateBetweenOrderByDateAsc(
+            LocalDate debut,
+            LocalDate fin
+    );
 
     @Query("SELECT COALESCE(SUM(l.montantApresDeduction), 0) " +
             "FROM LigneCompteLivreur l " +

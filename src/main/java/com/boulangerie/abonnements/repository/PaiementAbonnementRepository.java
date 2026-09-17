@@ -2,6 +2,7 @@
 package com.boulangerie.abonnements.repository;
 
 import com.boulangerie.abonnements.model.PaiementAbonnement;
+import com.boulangerie.abonnements.projection.PaiementReportProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -53,10 +53,54 @@ public interface PaiementAbonnementRepository extends JpaRepository<PaiementAbon
       AND p.createdAt >= :debut
       AND p.createdAt < :fin
     ORDER BY p.createdAt
+    """)
+    List<PaiementAbonnement>
+    findByAbonnementIdInAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+            List<Long> abonnementIds,
+            Instant debut,
+            Instant fin
+    );
+
+    @Query("""
+    SELECT
+        p.id AS paiementId,
+        l.id AS ligneId,
+        a.id AS abonnementId,
+        p.montant AS montant,
+        p.createdAt AS createdAt
+    FROM PaiementAbonnement p
+    JOIN p.ligne l
+    JOIN l.abonnement a
+    WHERE a.id = :abonnementId
+      AND p.createdAt >= :debut
+      AND p.createdAt < :fin
+    ORDER BY l.id, p.createdAt
 """)
-    List<PaiementAbonnement> findByAbonnementIdInAndCreatedAtBetween(
-            @Param("abonnementIds") List<Long> abonnementIds,
+    List<PaiementReportProjection> findReportData(
+            @Param("abonnementId") Long abonnementId,
             @Param("debut") Instant debut,
             @Param("fin") Instant fin
     );
+
+    @Query("""
+    SELECT
+        p.id AS paiementId,
+        l.id AS ligneId,
+        a.id AS abonnementId,
+        p.montant AS montant,
+        p.createdAt AS createdAt
+    FROM PaiementAbonnement p
+    JOIN p.ligne l
+    JOIN l.abonnement a
+    WHERE a.id IN :abonnementIds
+      AND p.createdAt >= :debut
+      AND p.createdAt < :fin
+    ORDER BY l.id, p.createdAt
+""")
+    List<PaiementReportProjection> findReportData(
+            @Param("abonnementIds") List<Long> abonnementId,
+            @Param("debut") Instant debut,
+            @Param("fin") Instant fin
+    );
+
 }

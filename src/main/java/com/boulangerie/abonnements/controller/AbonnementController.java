@@ -3,6 +3,7 @@ package com.boulangerie.abonnements.controller;
 import com.boulangerie.abonnements.service.AbonnementReportingService;
 import com.boulangerie.abonnements.dto.*;
 import com.boulangerie.abonnements.service.AbonnementService;
+import com.boulangerie.abonnements.service.CsvImportService;
 import com.boulangerie.abonnements.service.ExcelImportService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
@@ -29,6 +30,7 @@ public class AbonnementController {
 
     private final AbonnementService abonnementService;
     private final ExcelImportService excelImportService;
+    private final CsvImportService csvImportService;
     // ===================== ABONNEMENT =====================
 
     @Operation(summary = "Créer un abonnement")
@@ -115,7 +117,7 @@ public class AbonnementController {
     public ResponseEntity<ConsommationImportResultDto> importerConsommationMensuelle(
             @PathVariable Long abonnementId,
             @RequestParam
-            @DateTimeFormat(pattern = "yyyy-MM")
+            @DateTimeFormat(pattern = "MM-yyyy")
             YearMonth periode,
             @RequestParam("file")
             MultipartFile fichier
@@ -138,7 +140,7 @@ public class AbonnementController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ConsommationImportResultDto> importerConsommationMensuelle(
             @RequestParam
-            @DateTimeFormat(pattern = "yyyy-MM")
+            @DateTimeFormat(pattern = "MM-yyyy")
             YearMonth periode,
             @RequestParam("file")
             MultipartFile fichier
@@ -146,6 +148,29 @@ public class AbonnementController {
 
         ConsommationImportResultDto result =
                 excelImportService.importerConsommationMensuelle(
+                        fichier,
+                        periode
+                );
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping(
+            value = "/consommations/mensuel/csv",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ConsommationImportResultDto>
+    importerConsommationMensuelleCsv(
+            @RequestParam
+            @DateTimeFormat(pattern = "MM-yyyy")
+            YearMonth periode,
+
+            @RequestParam("file")
+            MultipartFile fichier
+    ) {
+        ConsommationImportResultDto result =
+                csvImportService.importerConsommationMensuelle(
                         fichier,
                         periode
                 );

@@ -6,6 +6,7 @@
                 "shared::utils",
                 "shared::repository",
                 "shared::model",
+                "shared::service",
                 "stocks::model",
                 "stocks::mapper",
                 "stocks::dto",
@@ -24,7 +25,10 @@
                 "ventes::model",
                 "ventes::api",
                 "ventes::event",
-                "production::api"
+                "production::api",
+                "ventes::repository",
+                "livreurs::repository",
+                "livreurs::model"
         }
 )
 package com.boulangerie.comptabilite;

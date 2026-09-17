@@ -14,10 +14,13 @@ public class ConsommationImportResultDto {
 
     private int lignesTraitees;
 
-    private int consommationsImportees;
+    private int consommationsCreees;
+
+    private int consommationsModifiees;
+
+    private int consommationsInchangees;
 
     private int lignesIgnorees;
 
-    private List<String> erreurs =
-            new ArrayList<>();
+    private List<String> erreurs = new ArrayList<>();
 }

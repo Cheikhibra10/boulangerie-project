@@ -2,6 +2,7 @@
 package com.boulangerie.abonnements.repository;
 
 import com.boulangerie.abonnements.model.ConsommationJournaliere;
+import com.boulangerie.abonnements.projection.ConsommationReportProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -47,4 +48,46 @@ public interface ConsommationJournaliereRepository extends JpaRepository<Consomm
 
     @Query("SELECT SUM(c.quantite) FROM ConsommationJournaliere c WHERE c.ligne.abonnement.id = :abonnementId AND c.date = :date")
     BigDecimal sumQuantiteByAbonnementIdAndDate(Long abonnementId, LocalDate date);
+
+    @Query("""
+    SELECT
+        c.id AS consommationId,
+        l.id AS ligneId,
+        a.id AS abonnementId,
+        c.date AS date,
+        c.quantite AS quantite
+    FROM ConsommationJournaliere c
+    JOIN c.ligne l
+    JOIN l.abonnement a
+    WHERE a.id = :abonnementId
+      AND c.date >= :debut
+      AND c.date < :fin
+    ORDER BY l.id, c.date
+""")
+    List<ConsommationReportProjection> findReportData(
+            @Param("abonnementId") Long abonnementId,
+            @Param("debut") LocalDate debut,
+            @Param("fin") LocalDate fin
+    );
+
+    @Query("""
+    SELECT
+        c.id AS consommationId,
+        l.id AS ligneId,
+        a.id AS abonnementId,
+        c.date AS date,
+        c.quantite AS quantite
+    FROM ConsommationJournaliere c
+    JOIN c.ligne l
+    JOIN l.abonnement a
+    WHERE a.id IN :abonnementIds
+      AND c.date >= :debut
+      AND c.date < :fin
+    ORDER BY a.id, l.id, c.date
+""")
+    List<ConsommationReportProjection> findReportData(
+            @Param("abonnementIds") List<Long> abonnementIds,
+            @Param("debut") LocalDate debut,
+            @Param("fin") LocalDate fin
+    );
 }

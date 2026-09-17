@@ -1,9 +1,12 @@
 package com.boulangerie.reporting.controller;
 
-import com.boulangerie.abonnements.api.ConsommationMensuelleReportDto;
 import com.boulangerie.abonnements.service.AbonnementReportingService;
+import com.boulangerie.abonnements.dto.ConsommationMensuelleReportDto;
+import com.boulangerie.reporting.service.CsvExportService;
 import com.boulangerie.reporting.service.ExcelExportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +20,14 @@ import java.time.YearMonth;
 @RequiredArgsConstructor
 public class AbonnementReportingController {
 
+    private static final MediaType EXCEL_MEDIA_TYPE =
+            MediaType.parseMediaType(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            );
+
     private final AbonnementReportingService abonnementReportingService;
     private final ExcelExportService excelExportService;
-
-
+    private final CsvExportService csvExportService;
     @GetMapping(
             value = "/abonnements/{abonnementId}/consommations/mensuel/excel",
             produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -30,7 +37,6 @@ public class AbonnementReportingController {
             @PathVariable Long abonnementId,
             @RequestParam YearMonth periode
     ) {
-
         ConsommationMensuelleReportDto report =
                 abonnementReportingService.genererRapportMensuel(
                         abonnementId,
@@ -42,21 +48,10 @@ public class AbonnementReportingController {
                         report
                 );
 
-        return ResponseEntity.ok()
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"consommation-"
-                                + abonnementId
-                                + "-"
-                                + periode
-                                + ".xlsx\""
-                )
-                .contentType(
-                        MediaType.parseMediaType(
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        )
-                )
-                .body(fichier);
+        return excelResponse(
+                fichier,
+                "consommation-" + abonnementId + "-" + periode + ".xlsx"
+        );
     }
 
     @GetMapping(
@@ -67,7 +62,6 @@ public class AbonnementReportingController {
     public ResponseEntity<byte[]> exporterToutesConsommationsMensuelles(
             @RequestParam YearMonth periode
     ) {
-
         ConsommationMensuelleReportDto report =
                 abonnementReportingService.genererRapportMensuel(
                         periode
@@ -78,18 +72,46 @@ public class AbonnementReportingController {
                         report
                 );
 
+        return excelResponse(
+                fichier,
+                "consommations-" + periode + ".xlsx"
+        );
+    }
+
+    private ResponseEntity<byte[]> excelResponse(
+            byte[] fichier,
+            String filename
+    ) {
         return ResponseEntity.ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"consommations-"
-                                + periode
-                                + ".xlsx\""
+                        ContentDisposition
+                                .attachment()
+                                .filename(filename)
+                                .build()
+                                .toString()
                 )
-                .contentType(
-                        MediaType.parseMediaType(
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        )
-                )
+                .contentType(EXCEL_MEDIA_TYPE)
+                .contentLength(fichier.length)
                 .body(fichier);
+    }
+
+    @GetMapping(value = "/abonnements/consommations/mensuel/csv", produces = "text/csv")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<byte[]> exporterConsommationMensuelleCsv(
+            @RequestParam
+            @DateTimeFormat(pattern = "yyyy-MM")
+            YearMonth periode
+    ) {
+        ConsommationMensuelleReportDto report = abonnementReportingService.genererRapportMensuel(periode);
+
+        byte[] fichier = csvExportService.exporterConsommationMensuelle(report);
+
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"consommation-"
+                                + periode
+                                + ".csv\""
+                ).contentType(MediaType.parseMediaType("text/csv")
+                ).body(fichier);
     }
 }

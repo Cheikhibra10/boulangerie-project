@@ -3,6 +3,7 @@ package com.boulangerie.production.repository;
 
 import com.boulangerie.production.model.CanalDistribution;
 import com.boulangerie.production.model.DestinationProduction;
+import com.boulangerie.production.model.EtatPain;
 import com.boulangerie.production.model.LotProduction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -44,4 +45,11 @@ public interface DestinationProductionRepository extends JpaRepository<Destinati
     @Query("SELECT d FROM DestinationProduction d JOIN FETCH d.lot JOIN FETCH d.produitId WHERE d.id = :id")
     Optional<DestinationProduction> findByIdWithDetails(@Param("id") Long id);
 
+    List<DestinationProduction> findByDateBetweenAndCanal(
+            LocalDate debut,
+            LocalDate fin,
+            CanalDistribution canal
+    );
+
+    List<DestinationProduction> findByDateBetweenAndEtatPain(LocalDate debut, LocalDate fin, EtatPain etatPain);
 }

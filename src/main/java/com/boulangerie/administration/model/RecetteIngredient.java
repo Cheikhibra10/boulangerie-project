@@ -39,7 +39,6 @@ public class RecetteIngredient extends AbstractAuditingEntity implements Generic
     }
 
     public ConsommationIngredient calculerConsommation(BigDecimal multiplicateur) {
-
         return new ConsommationIngredient(ingredient.getId(),  quantite.multiply(multiplicateur)
         );
     }

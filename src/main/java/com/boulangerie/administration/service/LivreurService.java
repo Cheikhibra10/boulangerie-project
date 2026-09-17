@@ -21,4 +21,5 @@ public interface LivreurService extends DefaultService<Livreur, LivreurDto> {
     boolean isActive(Long livreurId);
 
     Long findLivreurOrThrow(Long id);
+    Livreur findLivreurById(Long id);
 }

@@ -1,6 +1,6 @@
 package com.boulangerie.abonnements.service;
 
-import com.boulangerie.abonnements.api.ConsommationMensuelleReportDto;
+import com.boulangerie.abonnements.dto.ConsommationMensuelleReportDto;
 
 import java.time.YearMonth;
 

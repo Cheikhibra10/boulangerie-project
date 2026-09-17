@@ -14,7 +14,9 @@
                 "administration::security",
                 "livreurs::repository",
                 "production::api",
-                "production::exception"
+                "production::exception",
+                "reporting::dto",
+                "reporting::service"
         }
 )
 package com.boulangerie.abonnements;

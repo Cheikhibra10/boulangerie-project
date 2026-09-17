@@ -2,6 +2,7 @@
 package com.boulangerie.abonnements.service;
 
 import com.boulangerie.abonnements.dto.*;
+import com.boulangerie.abonnements.model.ImportAction;
 import com.boulangerie.shared.dto.PageResponse;
 
 public interface AbonnementService {
@@ -14,7 +15,7 @@ public interface AbonnementService {
     // ===== CONSOMMATION =====
     void enregistrerConsommation(Long ligneId, ConsommationDto dto);
 
-    void synchroniserConsommation(Long ligneId, ConsommationDto dto);
+    ImportAction synchroniserConsommation(Long ligneId, ConsommationDto dto);
     // ===== PAIEMENT CLIENT =====
     PaiementClientResultDto enregistrerPaiementClient(Long ligneId, PaiementClientDto dto);
 

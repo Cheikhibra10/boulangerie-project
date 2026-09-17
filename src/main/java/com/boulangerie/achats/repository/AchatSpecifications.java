@@ -28,7 +28,7 @@ public class AchatSpecifications {
             if (statut == null) {
                 return cb.conjunction();
             }
-            return cb.equal(root.get("statut"), statut);
+            return cb.equal(root.get("statutAchat"), statut);
         };
     }
 
@@ -77,21 +77,21 @@ public class AchatSpecifications {
 
     public static Specification<Achat> estAnnule() {
         return (root, query, cb) -> 
-            cb.equal(root.get("statut"), StatutAchat.ANNULE);
+            cb.equal(root.get("statutAchat"), StatutAchat.ANNULE);
     }
 
     public static Specification<Achat> estRecu() {
         return (root, query, cb) -> 
-            cb.equal(root.get("statut"), StatutReception.COMPLETE);
+            cb.equal(root.get("statutReception"), StatutReception.COMPLETE);
     }
 
     public static Specification<Achat> estEnAttente() {
         return (root, query, cb) -> 
-            cb.equal(root.get("statut"), StatutReception.EN_ATTENTE);
+            cb.equal(root.get("statutReception"), StatutReception.EN_ATTENTE);
     }
 
     public static Specification<Achat> estPartiel() {
         return (root, query, cb) -> 
-            cb.equal(root.get("statut"), StatutReception.PARTIELLE);
+            cb.equal(root.get("statutReception"), StatutReception.PARTIELLE);
     }
 }

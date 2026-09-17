@@ -1,8 +1,8 @@
-// ventes/repository/LigneVenteBoutiqueRepository.java
 package com.boulangerie.ventes.repository;
 
 import com.boulangerie.ventes.service.TopProduitProjection;
 import com.boulangerie.ventes.model.LigneVenteBoutique;
+import com.boulangerie.ventes.model.StatutVente;
 import com.boulangerie.ventes.model.TypeVenteLigne;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,6 +24,17 @@ public interface LigneVenteBoutiqueRepository extends JpaRepository<LigneVenteBo
     BigDecimal sumTotalByVenteId(@Param("venteId") Long venteId);
 
     List<LigneVenteBoutique> findByVenteIdAndTypeVente(Long venteId, TypeVenteLigne typeVente);
+
+    /*
+     * Pour le rapport mensuel VERSEMENTS/FRAIS : lignes de vente
+     * payées sur la période, pour classification PAIN / autres
+     * produits jour par jour (cf. VersementsReportingService).
+     */
+    List<LigneVenteBoutique> findByVenteDateBetweenAndVenteStatut(
+            LocalDate debut,
+            LocalDate fin,
+            StatutVente statut
+    );
 
     @Query("SELECT l FROM LigneVenteBoutique l JOIN FETCH l.produitId WHERE l.vente.id = :venteId")
     List<LigneVenteBoutique> findByVenteIdWithProduit(@Param("venteId") Long venteId);

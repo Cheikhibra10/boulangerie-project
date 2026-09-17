@@ -2,6 +2,7 @@
 package com.boulangerie.production.dto;
 
 import com.boulangerie.production.model.CanalDistribution;
+import com.boulangerie.production.model.EtatPain;
 import com.boulangerie.shared.dto.AbstractAuditingDto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -17,7 +18,7 @@ public class DestinationRequestDto extends AbstractAuditingDto {
 
     @NotNull(message = "Le canal est obligatoire")
     private CanalDistribution canal;
-
+    private EtatPain etatPain;
     @NotNull(message = "La quantité est obligatoire")
     @Positive(message = "La quantité doit être positive")
     private BigDecimal quantite;

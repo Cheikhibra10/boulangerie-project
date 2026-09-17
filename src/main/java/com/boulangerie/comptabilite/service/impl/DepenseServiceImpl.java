@@ -58,16 +58,7 @@ public class DepenseServiceImpl implements DepenseService {
                 .setMouvement(mouvement);
 
         depense = depenseRepository.save(depense);
-        publisher.publishEvent(
-                new MouvementCaisseEvent(
-                        caisse.getId(),
-                        TypeMouvement.DEPENSE_PERIODE,
-                        SensMouvement.SORTIE,
-                        TypePaiement.CASH,
-                        dto.getMontant(),
-                        "Depense  #" + dto.getLibelle()
-                )
-        );
+
         return depenseMapper.toDto(depense);
     }
 

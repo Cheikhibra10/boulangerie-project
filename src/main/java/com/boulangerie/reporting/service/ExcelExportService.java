@@ -1,6 +1,6 @@
 package com.boulangerie.reporting.service;
 
-import com.boulangerie.abonnements.api.ConsommationMensuelleReportDto;
+import com.boulangerie.abonnements.dto.ConsommationMensuelleReportDto;
 
 public interface ExcelExportService {
 

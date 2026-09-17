@@ -126,7 +126,7 @@ public class AbonnementServiceImpl implements AbonnementService {
 
     @Override
     @Transactional
-    public void synchroniserConsommation(
+    public ImportAction synchroniserConsommation(
             Long ligneId,
             ConsommationDto dto
     ) {
@@ -150,8 +150,8 @@ public class AbonnementServiceImpl implements AbonnementService {
                         .orElse(null);
 
         /*
-         * Rien n'existe pour cette ligne/date.
-         * → création normale.
+         * Aucune consommation pour cette ligne/date.
+         * → création.
          */
         if (consommationExistante == null) {
 
@@ -168,22 +168,22 @@ public class AbonnementServiceImpl implements AbonnementService {
 
             ligneRepository.save(ligne);
 
-            return;
+            return ImportAction.CREEE;
         }
 
         /*
-         * Même valeur que celle déjà enregistrée.
-         * → aucune modification nécessaire.
+         * Même quantité.
+         * → aucune modification.
          */
         if (consommationExistante.getQuantite()
                 .compareTo(dto.getQuantite()) == 0) {
 
-            return;
+            return ImportAction.INCHANGEE;
         }
 
         /*
-         * La valeur Excel est différente.
-         * → validation de la nouvelle quantité.
+         * Quantité différente.
+         * → modification.
          */
         verifierQuantiteDisponiblePourModification(
                 abonnement,
@@ -192,9 +192,13 @@ public class AbonnementServiceImpl implements AbonnementService {
                 dto.getQuantite()
         );
 
-        consommationExistante.setQuantite(dto.getQuantite());
+        consommationExistante.setQuantite(
+                dto.getQuantite()
+        );
 
         ligneRepository.save(ligne);
+
+        return ImportAction.MODIFIEE;
     }
 
     @Override

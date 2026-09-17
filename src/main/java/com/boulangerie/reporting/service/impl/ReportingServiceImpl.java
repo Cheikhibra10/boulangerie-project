@@ -1,8 +1,8 @@
 // reporting/application/service/ReportingApplicationService.java
 package com.boulangerie.reporting.service.impl;
 
-import com.boulangerie.abonnements.api.AbonnementConsommationReportDto;
-import com.boulangerie.abonnements.api.ConsommationMensuelleReportDto;
+import com.boulangerie.abonnements.dto.AbonnementConsommationReportDto;
+import com.boulangerie.abonnements.dto.ConsommationMensuelleReportDto;
 import com.boulangerie.reporting.dto.*;
 import com.boulangerie.reporting.service.KpiCalculator;
 import com.boulangerie.reporting.service.ReportingService;
@@ -46,48 +46,48 @@ public class ReportingServiceImpl implements ReportingService {
                 .setStatutsAchats(achats);
     }
 
-    private ConsommationMensuelleReportDto construireRapportGlobal(
-            YearMonth periode,
-            List<AbonnementConsommationReportDto> abonnements
-    ) {
-        ConsommationMensuelleReportDto report =
-                new ConsommationMensuelleReportDto()
-                        .setPeriode(periode)
-                        .setAbonnements(
-                                new ArrayList<>(abonnements)
-                        );
-
-        for (AbonnementConsommationReportDto abonnement : abonnements) {
-
-            report.setQuantiteTotale(
-                    report.getQuantiteTotale()
-                            .add(
-                                    abonnement.getQuantiteTotale()
-                            )
-            );
-
-            report.setMontantMensuelTotal(
-                    report.getMontantMensuelTotal()
-                            .add(
-                                    abonnement.getMontantMensuelTotal()
-                            )
-            );
-
-            report.setMontantVerseTotal(
-                    report.getMontantVerseTotal()
-                            .add(
-                                    abonnement.getMontantVerseTotal()
-                            )
-            );
-
-            report.setReliquatTotal(
-                    report.getReliquatTotal()
-                            .add(
-                                    abonnement.getReliquatTotal()
-                            )
-            );
-        }
-
-        return report;
-    }
+//    private ConsommationMensuelleReportDto construireRapportGlobal(
+//            YearMonth periode,
+//            List<AbonnementConsommationReportDto> abonnements
+//    ) {
+//        ConsommationMensuelleReportDto report =
+//                new ConsommationMensuelleReportDto()
+//                        .setPeriode(periode)
+//                        .setAbonnements(
+//                                new ArrayList<>(abonnements)
+//                        );
+//
+//        for (AbonnementConsommationReportDto abonnement : abonnements) {
+//
+//            report.setQuantiteTotale(
+//                    report.getQuantiteTotale()
+//                            .add(
+//                                    abonnement.getQuantiteTotale()
+//                            )
+//            );
+//
+//            report.setMontantMensuelTotal(
+//                    report.getMontantMensuelTotal()
+//                            .add(
+//                                    abonnement.getMontantMensuelTotal()
+//                            )
+//            );
+//
+//            report.setMontantVerseTotal(
+//                    report.getMontantVerseTotal()
+//                            .add(
+//                                    abonnement.getMontantVerseTotal()
+//                            )
+//            );
+//
+//            report.setReliquatTotal(
+//                    report.getReliquatTotal()
+//                            .add(
+//                                    abonnement.getReliquatTotal()
+//                            )
+//            );
+//        }
+//
+//        return report;
+//    }
 }

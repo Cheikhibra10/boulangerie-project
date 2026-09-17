@@ -37,7 +37,9 @@ public class DestinationProduction extends AbstractAuditingEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CanalDistribution canal;
-
+    @Enumerated(EnumType.STRING)
+    @Column(name = "etat_pain", nullable = false)
+    private EtatPain etatPain = EtatPain.FRAIS;
     @Column(nullable = false)
     private Long produitId;
 
@@ -50,7 +52,6 @@ public class DestinationProduction extends AbstractAuditingEntity {
     private BigDecimal quantiteConsommee = BigDecimal.ZERO;
     @Column
     private Long livreurId;
-
     @Column
     private Long abonnementId;
 
@@ -65,6 +66,7 @@ public class DestinationProduction extends AbstractAuditingEntity {
         destination.setProduitId(lot.getProduitId());
 
         destination.setCanal(dto.getCanal());
+        destination.setEtatPain(dto.getEtatPain());
         destination.setQuantite(dto.getQuantite());
         destination.setPrixUnitaire(dto.getPrixUnitaire());
         destination.setLivreurId(dto.getLivreurId());

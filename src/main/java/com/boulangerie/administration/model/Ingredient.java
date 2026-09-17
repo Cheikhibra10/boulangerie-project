@@ -41,6 +41,16 @@ public class Ingredient extends AbstractAuditingEntity implements GenericEntity<
                 libelle.toLowerCase().contains("farine");
     }
 
+    public boolean estLevure() {
+        return libelle != null &&
+                libelle.toLowerCase().contains("levure");
+    }
+
+    public boolean estAmeliorant() {
+        return libelle != null &&
+                libelle.toLowerCase().contains("ameliorant");
+    }
+
     public BigDecimal convertirQuantiteVersStock(BigDecimal quantiteSaisie) {
         if (quantiteSaisie == null) {
             throw new BadRequestException("Quantité obligatoire.");
@@ -96,6 +106,9 @@ public class Ingredient extends AbstractAuditingEntity implements GenericEntity<
         }
         if (libelle.contains("levure")) {
             return StockConstants.SEUIL_LEVURE;
+        }
+        if (libelle.contains("ameliorant")) {
+            return StockConstants.SEUIL_AMELIORANT;
         }
         return StockConstants.SEUIL_PAR_DEFAUT;
     }

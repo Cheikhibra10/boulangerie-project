@@ -1,19 +1,17 @@
 // reporting/api/dto/KpiDto.java
 package com.boulangerie.reporting.dto;
 
-import com.boulangerie.shared.dto.AbstractAuditingDto;
 import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class KpiDto extends AbstractAuditingDto {
+public class KpiDto {
 
     // ===== VENTES =====
     private BigDecimal caTotal;

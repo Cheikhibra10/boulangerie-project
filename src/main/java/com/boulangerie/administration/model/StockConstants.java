@@ -25,6 +25,9 @@ public final class StockConstants {
     public static final BigDecimal SEUIL_LEVURE =
             BigDecimal.valueOf(250);
 
+    public static final BigDecimal SEUIL_AMELIORANT =
+            BigDecimal.valueOf(250);
+
     /**
      * Produits finis.
      */

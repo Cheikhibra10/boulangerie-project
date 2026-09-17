@@ -59,4 +59,9 @@ public class LivreurServiceImpl
         }
         return id;
     }
+
+    @Override
+    public Livreur findLivreurById(Long id) {
+        return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Livreur introuvable : " + id));
+    }
 }

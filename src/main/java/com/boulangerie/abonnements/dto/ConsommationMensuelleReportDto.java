@@ -1,6 +1,7 @@
-package com.boulangerie.abonnements.api;
+package com.boulangerie.abonnements.dto;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
@@ -15,8 +16,7 @@ public class ConsommationMensuelleReportDto {
 
     private YearMonth periode;
 
-    private List<AbonnementConsommationReportDto> abonnements =
-            new ArrayList<>();
+    private List<AbonnementConsommationReportDto> abonnements = new ArrayList<>();
     private BigDecimal quantiteTotale = BigDecimal.ZERO;
 
     private BigDecimal montantMensuelTotal = BigDecimal.ZERO;

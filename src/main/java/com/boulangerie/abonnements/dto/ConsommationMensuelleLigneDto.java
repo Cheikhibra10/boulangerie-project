@@ -1,10 +1,11 @@
-package com.boulangerie.abonnements.api;
+package com.boulangerie.abonnements.dto;
 
-import com.boulangerie.abonnements.model.ConsommationJournaliere;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,12 +40,10 @@ public class ConsommationMensuelleLigneDto {
         }
     }
 
-    public void ajouterConsommation(ConsommationJournaliere consommation) {
-        int jour = consommation.getDate().getDayOfMonth();
-        consommations.merge(
-                jour,
-                consommation.getQuantite(),
-                BigDecimal::add
+    public void ajouterConsommation(LocalDate date, BigDecimal quantite) {
+        consommations.put(
+                date.getDayOfMonth(),
+                quantite
         );
     }
 }

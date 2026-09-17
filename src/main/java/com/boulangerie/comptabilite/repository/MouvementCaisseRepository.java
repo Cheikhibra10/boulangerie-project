@@ -10,7 +10,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface MouvementCaisseRepository
@@ -18,6 +20,11 @@ public interface MouvementCaisseRepository
 
     // Les méthodes spécifiques peuvent être remplacées par Specification
     // On garde quelques utilitaires pour les agrégations
+
+    List<MouvementCaisse> findByCreatedAtBetweenOrderByCreatedAtAsc(
+            Instant debut,
+            Instant fin
+    );
 
     @Query("SELECT COALESCE(SUM(m.montant), 0) FROM MouvementCaisse m WHERE m.caisse.id = :caisseId AND m.sens = :sens")
     BigDecimal sumMontantByCaisseIdAndSens(@Param("caisseId") Long caisseId, @Param("sens") SensMouvement sens);

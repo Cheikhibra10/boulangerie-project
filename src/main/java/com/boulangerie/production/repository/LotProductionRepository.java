@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -22,7 +23,10 @@ public interface LotProductionRepository extends JpaRepository<LotProduction, Lo
     boolean existsByDateAndProduitId(LocalDate date, Long produitId);
 
     Page<LotProduction> findByDateBetween(LocalDate debut, LocalDate fin, Pageable pageable);
-
+    List<LotProduction> findByDateBetweenOrderByDateAsc(
+            LocalDate debut,
+            LocalDate fin
+    );
     Page<LotProduction> findByProduitIdOrderByDateDesc(Long produitId, Pageable pageable);
 
     @Query("SELECT lp FROM LotProduction lp JOIN FETCH lp.produitId WHERE lp.id = :id")

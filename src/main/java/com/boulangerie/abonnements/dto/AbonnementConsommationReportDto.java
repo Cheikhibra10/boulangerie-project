@@ -1,10 +1,12 @@
-package com.boulangerie.abonnements.api;
+package com.boulangerie.abonnements.dto;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter

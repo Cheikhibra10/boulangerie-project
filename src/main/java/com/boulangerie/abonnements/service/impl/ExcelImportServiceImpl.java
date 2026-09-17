@@ -3,19 +3,18 @@ package com.boulangerie.abonnements.service.impl;
 import com.boulangerie.abonnements.dto.ConsommationDto;
 import com.boulangerie.abonnements.dto.ConsommationImportResultDto;
 import com.boulangerie.abonnements.dto.ImportConsommationCommand;
+import com.boulangerie.abonnements.dto.ImportConsommationStats;
 import com.boulangerie.abonnements.exception.ExcelImportException;
 import com.boulangerie.abonnements.model.LigneAbonnement;
 import com.boulangerie.abonnements.repository.LigneAbonnementRepository;
 import com.boulangerie.abonnements.service.AbonnementConsommationImportService;
 import com.boulangerie.abonnements.service.AbonnementService;
 import com.boulangerie.abonnements.service.ExcelImportService;
+import com.boulangerie.reporting.service.impl.ExcelExportServiceImpl;
 import com.boulangerie.shared.exception.BadRequestException;
-import com.boulangerie.shared.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -31,22 +30,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ExcelImportServiceImpl implements ExcelImportService {
 
-    private static final int CLIENT_COLUMN = 0;
     private static final int FIRST_DAY_COLUMN = 1;
-
-    private static final int TOTAL_COLUMN = 32;
-    private static final int PRIX_UNITAIRE_COLUMN = 33;
-    private static final int MONTANT_MENSUEL_COLUMN = 34;
-    private static final int MONTANT_PAYE_COLUMN = 35;
-    private static final int RELIQUAT_COLUMN = 36;
-
-    /**
-     * Hidden technical columns.
-     */
-    private static final int ABONNEMENT_ID_COLUMN = 37;
-    private static final int CLIENT_ID_COLUMN = 38;
-
-    private static final String SHEET_NAME = "Feuil1";
+    private static final String DETAILS_SHEET = "Détails";
 
     private final AbonnementService abonnementService;
     private final LigneAbonnementRepository ligneRepository;
@@ -84,10 +69,12 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 Workbook workbook = WorkbookFactory.create(inputStream)
         ) {
 
-            Sheet sheet = trouverFeuille(workbook);
+            ExcelLayout layout = ExcelLayout.forPeriod(periode);
+            Sheet sheet = trouverFeuilleDetails(workbook);
 
             validerStructure(
                     sheet,
+                    layout,
                     periode
             );
 
@@ -98,17 +85,23 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                             periode
                     );
 
-            int importees =
-                    consommationImportService.importer(
-                            commandes
-                    );
+            ImportConsommationStats consommationStats = consommationImportService.importer(commandes);
 
             return new ConsommationImportResultDto()
-                    .setConsommationsImportees(importees)
                     .setLignesTraitees(
-                            compterLignesClients(commandes)
+                            consommationStats.getLignesTraitees()
                     )
-                    .setLignesIgnorees(0);
+                    .setConsommationsCreees(
+                            consommationStats.getConsommationsCreees()
+                    )
+                    .setConsommationsModifiees(
+                            consommationStats.getConsommationsModifiees()
+                    )
+                    .setConsommationsInchangees(
+                            consommationStats.getConsommationsInchangees()
+                    )
+                    .setLignesIgnorees(0)
+                    .setErreurs(List.of());
 
         } catch (IOException e) {
 
@@ -147,10 +140,12 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 Workbook workbook = WorkbookFactory.create(inputStream)
         ) {
 
-            Sheet sheet = trouverFeuille(workbook);
+            ExcelLayout layout = ExcelLayout.forPeriod(periode);
+            Sheet sheet = trouverFeuilleDetails(workbook);
 
             validerStructure(
                     sheet,
+                    layout,
                     periode
             );
 
@@ -161,104 +156,64 @@ public class ExcelImportServiceImpl implements ExcelImportService {
              *
              * Nous construisons uniquement les commandes.
              */
-            List<ImportConsommationCommand> commandes =
-                    construireCommandes(
-                            sheet,
-                            periode
-                    );
 
-            if (commandes.isEmpty()) {
-
-                return new ConsommationImportResultDto()
-                        .setConsommationsImportees(0)
-                        .setLignesTraitees(0)
-                        .setLignesIgnorees(
-                                sheet.getLastRowNum() + 1
-                        );
-            }
-
+            ConstructionCommandesResult construction = construireCommandes(
+                    sheet, periode
+            );
+            List<ImportConsommationCommand> commandes = construction.commandes();
             /*
              * UN SEUL appel au service transactionnel.
              *
              * Si une seule consommation est invalide,
              * toute la transaction est rollbackée.
              */
-            int importees = consommationImportService.importer(commandes);
+            int lignesIgnorees = construction.lignesIgnorees();
+
+
+            if (commandes.isEmpty()) {
+                return new ConsommationImportResultDto()
+                        .setLignesTraitees(0)
+                        .setConsommationsCreees(0)
+                        .setConsommationsModifiees(0)
+                        .setConsommationsInchangees(0)
+                        .setLignesIgnorees(lignesIgnorees)
+                        .setErreurs(List.of());
+            }
+
+
+            ImportConsommationStats consommationStats = consommationImportService.importer(commandes);
 
             return new ConsommationImportResultDto()
-                    .setConsommationsImportees(importees)
-                    .setLignesTraitees(compterLignesClients(commandes))
-                    .setLignesIgnorees(0);
+                    .setLignesTraitees(
+                            consommationStats.getLignesTraitees()
+                    )
+                    .setConsommationsCreees(
+                            consommationStats.getConsommationsCreees()
+                    )
+                    .setConsommationsModifiees(
+                            consommationStats.getConsommationsModifiees()
+                    )
+                    .setConsommationsInchangees(
+                            consommationStats.getConsommationsInchangees()
+                    )
+                    .setLignesIgnorees(lignesIgnorees)
+                    .setErreurs(List.of());
         } catch (IOException e) {
             throw new ExcelImportException("Erreur lors de la lecture du fichier Excel.", e);
         }
     }
 
-    private List<ImportConsommationCommand> construireCommandes(Sheet sheet, YearMonth periode) {
-        List<ImportConsommationCommand> commandes = new ArrayList<>();
-        for (int rowIndex = 0; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
-            Row row = sheet.getRow(rowIndex);
-
-            if (row == null || rowIsEmpty(row)) {
-                continue;
-            }
-
-            if(!estLigneClient(row)){
-                continue;
-            }
-            Long abonnementExcelId = lireIdCache(row, ABONNEMENT_ID_COLUMN);
-
-            Long clientId = lireIdCache(row, CLIENT_ID_COLUMN);
-
-            /*
-             * Header, titre abonnement,
-             * lignes de total, etc.
-             */
-            if (abonnementExcelId == null && clientId == null) {
-                continue;
-            }
-
-            /*
-             * Les deux IDs doivent toujours être présents.
-             */
-            if (abonnementExcelId == null || clientId == null) {
-
-                throw new ExcelImportException(
-                        "Ligne "
-                                + (rowIndex + 1)
-                                + " : abonnementId et clientId "
-                                + "sont obligatoires."
-                );
-            }
-
-            LigneAbonnement ligne = trouverLigne(abonnementExcelId, clientId);
-
-            /*
-             * Une ligne Excel = un client.
-             */
-            List<ImportConsommationCommand> lignes =
-                    construireCommandesLigne(
-                            row,
-                            ligne,
-                            abonnementExcelId,
-                            clientId,
-                            periode
-                    );
-
-            commandes.addAll(lignes);
-        }
-
-        return commandes;
-    }
-
-    private List<ImportConsommationCommand> construireCommandes(
+    private ConstructionCommandesResult construireCommandes(
             Sheet sheet,
-            Long abonnementId,
             YearMonth periode
     ) {
-
         List<ImportConsommationCommand> commandes =
                 new ArrayList<>();
+
+        int lignesIgnorees = 0;
+
+        ExcelLayout layout =
+                ExcelLayout.forPeriod(periode);
 
         for (
                 int rowIndex = 0;
@@ -272,30 +227,117 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 continue;
             }
 
+            /*
+             * Header, titre abonnement, lignes de total,
+             * etc.
+             */
+            if (!estLigneClient(row, layout)) {
+                continue;
+            }
+
             Long abonnementExcelId =
                     lireIdCache(
                             row,
-                            ABONNEMENT_ID_COLUMN
+                            layout.abonnementIdColumn()
                     );
 
             Long clientId =
                     lireIdCache(
                             row,
-                            CLIENT_ID_COLUMN
+                            layout.clientIdColumn()
                     );
 
-            // Header / titre / total
+            /*
+             * Ligne reconnue comme ligne client,
+             * mais sans aucun identifiant.
+             *
+             * On l'ignore.
+             */
             if (abonnementExcelId == null && clientId == null) {
+                lignesIgnorees++;
                 continue;
             }
 
-            if (abonnementExcelId == null || clientId == null) {
+            /*
+             * Un seul des deux IDs est présent :
+             * fichier incohérent.
+             *
+             * Ce n'est PAS une ligne ignorée.
+             * L'import doit échouer.
+             */
+            if (
+                    abonnementExcelId == null
+                            || clientId == null
+            ) {
+
                 throw new ExcelImportException(
-                        "Ligne " + (rowIndex + 1)
+                        "Ligne "
+                                + (rowIndex + 1)
                                 + " : abonnementId et clientId "
                                 + "sont obligatoires."
                 );
             }
+
+            LigneAbonnement ligne =
+                    trouverLigne(
+                            abonnementExcelId,
+                            clientId
+                    );
+
+            /*
+             * Une ligne Excel = un client.
+             */
+            List<ImportConsommationCommand> lignes =
+                    construireCommandesLigne(
+                            row,
+                            ligne,
+                            abonnementExcelId,
+                            clientId,
+                            periode
+                    );
+
+            /*
+             * La ligne client existe mais ne contient
+             * aucune consommation importable.
+             */
+            if (lignes.isEmpty()) {
+                lignesIgnorees++;
+                continue;
+            }
+
+            commandes.addAll(lignes);
+        }
+
+        return new ConstructionCommandesResult(
+                commandes,
+                lignesIgnorees
+        );
+    }
+
+    private List<ImportConsommationCommand> construireCommandes(
+            Sheet sheet,
+            Long abonnementId,
+            YearMonth periode
+    ) {
+
+        List<ImportConsommationCommand> commandes = new ArrayList<>();
+
+        ExcelLayout layout = ExcelLayout.forPeriod(periode);
+        for (int rowIndex = 0; rowIndex <= sheet.getLastRowNum();              rowIndex++) {
+
+            Row row = sheet.getRow(rowIndex);
+            if (row == null || rowIsEmpty(row)) {
+                continue;
+            }
+
+            if (!estLigneClient(row, layout)) {
+                continue;
+            }
+
+            Long abonnementExcelId = lireIdCache(row, layout.abonnementIdColumn());
+
+            Long clientId = lireIdCache(row, layout.clientIdColumn());
+
 
             /*
              * Protection contre l'utilisation d'un fichier
@@ -317,11 +359,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 );
             }
 
-            LigneAbonnement ligne =
-                    trouverLigne(
-                            abonnementId,
-                            clientId
-                    );
+            LigneAbonnement ligne = trouverLigne(abonnementId, clientId);
 
             commandes.addAll(
                     construireCommandesLigne(
@@ -335,6 +373,8 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         }
         return commandes;
     }
+
+
 
     private int compterLignesClients(
             List<ImportConsommationCommand> commandes
@@ -359,53 +399,31 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             YearMonth periode
     ) {
 
-        List<ImportConsommationCommand> commandes =
-                new ArrayList<>();
+        List<ImportConsommationCommand> commandes = new ArrayList<>();
 
-        for (
-                int jour = 1;
-                jour <= periode.lengthOfMonth();
-                jour++
-        ) {
+        ExcelLayout layout = ExcelLayout.forPeriod(periode);
 
-            int column =
-                    FIRST_DAY_COLUMN + jour - 1;
-
-            BigDecimal quantite =
-                    lireBigDecimal(
-                            row,
-                            column
-                    );
-
+        for (int jour = 1; jour <= layout.nombreJours; jour++) {
+            int column = layout.dayColumn(jour);
+            BigDecimal quantite = lireQuantite(row, column);
             /*
              * Cellule vide ou zéro :
              * aucune consommation à importer.
              */
-            if (
-                    quantite == null
-                            || quantite.compareTo(
-                            BigDecimal.ZERO
-                    ) == 0
-            ) {
+            if (quantite == null || quantite.compareTo(BigDecimal.ZERO) == 0) {
                 continue;
             }
 
-            if (
-                    quantite.compareTo(
-                            BigDecimal.ZERO
-                    ) < 0
+            if (quantite.compareTo(BigDecimal.ZERO) < 0
             ) {
-
-                throw new ExcelImportException(
-                        "Quantité négative à la ligne "
+                throw new ExcelImportException("Quantité négative à la ligne "
                                 + row.getRowNum()
                                 + ", jour "
                                 + jour
                 );
             }
 
-            LocalDate date =
-                    periode.atDay(jour);
+            LocalDate date = periode.atDay(jour);
 
             commandes.add(
                     new ImportConsommationCommand()
@@ -509,48 +527,6 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         }
     }
 
-    private int importerLigne(
-            Row row,
-            LigneAbonnement ligne,
-            YearMonth periode
-    ) {
-        int importees = 0;
-
-        for (int jour = 1;
-             jour <= periode.lengthOfMonth();
-             jour++) {
-
-            int column =
-                    FIRST_DAY_COLUMN + jour - 1;
-
-            BigDecimal quantite =
-                    lireBigDecimal(row, column);
-
-            if (quantite == null ||
-                    quantite.compareTo(BigDecimal.ZERO) == 0) {
-                continue;
-            }
-
-            LocalDate date =
-                    periode.atDay(jour);
-
-            ConsommationDto dto =
-                    new ConsommationDto()
-                            .setDate(date)
-                            .setQuantite(quantite);
-
-            abonnementService.synchroniserConsommation(
-                    ligne.getId(),
-                    dto
-            );
-
-            importees++;
-        }
-
-        return importees;
-    }
-
-
     private Long lireIdCache(
             Row row,
             int column
@@ -575,7 +551,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         return (long) cell.getNumericCellValue();
     }
 
-    private BigDecimal lireBigDecimal(
+    private BigDecimal lireQuantite(
             Row row,
             int column
     ) {
@@ -699,42 +675,41 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         return true;
     }
 
-    private Sheet trouverFeuille(
+    private Sheet trouverFeuilleDetails(
             Workbook workbook
     ) {
-
         if (workbook.getNumberOfSheets() == 0) {
-
             throw new ExcelImportException(
-                    "Le fichier Excel ne contient "
-                            + "aucune feuille."
+                    "Le fichier Excel ne contient aucune feuille."
             );
         }
 
-        Sheet sheet =
-                workbook.getSheet(
-                        SHEET_NAME
-                );
+        Sheet sheet = workbook.getSheet(DETAILS_SHEET);
 
         if (sheet == null) {
-
             throw new ExcelImportException(
-                    "La feuille '"
-                            + SHEET_NAME
-                            + "' est introuvable."
+                    "La feuille '" +
+                            DETAILS_SHEET +
+                            "' est introuvable."
             );
         }
 
         return sheet;
     }
 
-    private boolean estLigneClient(Row row) {
-
+    private boolean estLigneClient(
+            Row row,
+            ExcelLayout layout
+    ) {
         Cell abonnementIdCell =
-                row.getCell(ABONNEMENT_ID_COLUMN);
+                row.getCell(
+                        layout.abonnementIdColumn()
+                );
 
         Cell clientIdCell =
-                row.getCell(CLIENT_ID_COLUMN);
+                row.getCell(
+                        layout.clientIdColumn()
+                );
 
         return estCelluleNumerique(abonnementIdCell)
                 && estCelluleNumerique(clientIdCell);
@@ -742,59 +717,45 @@ public class ExcelImportServiceImpl implements ExcelImportService {
 
     private boolean estCelluleNumerique(Cell cell) {
 
-        if (cell == null) {
-            return false;
-        }
-
-        return cell.getCellType() == CellType.NUMERIC
-                && !DateUtil.isCellDateFormatted(cell);
+        return cell != null && cell.getCellType() == CellType.NUMERIC;
     }
 
     private void validerStructure(
             Sheet sheet,
+            ExcelLayout layout,
             YearMonth periode
     ) {
-
-        Row firstRow =
-                sheet.getRow(0);
-
-        if (firstRow == null) {
-
+        if (sheet.getLastRowNum() < 0) {
             throw new ExcelImportException(
-                    "Le fichier Excel est vide."
+                    "La feuille Détails est vide."
             );
         }
 
-        /*
-         * Dernière colonne correspondant
-         * aux jours du mois.
-         */
-        int derniereColonneJour =
-                FIRST_DAY_COLUMN
+        int lastDayColumn = FIRST_DAY_COLUMN
                         + periode.lengthOfMonth()
                         - 1;
 
-        if (
-                firstRow.getLastCellNum()
-                        <= derniereColonneJour
-        ) {
+        Row headerRow =
+                sheet.getRow(0);
+
+        if (headerRow == null) {
+            throw new ExcelImportException(
+                    "L'en-tête de la feuille Détails est absent."
+            );
+        }
+
+        if (headerRow.getLastCellNum()
+                <= lastDayColumn) {
 
             throw new ExcelImportException(
                     "La structure du fichier Excel "
                             + "ne correspond pas au mois "
-                            + periode + "."
+                            + periode
+                            + "."
             );
         }
 
-        /*
-         * Les colonnes techniques doivent
-         * également être présentes.
-         */
-        if (
-                firstRow.getLastCellNum()
-                        <= CLIENT_ID_COLUMN
-        ) {
-
+        if (headerRow.getLastCellNum() <= layout.clientColumn()) {
             throw new ExcelImportException(
                     "Le fichier Excel ne contient pas "
                             + "les colonnes techniques "
@@ -802,51 +763,53 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             );
         }
     }
-
-    private String ligneNom(Row row) {
-
-        Cell cell =
-                row.getCell(CLIENT_COLUMN);
-
-        if (
-                cell == null
-                        || cell.getCellType()
-                        == CellType.BLANK
-        ) {
-            return "client inconnu";
-        }
-
-        if (
-                cell.getCellType()
-                        == CellType.STRING
-        ) {
-            return cell.getStringCellValue();
-        }
-
-        return "client inconnu";
-    }
-
-    private String construireMessageErreur(
-            String client,
-            RuntimeException exception
+    private record ExcelLayout(
+            int clientColumn,
+            int firstDayColumn,
+            int totalColumn,
+            int prixUnitaireColumn,
+            int montantMensuelColumn,
+            int montantPayeColumn,
+            int reliquatColumn,
+            int abonnementIdColumn,
+            int clientIdColumn,
+            int nombreJours
     ) {
 
-        String message =
-                exception.getMessage();
-
-        if (
-                message == null
-                        || message.isBlank()
+        static ExcelLayout forPeriod(
+                YearMonth periode
         ) {
+            int firstDayColumn = 1;
 
-            message =
-                    exception
-                            .getClass()
-                            .getSimpleName();
+            int totalColumn =
+                    firstDayColumn
+                            + periode.lengthOfMonth();
+
+            return new ExcelLayout(
+                    0,
+                    firstDayColumn,
+                    totalColumn,
+                    totalColumn + 1,
+                    totalColumn + 2,
+                    totalColumn + 3,
+                    totalColumn + 4,
+                    totalColumn + 5,
+                    totalColumn + 6,
+                    periode.lengthOfMonth()
+            );
         }
 
-        return client
-                + " : "
-                + message;
+        public int dayColumn(int jour) {
+            if(jour < 1 || jour > nombreJours){
+                throw new IllegalArgumentException("Jour invalide : " + jour);
+            }
+            return firstDayColumn + jour - 1;
+        }
+    }
+
+    private record ConstructionCommandesResult(
+            List<ImportConsommationCommand> commandes,
+            int lignesIgnorees
+    ) {
     }
 }

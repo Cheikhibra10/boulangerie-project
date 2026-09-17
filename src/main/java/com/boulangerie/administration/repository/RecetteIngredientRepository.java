@@ -45,4 +45,6 @@ public interface RecetteIngredientRepository extends GenericRepository<RecetteIn
            "WHERE ri.ingredient.id = :ingredientId " +
            "AND r.actif = true")
     boolean existsByIngredientIdInActiveRecette(@Param("ingredientId") Long ingredientId);
+
+    List<RecetteIngredient> findByRecetteId(Long recetteId);
 }
