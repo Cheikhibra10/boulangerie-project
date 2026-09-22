@@ -4,6 +4,7 @@ import com.boulangerie.shared.dto.ConsommationIngredient;
 import com.boulangerie.administration.service.ProductionConstants;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.model.AbstractAuditingEntity;
+import com.boulangerie.shared.model.Activable;
 import com.boulangerie.shared.model.GenericEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -23,8 +24,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @Accessors(chain = true)
-public class Recette extends AbstractAuditingEntity
-        implements GenericEntity<Recette> {
+public class Recette extends AbstractAuditingEntity implements GenericEntity<Recette>, Activable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

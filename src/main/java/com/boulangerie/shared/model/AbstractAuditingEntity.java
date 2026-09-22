@@ -22,7 +22,7 @@ import java.time.Instant;
 @MappedSuperclass
 @NoArgsConstructor
 @AllArgsConstructor
-@EntityListeners({AuditingEntityListener.class,AuditLogEntityListener.class})
+@EntityListeners({AuditingEntityListener.class,AuditLogEntityListener.class, ActifDefaultEntityListener.class})
 public abstract class AbstractAuditingEntity {
 
     @CreatedDate

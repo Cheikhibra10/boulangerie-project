@@ -1,5 +1,6 @@
 package com.boulangerie.administration.model;
 
+import com.boulangerie.shared.model.Activable;
 import com.boulangerie.shared.model.GenericEntity;
 import jakarta.persistence.*;
 import lombok.Getter;

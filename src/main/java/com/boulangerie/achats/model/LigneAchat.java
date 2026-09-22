@@ -86,12 +86,14 @@ public class LigneAchat extends AbstractAuditingEntity {
         }
     }
 
+
     public void recevoir(BigDecimal quantiteRecue, BigDecimal quantiteRetournee, String motif) {
 
+        BigDecimal quantiteRefusee = quantiteRetournee == null ? BigDecimal.ZERO : quantiteRetournee;
         validatePositive(quantiteRecue, "Quantité reçue");
-        validatePositive(quantiteRetournee, "Quantité refusée");
+        validatePositive(quantiteRefusee, "Quantité refusée");
 
-        BigDecimal total = quantiteRecue.add(quantiteRetournee);
+        BigDecimal total = quantiteRecue.add(quantiteRefusee);
         BigDecimal nouvelleQuantite = this.quantiteRecue.add(quantiteRecue);
         BigDecimal restante = getQuantiteRestante();
 
@@ -103,22 +105,22 @@ public class LigneAchat extends AbstractAuditingEntity {
             throw new BadRequestException("La quantité reçue dépasse la quantité commandée.");
         }
 
-        if (quantiteRecue.add(quantiteRetournee).compareTo(restante) > 0) {
+        if (total.compareTo(restante) > 0) {
             throw new BadRequestException("La réception dépasse la quantité restante.");
         }
 
-        if (quantiteRecue.compareTo(BigDecimal.ZERO) == 0
-                && quantiteRetournee.compareTo(BigDecimal.ZERO) == 0) {
+
+        if (total.signum() == 0) {
             throw new BadRequestException("Aucune quantité renseignée.");
         }
 
-        if (quantiteRetournee.compareTo(BigDecimal.ZERO) > 0 &&
+        if (quantiteRefusee.signum() > 0 &&
                 (motif == null || motif.isBlank())) {
             throw new BadRequestException("Le motif de refus est obligatoire.");
         }
 
         this.quantiteRecue = nouvelleQuantite;
-        this.quantiteRetournee = this.quantiteRetournee.add(quantiteRetournee);
+        this.quantiteRetournee = this.quantiteRetournee.add(quantiteRefusee);
         this.motifRetour = motif;
     }
 

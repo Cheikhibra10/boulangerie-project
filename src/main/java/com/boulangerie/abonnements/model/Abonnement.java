@@ -3,6 +3,7 @@ package com.boulangerie.abonnements.model;
 
 import com.boulangerie.abonnements.exception.DepassementQuantiteAbonnementException;
 import com.boulangerie.shared.model.AbstractAuditingEntity;
+import com.boulangerie.shared.model.Activable;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -17,7 +18,7 @@ import java.util.*;
 @Getter
 @Setter
 @Accessors(chain = true)
-public class Abonnement extends AbstractAuditingEntity {
+public class Abonnement extends AbstractAuditingEntity implements Activable {
 
 
     @Id

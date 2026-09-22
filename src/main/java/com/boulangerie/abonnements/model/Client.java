@@ -1,6 +1,7 @@
 package com.boulangerie.abonnements.model;
 
 import com.boulangerie.shared.model.AbstractAuditingEntity;
+import com.boulangerie.shared.model.Activable;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -18,7 +19,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Accessors(chain = true)
-public class Client extends AbstractAuditingEntity {
+public class Client extends AbstractAuditingEntity implements Activable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

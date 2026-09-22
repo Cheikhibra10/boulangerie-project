@@ -1,6 +1,7 @@
 package com.boulangerie.administration.model;
 
 import com.boulangerie.shared.model.AbstractAuditingEntity;
+import com.boulangerie.shared.model.Activable;
 import com.boulangerie.shared.model.GenericEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Accessors(chain = true)
-public class Produit extends AbstractAuditingEntity implements GenericEntity<Produit> {
+public class Produit extends AbstractAuditingEntity implements GenericEntity<Produit>, Activable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

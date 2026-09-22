@@ -4,6 +4,7 @@ import com.boulangerie.administration.service.ProductionConstants;
 import com.boulangerie.shared.dto.ValeursStock;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.model.AbstractAuditingEntity;
+import com.boulangerie.shared.model.Activable;
 import com.boulangerie.shared.model.GenericEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,7 +19,7 @@ import java.math.RoundingMode;
 @Getter
 @Setter
 @Accessors(chain = true)
-public class Ingredient extends AbstractAuditingEntity implements GenericEntity<Ingredient> {
+public class Ingredient extends AbstractAuditingEntity implements GenericEntity<Ingredient>, Activable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,6 +1,7 @@
 package com.boulangerie.administration.model;
 
 import com.boulangerie.shared.model.AbstractAuditingEntity;
+import com.boulangerie.shared.model.Activable;
 import com.boulangerie.shared.model.GenericEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(chain = true)
-public class CategorieProduit extends AbstractAuditingEntity implements GenericEntity<CategorieProduit> {
+public class CategorieProduit extends AbstractAuditingEntity implements GenericEntity<CategorieProduit>, Activable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
