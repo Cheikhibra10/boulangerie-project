@@ -13,6 +13,7 @@ public class ExceptionSchema {
     private String message;
     private String path;
     private Map<String, String> errors;
+    private String errorId;
 
     public ExceptionSchema(int status, String message, String path) {
         this.timestamp = Instant.now();
@@ -24,5 +25,10 @@ public class ExceptionSchema {
     public ExceptionSchema(int status, String message, String path, Map<String, String> errors) {
         this(status, message, path);
         this.errors = errors;
+    }
+
+    public ExceptionSchema(int status, String message, String path, String errorId) {
+        this(status, message, path);
+        this.errorId = errorId;
     }
 }

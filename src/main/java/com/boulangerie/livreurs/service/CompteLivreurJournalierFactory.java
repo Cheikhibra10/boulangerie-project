@@ -1,10 +1,9 @@
 package com.boulangerie.livreurs.service;
 
-import com.boulangerie.administration.model.Livreur;
 import com.boulangerie.livreurs.model.CompteLivreurJournalier;
 import com.boulangerie.livreurs.repository.CompteLivreurJournalierRepository;
-import com.boulangerie.shared.exception.DataIntegrityViolationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

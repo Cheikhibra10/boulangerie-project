@@ -20,6 +20,8 @@ public class SecurityConfig {
 
 
     private final KeycloakJwtAuthenticationConverter converter;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final RestAccessDeniedHandler restAccessDeniedHandler;
 
 
     @Bean
@@ -45,12 +47,16 @@ public class SecurityConfig {
                         .anyRequest()
                         .authenticated()
                 )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler)
+                )
                 .oauth2ResourceServer(oauth ->
                         oauth.jwt(jwt ->
                                 jwt.jwtAuthenticationConverter(
                                         converter
                                 )
-                        )
+                        ).authenticationEntryPoint(restAuthenticationEntryPoint)
                 )
                 .build();
     }

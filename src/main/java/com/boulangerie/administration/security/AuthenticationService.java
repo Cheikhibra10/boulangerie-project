@@ -43,18 +43,6 @@ public class AuthenticationService {
         form.add("username",request.getEmail());
         form.add("password",request.getPassword());
 
-        AccessTokenResponse response = securityRestClient.post()
-                        .uri(serverUrl +
-                                "/realms/" +
-                                realm +
-                                "/protocol/openid-connect/token")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .body(form)
-                        .retrieve()
-                        .body(AccessTokenResponse.class);
-        if (response == null) {
-            throw new IllegalStateException("Keycloak returned an empty response");
-        }
         try {
             return toDto(requestToken(form));
         } catch (RestClientResponseException ex) {
@@ -72,20 +60,11 @@ public class AuthenticationService {
         form.add("client_secret",clientSecret);
         form.add("refresh_token",refreshToken);
 
-        AccessTokenResponse response =
-                securityRestClient.post()
-                        .uri(serverUrl +
-                                "/realms/" +
-                                realm +
-                                "/protocol/openid-connect/token")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .body(form)
-                        .retrieve()
-                        .body(AccessTokenResponse.class);
         try {
             return toDto(requestToken(form));
         } catch (RestClientResponseException ex) {
-            throw new AuthenticationException("Email ou mot de passe incorrect", ex);
+            log.warn("Refresh failed: {}", ex.getResponseBodyAsString());
+            throw new AuthenticationException("Refresh token invalide ou expiré", ex);
         }
     }
 
@@ -96,16 +75,22 @@ public class AuthenticationService {
         form.add("client_secret",clientSecret);
         form.add("refresh_token",refreshToken);
 
-        securityRestClient.post()
-                .uri(serverUrl +
-                        "/realms/" +
-                        realm +
-                        "/protocol/openid-connect/logout")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(form)
-                .retrieve()
-                .toBodilessEntity();
-
+        try {
+            securityRestClient.post()
+                    .uri(serverUrl +
+                            "/realms/" +
+                            realm +
+                            "/protocol/openid-connect/logout")
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(form)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientResponseException ex) {
+            // Déconnexion idempotente : si le refresh token est déjà expiré/révoqué côté
+            // Keycloak, l'utilisateur est de toute façon déconnecté — pas la peine de faire
+            // remonter une erreur pour un clic sur "se déconnecter".
+            log.warn("Logout Keycloak non critique : {}", ex.getResponseBodyAsString());
+        }
     }
 
     private LoginResponseDto toDto(AccessTokenResponse token){
