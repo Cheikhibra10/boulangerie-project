@@ -2,6 +2,7 @@ package com.boulangerie.administration.service.Impl;
 
 import com.boulangerie.administration.dto.RegisterUtilisateurRequestDto;
 import com.boulangerie.administration.dto.UtilisateurDto;
+import com.boulangerie.administration.event.UtilisateurCreeEvent;
 import com.boulangerie.administration.mapper.UtilisateurMapper;
 import com.boulangerie.administration.model.RoleUtilisateur;
 import com.boulangerie.administration.model.Utilisateur;
@@ -14,6 +15,7 @@ import com.boulangerie.administration.security.keycloak.dto.KeycloakUserDto;
 import com.boulangerie.shared.service.impl.AbstractCrudService;
 import com.boulangerie.shared.utils.PageUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,17 +28,20 @@ import java.util.List;
 public class UtilisateurServiceImpl extends AbstractCrudService<Utilisateur, UtilisateurDto> implements UtilisateurService {
     private final UtilisateurRepository repository;
     private final KeycloakUserService keycloakUserService;
+    private final ApplicationEventPublisher publisher;
 
     public UtilisateurServiceImpl(
             UtilisateurRepository repository,
             UtilisateurMapper mapper,
-            KeycloakUserService keycloakUserService
+            KeycloakUserService keycloakUserService,
+            ApplicationEventPublisher publisher
     ) {
 
         super(repository, mapper, Utilisateur.class);
 
         this.repository = repository;
         this.keycloakUserService = keycloakUserService;
+        this.publisher = publisher;
     }
 
 
@@ -60,7 +65,7 @@ public class UtilisateurServiceImpl extends AbstractCrudService<Utilisateur, Uti
         String keycloakId = null;
         try {
             // 1 - Create Keycloak user
-             keycloakId = keycloakUserService.createUser(
+            keycloakId = keycloakUserService.createUser(
                     request.getEmail(),
                     request.getPrenom(),
                     request.getNom(),
@@ -82,7 +87,18 @@ public class UtilisateurServiceImpl extends AbstractCrudService<Utilisateur, Uti
                     .setKeycloakId(keycloakId)
                     .setActif(true);
 
-            return mapper.toDto(repository.save(utilisateur));
+            Utilisateur saved = repository.save(utilisateur);
+
+            publisher.publishEvent(new UtilisateurCreeEvent(
+                    saved.getId(),
+                    saved.getPrenom() + " " + saved.getNom(),
+                    saved.getEmail(),
+                    saved.getRole() != null ? saved.getRole().name() : null,
+                    "Nouvel utilisateur créé : " + saved.getPrenom() + " " + saved.getNom()
+                            + " (" + saved.getRole() + ")"
+            ));
+
+            return mapper.toDto(saved);
         } catch (Exception e) {
             if(keycloakId != null){
                 keycloakUserService.deleteUser(keycloakId);
@@ -93,7 +109,6 @@ public class UtilisateurServiceImpl extends AbstractCrudService<Utilisateur, Uti
             );
         }
     }
-
 
     /**
      * Update user profile.

@@ -15,7 +15,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 @Entity
-@Table(name = "ingredients")
+@Table(name = "ingredients", indexes = {
+        @Index(name = "idx_ingredients_actif", columnList = "actif")
+})
 @Getter
 @Setter
 @Accessors(chain = true)

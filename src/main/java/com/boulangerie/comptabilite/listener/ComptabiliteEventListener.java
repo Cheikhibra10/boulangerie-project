@@ -1,7 +1,6 @@
 package com.boulangerie.comptabilite.listener;
 
 import com.boulangerie.abonnements.event.VersementAbonnementEnregistreEvent;
-import com.boulangerie.abonnements.event.VersementEvent;
 import com.boulangerie.comptabilite.model.Caisse;
 import com.boulangerie.comptabilite.service.*;
 import com.boulangerie.livreurs.event.CompteRenduLivreurClotureEvent;

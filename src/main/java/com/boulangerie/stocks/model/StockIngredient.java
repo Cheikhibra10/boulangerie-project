@@ -25,6 +25,9 @@ public class StockIngredient extends AbstractAuditingEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ingredient_id", unique = true, nullable = false)
     private Ingredient ingredient;

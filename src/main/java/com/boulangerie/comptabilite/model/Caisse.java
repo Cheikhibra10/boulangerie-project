@@ -25,6 +25,14 @@ public class Caisse extends AbstractAuditingEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Empêche deux fermetures concurrentes de la même caisse (deux
+    // utilisateurs qui cliquent "fermer" en même temps) de s'écraser
+    // silencieusement l'une l'autre — la seconde échoue proprement avec
+    // OptimisticLockException plutôt que de remplacer en silence le solde
+    // physique/motif d'écart du premier par le second.
+    @Version
+    private Long version;
+
     @Column(name = "date_ouverture", nullable = false)
     private Instant dateOuverture;
 

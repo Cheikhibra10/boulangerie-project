@@ -23,6 +23,16 @@ public class StockProduit extends AbstractAuditingEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Verrou optimiste : sans lui, deux ventes concurrentes qui lisent la
+    // même quantité de stock, la décrémentent chacune en mémoire, puis
+    // sauvegardent, écrasent silencieusement le résultat l'une de l'autre
+    // (perte de mise à jour) — c'est exactement le mécanisme d'une
+    // survente. Avec @Version, la seconde sauvegarde échoue avec
+    // OptimisticLockException (mappée en 409 par GlobalExceptionHandler)
+    // plutôt que de corrompre silencieusement la quantité en stock.
+    @Version
+    private Long version;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produit_id", unique = true, nullable = false)
     private Produit produit;

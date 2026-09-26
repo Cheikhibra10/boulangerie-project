@@ -143,6 +143,13 @@ public class StockServiceImpl implements StockService {
         }
     }
 
+    private StockIngredient chargerStock(Long ingredientId) {
+        Ingredient ingredient = ingredientService.findIngredientOrThrow(ingredientId);
+        return stockIngredientRepository.findByIngredient(ingredient)
+                .orElseThrow(() -> new EntityNotFoundException("Stock introuvable pour l'ingrédient " + ingredient.getLibelle()));
+
+    }
+
     @Override
     public StockIngredientDto modifierSeuilAlerte(Long stockId, SeuilAlerteRequest request) {
        StockIngredient stock= stockIngredientRepository.findById(stockId)
@@ -175,6 +182,7 @@ public class StockServiceImpl implements StockService {
             List<String> alertes
     ){
         StockIngredient stock = chargerStock(consommation.ingredientId());
+        boolean etaitSousSeuil = stock.estSousSeuil();
         mouvements.add(appliquerMouvementStock(
                         consommation.ingredientId(),
                         TypeMouvementStock.CONSOMMATION_PRODUCTION,
@@ -184,7 +192,7 @@ public class StockServiceImpl implements StockService {
                         null,
                         alertes
                 ));
-        verifierSeuil(stock, alertes);
+        verifierSeuil(stock, alertes, etaitSousSeuil);
     }
 
     private void verifierTypeMouvementManuel(TypeMouvementStock type) {
@@ -225,9 +233,11 @@ public class StockServiceImpl implements StockService {
                 ligneAchatId
         );
 
+        boolean etaitSousSeuil = stock.estSousSeuil();
         stock.appliquerMouvement(type, quantite, montant);
+        verifierSeuil(stock, alertes, etaitSousSeuil);
 
-        verifierSeuil(stock, alertes);
+        stock.appliquerMouvement(type, quantite, montant);
 
         stockIngredientRepository.save(stock);
 
@@ -249,7 +259,7 @@ public class StockServiceImpl implements StockService {
         }
     }
 
-    private void verifierSeuil(StockIngredient stock, List<String> alertes) {
+    private void verifierSeuil(StockIngredient stock, List<String> alertes, boolean etaitSousSeuilAvant) {
         if (!stock.estSousSeuil()) {
             return;
         }
@@ -257,12 +267,9 @@ public class StockServiceImpl implements StockService {
         if (alertes != null) {
             alertes.add(message);
         }
-        alerteService.alerterStockBas(stock.getIngredient(), stock);
-    }
-
-    private StockIngredient chargerStock(Long ingredientId) {
-        return stockIngredientRepository.findByIngredientId(ingredientId)
-                .orElseThrow(() -> new EntityNotFoundException("Stock pour cet ingredient introuvable" +ingredientId));
+        if (!etaitSousSeuilAvant) {
+            alerteService.alerterStockBas(stock.getIngredient(), stock);
+        }
     }
 
     @Transactional
@@ -380,17 +387,21 @@ public class StockServiceImpl implements StockService {
     @Transactional
     public void diminuerStockProduit(Long produitId, BigDecimal quantite) {
         StockProduit stock = chargerStockProduit(produitId);
+        boolean etaitSousSeuil = stock.estSousSeuil();
         stock.retirer(quantite);
-        verifierSeuilProduit(stock);
+        verifierSeuilProduit(stock, etaitSousSeuil);
         stockProduitRepository.save(stock);
-        log.info(  "Stock produit {} diminué de {}", produitId, quantite);
+        log.info("Stock produit {} diminué de {}", produitId, quantite);
     }
 
-    private void verifierSeuilProduit(StockProduit stock) {
+    private void verifierSeuilProduit(StockProduit stock, boolean etaitSousSeuilAvant) {
         if(!stock.estSousSeuil()){
             return;
         }
         log.warn("Stock bas pour le produit {}", stock.getProduit().getLibelle());
+        if (!etaitSousSeuilAvant) {
+            alerteService.alerterStockBasProduit(stock.getProduit(), stock);
+        }
     }
 
     @Override

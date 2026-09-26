@@ -124,6 +124,13 @@ public class RecetteServiceImpl
         return mapper.toDto(repository.save(recette));
     }
 
+    @Override
+    public RecetteDto restore(Long id) {
+        Recette recette = getEntityById(id);
+        recette.setActif(true);
+        return mapper.toDto(repository.save(recette));
+    }
+
     private void desactiverRecette(Recette recette) {
         recette.setActif(false);
         recetteRepository.save(recette);

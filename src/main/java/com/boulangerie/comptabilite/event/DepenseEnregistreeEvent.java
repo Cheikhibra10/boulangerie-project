@@ -1,5 +1,6 @@
 package com.boulangerie.comptabilite.event;
 
+import com.boulangerie.shared.model.Notifiable;
 import com.boulangerie.shared.model.TypePaiement;
 
 import java.math.BigDecimal;
@@ -14,5 +15,5 @@ public record DepenseEnregistreeEvent (
         String motif,
         String libelle
 
-){
+) implements Notifiable {
 }

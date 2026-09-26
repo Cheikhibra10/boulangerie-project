@@ -8,9 +8,12 @@ import com.boulangerie.shared.dto.PageResponse;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 public interface PeriodeManagementService {
     PeriodeDto creerPeriode(CreationPeriodeDto dto);
+
+    PeriodeDto creerPeriodeMensuelle(YearMonth mois);
 
     PeriodeDto fermerPeriode(Long id);
 

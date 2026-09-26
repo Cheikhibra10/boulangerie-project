@@ -18,5 +18,5 @@ public record MouvementCaisseEvent(
 
         String libelle
 
-) {
+) implements Notifiable {
 }

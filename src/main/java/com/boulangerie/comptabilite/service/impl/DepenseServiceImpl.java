@@ -3,6 +3,7 @@ package com.boulangerie.comptabilite.service.impl;
 import com.boulangerie.administration.model.CategorieDepense;
 import com.boulangerie.administration.service.CategorieDepenseService;
 import com.boulangerie.comptabilite.dto.*;
+import com.boulangerie.comptabilite.event.DepenseEnregistreeEvent;
 import com.boulangerie.comptabilite.mapper.DepenseMapper;
 import com.boulangerie.comptabilite.model.*;
 import com.boulangerie.comptabilite.repository.DepensePeriodeRepository;
@@ -34,6 +35,7 @@ public class DepenseServiceImpl implements DepenseService {
     private final CategorieDepenseService categorieService;
     private final PeriodeManagementService periodeService;
 
+
     @Override
     public DepenseDto enregistrerDepense(EnregistrerDepenseDto dto) {
 
@@ -44,13 +46,13 @@ public class DepenseServiceImpl implements DepenseService {
         Periode periode = periodeService.findPeriodeOuverte();
 
         MouvementCaisse mouvement = mouvementService.creerMouvement(
-                        TypeMouvement.DEPENSE_PERIODE,
-                        SensMouvement.SORTIE,
-                        TypePaiement.CASH,
-                        caisse,
-                        dto.getLibelle(),
-                        dto.getMontant()
-                );
+                TypeMouvement.DEPENSE_PERIODE,
+                SensMouvement.SORTIE,
+                TypePaiement.CASH,
+                caisse,
+                dto.getLibelle(),
+                dto.getMontant()
+        );
 
         DepensePeriode depense = new DepensePeriode()
                 .setCategorie(categorie)
@@ -58,6 +60,14 @@ public class DepenseServiceImpl implements DepenseService {
                 .setMouvement(mouvement);
 
         depense = depenseRepository.save(depense);
+
+        publisher.publishEvent(new DepenseEnregistreeEvent(
+                depense.getId(),
+                dto.getMontant(),
+                mouvement.getModePaiement(),
+                categorie.getLibelle(),
+                dto.getLibelle()
+        ));
 
         return depenseMapper.toDto(depense);
     }

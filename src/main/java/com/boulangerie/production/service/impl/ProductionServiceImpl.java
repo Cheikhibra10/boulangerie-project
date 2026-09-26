@@ -60,7 +60,7 @@ public class ProductionServiceImpl implements ProductionService {
     @Override
     @Transactional(readOnly = true)
     public LotProductionDto getLot(Long id) {
-        return lotRepository.findByIdWithProduit(id)
+        return lotRepository.findById(id)
                 .map(lotMapper::toDto)
                 .orElseThrow(() -> new EntityNotFoundException("LotProduction" +id));
     }

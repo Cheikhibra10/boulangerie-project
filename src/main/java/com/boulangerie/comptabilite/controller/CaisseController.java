@@ -64,7 +64,7 @@ public class CaisseController {
 
     @Operation(summary = "Lister toutes les caisses (paginé)")
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
     public ResponseEntity<PageResponse<CaisseDto>> getCaisses(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

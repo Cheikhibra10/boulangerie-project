@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -56,6 +57,27 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI());
     }
 
+    // --- Écriture concurrente perdue (optimistic locking, @Version) : deux
+// requêtes ont chargé la même ligne, l'une a sauvegardé entre-temps —
+// la seconde échoue proprement au lieu d'écraser silencieusement la
+// première (c'est exactement le mécanisme anti-survente sur les stocks
+// et anti-double-fermeture sur caisses/périodes). 409, pas 500 : c'est
+// une situation attendue et rejouable, pas un bug.
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ExceptionSchema> handleOptimisticLock(ObjectOptimisticLockingFailureException ex, HttpServletRequest request) {
+        log.warn(
+                "Conflit d'écriture concurrente sur {} ({}) : {}",
+                request.getRequestURI(),
+                ex.getPersistentClassName(),
+                ex.getMessage()
+        );
+
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                "Cette donnée a été modifiée entre-temps par une autre opération — veuillez réessayer",
+                request.getRequestURI()
+        );
+    }
     // --- Violation de contrainte réelle levée par Hibernate/JPA (unicité, NOT NULL, FK...) ---
     // NB : org.springframework.dao.DataIntegrityViolationException, PAS un type maison —
     // c'est bien celui que Spring Data lève lui-même depuis repository.save()/delete().

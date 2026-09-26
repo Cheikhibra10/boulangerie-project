@@ -42,7 +42,7 @@ public interface DestinationProductionRepository extends JpaRepository<Destinati
             @Param("date") LocalDate date
     );
 
-    @Query("SELECT d FROM DestinationProduction d JOIN FETCH d.lot JOIN FETCH d.produitId WHERE d.id = :id")
+    @Query("SELECT d FROM DestinationProduction d JOIN FETCH d.lot WHERE d.id = :id")
     Optional<DestinationProduction> findByIdWithDetails(@Param("id") Long id);
 
     List<DestinationProduction> findByDateBetweenAndCanal(

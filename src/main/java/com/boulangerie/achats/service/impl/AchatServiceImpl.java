@@ -1,6 +1,7 @@
 package com.boulangerie.achats.service.impl;
 
 import com.boulangerie.achats.dto.*;
+import com.boulangerie.achats.event.AchatReceptionneEvent;
 import com.boulangerie.achats.exception.*;
 import com.boulangerie.achats.mapper.*;
 import com.boulangerie.achats.model.*;
@@ -140,6 +141,14 @@ public class AchatServiceImpl implements AchatService {
         log.info("Achat {} réceptionné par {}",
                 achatId,
                 currentUserService.getCurrentUser().getNom());
+
+        publisher.publishEvent(new AchatReceptionneEvent(
+                achat.getId(),
+                achat.getFournisseur().getNom(),
+                achat.getMontantTotal(),
+                "Achat #" + achat.getId() + " réceptionné — " + achat.getFournisseur().getNom()
+        ));
+
         return achatMapper.toDto(achat);
     }
 

@@ -8,16 +8,11 @@ import com.boulangerie.comptabilite.model.Periode;
 import com.boulangerie.comptabilite.model.ResultatData;
 import com.boulangerie.comptabilite.model.ResultatPeriode;
 import com.boulangerie.comptabilite.repository.PeriodeRepository;
-import com.boulangerie.shared.dto.MouvementCaisseEvent;
-import com.boulangerie.shared.model.*;
 import com.boulangerie.stocks.api.SnapshotServiceApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +20,6 @@ import java.math.BigDecimal;
 public class PeriodeClosureService {
     
     private final PeriodeRepository periodeRepository;
-    private final CaisseService caisseService;
-    private final ApplicationEventPublisher publisher;
     private final PeriodeMapper periodeMapper;
     private final DataAggregationService aggregationService;
     private final ResultatCalculator resultatCalculator;
@@ -44,8 +37,7 @@ public class PeriodeClosureService {
 
         periode.enregistrerResultat(resultat);
 
-        publierBeneficeSiNecessaire(periode);
-
+        reporterBeneficeDansPeriodeSuivante(periode, resultat);
 
         snapshotServiceApi.creerSnapshots(id);
 
@@ -56,24 +48,16 @@ public class PeriodeClosureService {
         return periodeMapper.toDto(periode);
     }
 
-    private void publierBeneficeSiNecessaire(Periode periode) {
+    private void reporterBeneficeDansPeriodeSuivante(
+            Periode periode,
+            ResultatPeriode resultat) {
 
-        BigDecimal benefice = periode.getBeneficeReport();
-
-        if (benefice == null || benefice.signum() <= 0) {
-            return;
-        }
-
-        publisher.publishEvent(
-                new MouvementCaisseEvent(
-                        caisseService.getCaisseOuverte().getId(),
-                        TypeMouvement.REPORT_BENEFICE,
-                        SensMouvement.ENTREE,
-                        TypePaiement.CASH,
-                        benefice,
-                        "Report bénéfice période #" + periode.getId()
-                )
-        );
+        periodeRepository.findByDate(periode.getDateFin().plusDays(1))
+                .ifPresent(periodeSuivante -> {
+                    periodeSuivante.initialiserBeneficeReport(
+                            resultat.getMontantAReporter());
+                    periodeRepository.save(periodeSuivante);
+                });
     }
 
     private Periode findPeriode(Long id) {

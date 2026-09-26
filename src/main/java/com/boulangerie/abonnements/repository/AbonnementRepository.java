@@ -29,7 +29,7 @@ public interface AbonnementRepository extends JpaRepository<Abonnement, Long> {
     @Query("SELECT COUNT(a) FROM Abonnement a WHERE a.actif = true")
     Integer countByActifTrue();
 
-    @Query("SELECT a FROM Abonnement a JOIN FETCH a.lignes l JOIN FETCH l.client.id WHERE a.id = :id")
+    @Query("SELECT a FROM Abonnement a JOIN FETCH a.lignes l JOIN FETCH l.client WHERE a.id = :id")
     Optional<Abonnement> findByIdWithLignesAndClients(@Param("id") Long id);
 
     @Query("""

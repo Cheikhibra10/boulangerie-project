@@ -1,5 +1,6 @@
 package com.boulangerie.abonnements.event;
 
+import com.boulangerie.shared.model.Notifiable;
 import com.boulangerie.shared.model.SensMouvement;
 import com.boulangerie.shared.model.TypeMouvement;
 import com.boulangerie.shared.model.TypePaiement;
@@ -19,4 +20,4 @@ public record VersementAbonnementEnregistreEvent(
         TypePaiement modePaiement,
 
         String libelle
-) {}
+) implements Notifiable {}

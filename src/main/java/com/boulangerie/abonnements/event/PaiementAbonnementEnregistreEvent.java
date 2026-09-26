@@ -1,5 +1,6 @@
 package com.boulangerie.abonnements.event;
 
+import com.boulangerie.shared.model.Notifiable;
 import com.boulangerie.shared.model.TypePaiement;
 
 import java.math.BigDecimal;
@@ -13,4 +14,4 @@ public record PaiementAbonnementEnregistreEvent(
         TypePaiement modePaiement,
         String libelle,
         Instant date
-) {}
+) implements Notifiable {}

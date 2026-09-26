@@ -13,7 +13,7 @@ import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.time.YearMonth;
 
 
 @Entity
@@ -33,6 +33,9 @@ public class Periode extends AbstractAuditingEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
 
     @Column(name = "date_debut", nullable = false, unique = true)
     private LocalDate dateDebut;
@@ -63,6 +66,15 @@ public class Periode extends AbstractAuditingEntity {
         periode.beneficeReport = BigDecimal.ZERO;
 
         return periode;
+    }
+
+    public static Periode creerPourMois(YearMonth mois) {
+
+        if (mois == null) {
+            throw new DateInvalideException("Le mois est obligatoire.");
+        }
+
+        return creer(mois.atDay(1), mois.atEndOfMonth());
     }
 
     public void fermer() {
@@ -115,7 +127,6 @@ public class Periode extends AbstractAuditingEntity {
         this.beneficeReport = montant;
     }
 
-
     public boolean estOuverte() {
         return statut == StatutPeriode.OUVERTE;
     }
@@ -140,8 +151,9 @@ public class Periode extends AbstractAuditingEntity {
             throw new DateInvalideException("Dates obligatoires.");
         }
 
-        if (!fin.equals(debut.plusMonths(1).minusDays(1))) {
-            throw new DateInvalideException("Une période doit durer exactement un mois.");
+        YearMonth mois = YearMonth.from(debut);
+        if (!debut.equals(mois.atDay(1)) || !fin.equals(mois.atEndOfMonth())) {
+            throw new DateInvalideException("Une période doit correspondre à un mois civil complet.");
         }
     }
 

@@ -2,9 +2,7 @@
 package com.boulangerie.abonnements.service.impl;
 
 import com.boulangerie.abonnements.dto.*;
-import com.boulangerie.abonnements.event.VersementEvent;
 import com.boulangerie.abonnements.exception.AbonnementExpireException;
-import com.boulangerie.abonnements.exception.AbonnementInactifException;
 import com.boulangerie.abonnements.exception.DepassementConsommationException;
 import com.boulangerie.abonnements.mapper.AbonnementMapper;
 import com.boulangerie.abonnements.mapper.LigneAbonnementMapper;
@@ -13,14 +11,9 @@ import com.boulangerie.abonnements.repository.*;
 import com.boulangerie.abonnements.service.*;
 import com.boulangerie.administration.service.LivreurService;
 import com.boulangerie.production.api.DistributionService;
-import com.boulangerie.shared.dto.MouvementCaisseEvent;
 import com.boulangerie.shared.dto.PageResponse;
-import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.ConflictException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
-import com.boulangerie.shared.model.SensMouvement;
-import com.boulangerie.shared.model.TypeMouvement;
-import com.boulangerie.shared.model.TypePaiement;
 import com.boulangerie.shared.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @Service

@@ -21,6 +21,7 @@ public abstract class GenericCrudController<T, D> {
     @Operation(summary = "Créer une entité")
     @ApiResponse(responseCode = "201", description = "Créé avec succès")
     @ApiResponse(responseCode = "400", description = "Requête invalide")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @PostMapping
     public ResponseEntity<D> create(@Valid @RequestBody D dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(dto));
@@ -30,6 +31,7 @@ public abstract class GenericCrudController<T, D> {
     @Operation(summary = "Mettre à jour une entité")
     @ApiResponse(responseCode = "200", description = "Mise à jour avec succès")
     @ApiResponse(responseCode = "404", description = "Entité non trouvée")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<D> update(@PathVariable Long id, @RequestBody D dto) {
         return ResponseEntity.ok(service.update(id, dto));
@@ -39,6 +41,7 @@ public abstract class GenericCrudController<T, D> {
     @Operation(summary = "Mettre à jour partiellement une entité")
     @ApiResponse(responseCode = "200", description = "Mise à jour partielle avec succès")
     @ApiResponse(responseCode = "404", description = "Entité non trouvée")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<D> patch(@PathVariable Long id, @RequestBody D dto) {
         return ResponseEntity.ok(service.patchFields(id, dto));
@@ -47,6 +50,7 @@ public abstract class GenericCrudController<T, D> {
     // ===================== GET ALL (paginé) =====================
     @Operation(summary = "Lister toutes les entités")
     @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @GetMapping
     public ResponseEntity<PageResponse<D>> findAll(
             @RequestParam(defaultValue = "0") int page,
@@ -58,7 +62,7 @@ public abstract class GenericCrudController<T, D> {
     @Operation(summary = "Obtenir une entité par son ID")
     @ApiResponse(responseCode = "200", description = "Entité trouvée")
     @ApiResponse(responseCode = "404", description = "Entité non trouvée")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<D> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
@@ -68,6 +72,7 @@ public abstract class GenericCrudController<T, D> {
     @Operation(summary = "Supprimer une entité")
     @ApiResponse(responseCode = "200", description = "Supprimée avec succès")
     @ApiResponse(responseCode = "404", description = "Entité non trouvée")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<D> delete(@PathVariable Long id) {
         return ResponseEntity.ok(service.delete(id));
@@ -77,7 +82,7 @@ public abstract class GenericCrudController<T, D> {
     @Operation(summary = "Archiver une entité (désactivation logique)")
     @ApiResponse(responseCode = "200", description = "Archivée avec succès")
     @ApiResponse(responseCode = "404", description = "Entité non trouvée")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @PutMapping("/{id}/archive")
     public ResponseEntity<D> archive(@PathVariable Long id) {
         return ResponseEntity.ok(service.archive(id));
@@ -87,6 +92,7 @@ public abstract class GenericCrudController<T, D> {
     @Operation(summary = "Restaurer une entité archivée")
     @ApiResponse(responseCode = "200", description = "Restaurée avec succès")
     @ApiResponse(responseCode = "404", description = "Entité non trouvée")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @PutMapping("/{id}/restore")
     public ResponseEntity<D> restore(@PathVariable Long id) {
         return ResponseEntity.ok(service.restore(id));

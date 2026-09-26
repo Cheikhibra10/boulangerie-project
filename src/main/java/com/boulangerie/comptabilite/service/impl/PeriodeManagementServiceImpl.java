@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Optional;
 
 @Service
@@ -40,21 +41,19 @@ public class PeriodeManagementServiceImpl  implements PeriodeManagementService {
 
     @Override
     public PeriodeDto creerPeriode(CreationPeriodeDto dto) {
-
-        verifierChevauchement(dto);
-
-        Periode periode = Periode.creer(
+        return enregistrerNouvellePeriode(Periode.creer(
                 dto.getDateDebut(),
                 dto.getDateFin()
-        );
+        ));
+    }
 
-        reporterBeneficePeriodePrecedente(periode);
+    @Override
+    public PeriodeDto creerPeriodeMensuelle(YearMonth mois) {
+        if (mois == null) {
+            throw new IllegalArgumentException("Le mois est obligatoire.");
+        }
 
-        periodeRepository.save(periode);
-
-        log.info("Nouvelle période créée : {} -> {}", periode.getDateDebut(), periode.getDateFin());
-
-        return periodeMapper.toDto(periode);
+        return enregistrerNouvellePeriode(Periode.creerPourMois(mois));
     }
 
     @Override
@@ -179,23 +178,33 @@ public class PeriodeManagementServiceImpl  implements PeriodeManagementService {
     }
 
 
-    private void verifierChevauchement(
-            CreationPeriodeDto dto) {
+    private PeriodeDto enregistrerNouvellePeriode(Periode periode) {
+        verifierChevauchement(periode);
+
+        reporterBeneficePeriodePrecedente(periode);
+        periodeRepository.save(periode);
+
+        log.info("Nouvelle période créée : {} -> {}", periode.getDateDebut(), periode.getDateFin());
+        return periodeMapper.toDto(periode);
+    }
+
+    private void verifierChevauchement(Periode periode) {
 
         if (periodeRepository.existsOverlappingPeriods(
-                dto.getDateDebut(),
-                dto.getDateFin())) {
+                periode.getDateDebut(),
+                periode.getDateFin())) {
 
             throw new PeriodeOverlapException(
-                    dto.getDateDebut(),
-                    dto.getDateFin());
+                    periode.getDateDebut(),
+                    periode.getDateFin());
         }
     }
 
     private void reporterBeneficePeriodePrecedente(Periode periode) {
 
         periodeRepository
-                .findTopByStatutOrderByDateFinDesc(StatutPeriode.CLOTUREE)
+                .findByDate(periode.getDateDebut().minusDays(1))
+                .filter(Periode::estCloturee)
                 .map(Periode::getResultat)
                 .map(ResultatPeriode::getMontantAReporter)
                 .ifPresent(periode::initialiserBeneficeReport);

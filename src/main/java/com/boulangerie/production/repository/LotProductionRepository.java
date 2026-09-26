@@ -29,8 +29,6 @@ public interface LotProductionRepository extends JpaRepository<LotProduction, Lo
     );
     Page<LotProduction> findByProduitIdOrderByDateDesc(Long produitId, Pageable pageable);
 
-    @Query("SELECT lp FROM LotProduction lp JOIN FETCH lp.produitId WHERE lp.id = :id")
-    Optional<LotProduction> findByIdWithProduit(@Param("id") Long id);
 
     @Query("SELECT COALESCE(SUM(l.quantiteRealisee), 0) FROM LotProduction l " +
             "WHERE l.date BETWEEN :debut AND :fin AND l.quantiteRealisee IS NOT NULL")

@@ -41,7 +41,7 @@ public class ProductionExcelExportServiceImpl
      * plus hardcodées : ces valeurs ne coïncidaient avec les
      * vraies colonnes de totaux que pour un mois de 31 jours
      * (décembre). Pour tout autre mois, totalGpColumn/totalPpColumn
-     * se décalent vers la gauche mais des constantes fixes
+     * se décalent vers la gauche, mais des constantes fixes
      * resteraient en place, laissant un écart de colonnes
      * inutilisées et non masquées.
      */
@@ -84,7 +84,7 @@ public class ProductionExcelExportServiceImpl
      *
      * NOTE : "mm-dd-yy" est un format anglo-saxon (mois/jour/année).
      * Si un format jour/mois/année est préféré pour une entreprise
-     * francophone, remplacer par "dd/MM/yyyy" ou "dd/MM/yy".
+     * francophone, remplacé par "dd/MM/yyyy" ou "dd/MM/yy".
      */
     private static final String DATE_FORMAT = "dd-mm-yyyy";
 
