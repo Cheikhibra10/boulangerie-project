@@ -6,7 +6,6 @@ import com.boulangerie.administration.dto.ProduitUpdateDto;
 import com.boulangerie.administration.service.ProduitService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -26,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/produits")
 @RequiredArgsConstructor
 @Tag(name = "Produits", description = "Gestion des produits finis ADMIN-MANAGER")
-@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER','CAISSIER')")
 public class ProduitController {
 
     private final ProduitService produitService;

@@ -81,7 +81,7 @@ public class VenteController {
 
     @Operation(summary = "Annuler une vente")
     @PostMapping("/{venteId}/annulation")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER', 'CAISSIER')")
     public ResponseEntity<ApiResponse<VenteDto>> annuler(
             @PathVariable Long venteId,
             @Valid @RequestBody AnnulationVenteRequestDto dto) {
