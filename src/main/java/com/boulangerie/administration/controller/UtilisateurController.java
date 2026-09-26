@@ -36,7 +36,7 @@ public class UtilisateurController
     // ===================== MÉTHODES SPÉCIFIQUES =====================
 
     @Operation(summary = "Rechercher un utilisateur par email")
-    @PreAuthorize("hasAnyRole('MANAGER','ADMIN', 'CAISSIER, GESTIONNAIRE_PRODUCTION')")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN', 'CAISSIER', 'GESTIONNAIRE_PRODUCTION')")
     @GetMapping("/email/{email}")
     public ResponseEntity<UtilisateurDto> findByEmail(@PathVariable String email) {
         return ResponseEntity.ok(utilisateurService.findByEmail(email));
