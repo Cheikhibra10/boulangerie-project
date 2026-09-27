@@ -9,6 +9,7 @@ import com.boulangerie.production.model.DestinationProduction;
 import com.boulangerie.production.model.LotProduction;
 import com.boulangerie.production.repository.DestinationProductionRepository;
 import com.boulangerie.production.repository.LotProductionRepository;
+import com.boulangerie.production.repository.LotQuantiteDistribueeProjection;
 import com.boulangerie.production.service.ProductionService;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.EntityNotFoundException;
@@ -23,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -60,16 +63,41 @@ public class ProductionServiceImpl implements ProductionService {
     @Override
     @Transactional(readOnly = true)
     public LotProductionDto getLot(Long id) {
-        return lotRepository.findById(id)
-                .map(lotMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("LotProduction" +id));
+        LotProduction lot = lotRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("LotProduction" + id));
+        LotProductionDto dto = lotMapper.toDto(lot);
+        dto.setQuantiteARepartir(lot.getQuantiteRestante());
+        return dto;
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<LotProductionDto> getLots(int page, int size) {
         Page<LotProduction> pageResult = lotRepository.findAll(PageRequest.of(page, size));
-        return PageUtils.toPageResponse(pageResult.map(lotMapper::toDto));
+
+        List<Long> lotIds = pageResult.getContent().stream()
+                .map(LotProduction::getId)
+                .toList();
+
+        Map<Long, BigDecimal> quantitesDistribuees = lotIds.isEmpty()
+                ? Map.of()
+                : destinationRepository.sumQuantiteByLotIds(lotIds).stream()
+                .collect(Collectors.toMap(
+                        LotQuantiteDistribueeProjection::getLotId,
+                        LotQuantiteDistribueeProjection::getTotal
+                ));
+
+        Page<LotProductionDto> dtoPage = pageResult.map(lot -> {
+            LotProductionDto dto = lotMapper.toDto(lot);
+            BigDecimal realisee = lot.getQuantiteRealisee() == null
+                    ? BigDecimal.ZERO
+                    : lot.getQuantiteRealisee();
+            BigDecimal distribuee = quantitesDistribuees.getOrDefault(lot.getId(), BigDecimal.ZERO);
+            dto.setQuantiteARepartir(realisee.subtract(distribuee));
+            return dto;
+        });
+
+        return PageUtils.toPageResponse(dtoPage);
     }
 
     @Override

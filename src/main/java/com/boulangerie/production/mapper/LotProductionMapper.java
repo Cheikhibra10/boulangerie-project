@@ -23,6 +23,7 @@ public abstract class LotProductionMapper implements EntityMapper<LotProductionD
 
     @Mapping(target = "recetteId", source = "recetteId")
     @Mapping(target = "ecart", ignore = true)
+    @Mapping(target = "quantiteARepartir", ignore = true)
     public abstract LotProductionDto toDto(LotProduction entity);
 
     @AfterMapping

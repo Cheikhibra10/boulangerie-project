@@ -21,4 +21,5 @@ public class LotProductionDto extends AbstractAuditingDto {
     private BigDecimal quantitePrevue;
     private BigDecimal quantiteRealisee;
     private BigDecimal ecart;
+    private BigDecimal quantiteARepartir;
 }

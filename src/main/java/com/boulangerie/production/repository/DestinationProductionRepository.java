@@ -17,7 +17,6 @@ import java.util.Optional;
 
 @Repository
 public interface DestinationProductionRepository extends JpaRepository<DestinationProduction, Long> {
-
     List<DestinationProduction> findByLotId(Long lotId);
 
     List<DestinationProduction> findByDateAndCanal(LocalDate date, CanalDistribution canal);
@@ -30,6 +29,14 @@ public interface DestinationProductionRepository extends JpaRepository<Destinati
 
     @Query("SELECT COALESCE(SUM(d.quantite), 0) FROM DestinationProduction d WHERE d.lot.id = :lotId")
     BigDecimal sumQuantiteByLotId(@Param("lotId") Long lotId);
+
+    @Query("""
+        select d.lot.id as lotId, coalesce(sum(d.quantite), 0) as total
+        from DestinationProduction d
+        where d.lot.id in :lotIds
+        group by d.lot.id
+        """)
+    List<LotQuantiteDistribueeProjection> sumQuantiteByLotIds(@Param("lotIds") List<Long> lotIds);
 
     @Query("""
             select coalesce(sum(d.quantite),0)
@@ -53,3 +60,4 @@ public interface DestinationProductionRepository extends JpaRepository<Destinati
 
     List<DestinationProduction> findByDateBetweenAndEtatPain(LocalDate debut, LocalDate fin, EtatPain etatPain);
 }
+

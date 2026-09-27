@@ -131,4 +131,15 @@ public class LotProduction extends AbstractAuditingEntity {
             throw new BadRequestException("La quantité réalisée dépasse la quantité prévue.");
         }
     }
+
+    public BigDecimal getQuantiteDistribuee() {
+        return destinations.stream()
+                .map(DestinationProduction::getQuantite)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getQuantiteRestante() {
+        BigDecimal realisee = quantiteRealisee == null ? BigDecimal.ZERO : quantiteRealisee;
+        return realisee.subtract(getQuantiteDistribuee());
+    }
 }
