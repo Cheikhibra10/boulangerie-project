@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/recettes")
 @Tag(name = "Recettes", description = "Gestion des recettes de fabrication ADMIN-MANAGER")
-@PreAuthorize("hasAnyRole('MANAGER','ADMIN', 'GESTIONNAIRE_PRODUCTION')")
+@PreAuthorize("hasAnyRole('MANAGER','ADMIN','GESTIONNAIRE_PRODUCTION')")
 public class RecetteController
         extends GenericCrudController<Recette, RecetteDto> {
 
