@@ -1,10 +1,13 @@
 package com.boulangerie.administration.controller;
 
+import com.boulangerie.administration.dto.FournisseurDto;
 import com.boulangerie.administration.dto.LivreurDto;
 import com.boulangerie.administration.model.Livreur;
 import com.boulangerie.administration.service.LivreurService;
 import com.boulangerie.shared.controller.GenericCrudController;
+import com.boulangerie.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,7 +29,15 @@ public class LivreurController
         this.livreurService = service;
     }
 
-
+    @Operation(summary = "Lister les livreurs")
+    @ApiResponse( responseCode = "200", description = "Liste des livreurs récupérée avec succès" )
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @GetMapping
+    public ResponseEntity<PageResponse<LivreurDto>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok( livreurService.findAll(page, size));
+    }
     @Operation(summary = "Lister tous les livreurs actifs")
     @GetMapping("/actifs")
     public ResponseEntity<List<LivreurDto>> findAllActive() {

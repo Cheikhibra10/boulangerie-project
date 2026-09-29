@@ -47,16 +47,6 @@ public abstract class GenericCrudController<T, D> {
         return ResponseEntity.ok(service.patchFields(id, dto));
     }
 
-    // ===================== GET ALL (paginé) =====================
-    @Operation(summary = "Lister toutes les entités")
-    @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
-    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
-    @GetMapping
-    public ResponseEntity<PageResponse<D>> findAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(service.findAll(page, size));
-    }
 
     // ===================== GET BY ID =====================
     @Operation(summary = "Obtenir une entité par son ID")

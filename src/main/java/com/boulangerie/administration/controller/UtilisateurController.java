@@ -1,5 +1,6 @@
 package com.boulangerie.administration.controller;
 
+import com.boulangerie.administration.dto.FournisseurDto;
 import com.boulangerie.administration.dto.RegisterUtilisateurRequestDto;
 import com.boulangerie.administration.dto.UtilisateurDto;
 import com.boulangerie.administration.model.RoleUtilisateur;
@@ -8,6 +9,7 @@ import com.boulangerie.administration.service.UtilisateurService;
 import com.boulangerie.shared.controller.GenericCrudController;
 import com.boulangerie.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +34,15 @@ public class UtilisateurController
         this.utilisateurService = service;
     }
 
+    @Operation(summary = "Lister les utilisateurs")
+    @ApiResponse( responseCode = "200", description = "Liste des utilisateurs récupérée avec succès" )
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @GetMapping
+    public ResponseEntity<PageResponse<UtilisateurDto>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok( utilisateurService.findAll(page, size) );
+    }
 
     // ===================== MÉTHODES SPÉCIFIQUES =====================
 

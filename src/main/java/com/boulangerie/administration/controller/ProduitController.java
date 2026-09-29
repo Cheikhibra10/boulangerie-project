@@ -125,9 +125,7 @@ public class ProduitController {
 
     @Operation(summary = "Lister les produits")
     @GetMapping
-
-    @PreAuthorize("hasAnyRole('GESTIONNAIRE_PRODUCTION','CAISSIER')")
-
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE_PRODUCTION','CAISSIER','ADMIN','MANAGER')")
     public ResponseEntity<PageResponse<ProduitDto>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
