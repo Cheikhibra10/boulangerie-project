@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/produits")
 @RequiredArgsConstructor
 @Tag(name = "Produits", description = "Gestion des produits finis ADMIN-MANAGER")
-@PreAuthorize("hasAnyRole('ADMIN','MANAGER','CAISSIER')")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
 public class ProduitController {
 
     private final ProduitService produitService;
@@ -125,6 +125,8 @@ public class ProduitController {
 
     @Operation(summary = "Lister les produits")
     @GetMapping
+
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE_PRODUCTION','CAISSIER')")
 
     public ResponseEntity<PageResponse<ProduitDto>> getAll(
             @RequestParam(defaultValue = "0") int page,
