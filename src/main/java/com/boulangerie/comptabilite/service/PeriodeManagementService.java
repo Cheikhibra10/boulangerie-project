@@ -13,7 +13,7 @@ import java.time.YearMonth;
 public interface PeriodeManagementService {
     PeriodeDto creerPeriode(CreationPeriodeDto dto);
 
-    PeriodeDto creerPeriodeMensuelle(YearMonth mois);
+//    PeriodeDto creerPeriodeMensuelle(YearMonth mois);
 
     PeriodeDto fermerPeriode(Long id);
 

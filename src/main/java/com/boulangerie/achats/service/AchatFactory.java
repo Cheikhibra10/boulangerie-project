@@ -3,7 +3,6 @@ package com.boulangerie.achats.service;
 import com.boulangerie.achats.dto.CreationAchatDto;
 import com.boulangerie.achats.dto.LigneAchatRequestDto;
 import com.boulangerie.achats.model.Achat;
-import com.boulangerie.shared.dto.ValeursStock;
 import com.boulangerie.administration.model.Fournisseur;
 import com.boulangerie.administration.model.Ingredient;
 import com.boulangerie.administration.repository.FournisseurRepository;

@@ -11,22 +11,22 @@ public final class StockConstants {
      * 6 sacs de farine.
      */
     public static final BigDecimal SEUIL_FARINE =
-            BigDecimal.valueOf(300);
+            BigDecimal.valueOf(6);
 
     /**
      * 1 sac de sucre.
      */
     public static final BigDecimal SEUIL_SUCRE =
-            BigDecimal.valueOf(150);
+            BigDecimal.ONE;
 
     /**
      * 1 carton de levure.
      */
     public static final BigDecimal SEUIL_LEVURE =
-            BigDecimal.valueOf(250);
+            BigDecimal.ONE;
 
     public static final BigDecimal SEUIL_AMELIORANT =
-            BigDecimal.valueOf(250);
+                BigDecimal.ONE;
 
     /**
      * Produits finis.

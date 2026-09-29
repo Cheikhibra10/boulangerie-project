@@ -47,14 +47,14 @@ public class PeriodeManagementServiceImpl  implements PeriodeManagementService {
         ));
     }
 
-    @Override
-    public PeriodeDto creerPeriodeMensuelle(YearMonth mois) {
-        if (mois == null) {
-            throw new IllegalArgumentException("Le mois est obligatoire.");
-        }
-
-        return enregistrerNouvellePeriode(Periode.creerPourMois(mois));
-    }
+//    @Override
+//    public PeriodeDto creerPeriodeMensuelle(YearMonth mois) {
+//        if (mois == null) {
+//            throw new IllegalArgumentException("Le mois est obligatoire.");
+//        }
+//
+//        return enregistrerNouvellePeriode(Periode.creerPourMois(mois));
+//    }
 
     @Override
     public PeriodeDto fermerPeriode(Long id) {

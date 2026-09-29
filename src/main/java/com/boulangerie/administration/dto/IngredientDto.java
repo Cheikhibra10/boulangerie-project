@@ -26,11 +26,6 @@ public class IngredientDto extends AbstractAuditingDto {
     @NotNull(message = "L'unité est obligatoire")
     private UniteMesure unite;
 
-    @NotNull(message = "Le rendement est obligatoire")
-    @Positive(message = "Le rendement doit être positif")
-    @DecimalMin(value = "0.00", message = "Le rendement doit être supérieur à 0")
-    private BigDecimal equivalenceStock;
-
     private Boolean actif;
 
 }

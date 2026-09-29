@@ -1,8 +1,6 @@
 package com.boulangerie.achats.service;
 
 import com.boulangerie.achats.dto.RetourLigneDto;
-import com.boulangerie.administration.model.Ingredient;
-import com.boulangerie.shared.dto.ValeursStock;
 import com.boulangerie.stocks.dto.RetourStockLine;
 import com.boulangerie.achats.model.Achat;
 import com.boulangerie.achats.model.LigneAchat;
@@ -25,25 +23,23 @@ public class RetourAchatService {
 
         List<RetourStockLine> stockLines = retours.stream()
 
-                        .filter(r -> r.quantiteRetournee().compareTo(BigDecimal.ZERO) > 0)
-                        .map(r -> {
-                            LigneAchat ligne = achat.getLigne(r.ligneId());
-                            Ingredient ingredient = ligne.getIngredient();
-                            ValeursStock valeurs = ingredient.convertirVersStock(r.quantiteRetournee(), ligne.getPrixUnitaire());
-                            return new RetourStockLine(
+                .filter(r -> r.quantiteRetournee().compareTo(BigDecimal.ZERO) > 0)
+                .map(r -> {
+                    LigneAchat ligne = achat.getLigne(r.ligneId());
+                    return new RetourStockLine(
 
-                                    ligne.getIngredient().getId(),
+                            ligne.getIngredient().getId(),
 
-                                    valeurs.quantite(),
+                            r.quantiteRetournee(),
 
-                                    valeurs.prixUnitaire(),
+                            ligne.getPrixUnitaire(),
 
-                                    ligne.getId(),
+                            ligne.getId(),
 
-                                    r.motif()
+                            r.motif()
 
-                            );
-                        }).toList();
+                    );
+                }).toList();
 
         if (!stockLines.isEmpty()) {
             stockManagement.retournerAchat(

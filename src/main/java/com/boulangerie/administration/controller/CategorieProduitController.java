@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/categories-produit")
 @Tag(name = "Catégories Produit", description = "Gestion des catégories de produits ADMIN-MANAGER")
-@PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+@PreAuthorize("hasAnyRole('MANAGER','ADMIN', 'CAISSIER')")
 public class CategorieProduitController
         extends GenericCrudController<CategorieProduit, CategorieProduitDto> {
 

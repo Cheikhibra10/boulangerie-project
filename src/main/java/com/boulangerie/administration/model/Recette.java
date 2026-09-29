@@ -1,7 +1,6 @@
 package com.boulangerie.administration.model;
 
 import com.boulangerie.shared.dto.ConsommationIngredient;
-import com.boulangerie.administration.service.ProductionConstants;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.model.AbstractAuditingEntity;
 import com.boulangerie.shared.model.Activable;
@@ -109,8 +108,7 @@ public class Recette extends AbstractAuditingEntity implements GenericEntity<Rec
      */
     public BigDecimal calculerMultiplicateur(BigDecimal sacsFarineUtilises) {
 
-        BigDecimal farineDisponible = sacsFarineUtilises.multiply(ProductionConstants.POIDS_SAC_FARINE);
-        return farineDisponible.divide(
+        return sacsFarineUtilises.divide(
                 getFarine().getQuantite(),
                 6,
                 RoundingMode.HALF_UP

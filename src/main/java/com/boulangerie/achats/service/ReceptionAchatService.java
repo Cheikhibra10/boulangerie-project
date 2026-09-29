@@ -1,8 +1,6 @@
 package com.boulangerie.achats.service;
 
 import com.boulangerie.achats.dto.ReceptionLigneDto;
-import com.boulangerie.administration.model.Ingredient;
-import com.boulangerie.shared.dto.ValeursStock;
 import com.boulangerie.stocks.dto.ReceptionStockLine;
 import com.boulangerie.achats.model.Achat;
 import com.boulangerie.achats.model.LigneAchat;
@@ -24,18 +22,19 @@ public class ReceptionAchatService {
 
     public void recevoirAchat(Achat achat, List<ReceptionLigneDto> receptions) {
 
+        // Depuis la suppression du mécanisme de conversion kg/sac, la
+        // quantité reçue et le prix unitaire sont déjà dans l'unité de
+        // stock de l'ingrédient (plus de conversion à appliquer ici).
         List<ReceptionStockLine> stockLines = receptions.stream()
                 .filter(r -> r.quantiteRecue().compareTo(BigDecimal.ZERO) > 0)
 
                 .map(r -> {
                     LigneAchat ligne = achat.getLigne(r.ligneId());
-                    Ingredient ingredient = ligne.getIngredient();
-                    ValeursStock valeurs = ingredient.convertirVersStock(r.quantiteRecue(), ligne.getPrixUnitaire());
 
                     return new ReceptionStockLine(
                             ligne.getIngredient().getId(),
-                            valeurs.quantite(),
-                            valeurs.prixUnitaire(),
+                            r.quantiteRecue(),
+                            ligne.getPrixUnitaire(),
                             ligne.getId(),
                             null
                     );
