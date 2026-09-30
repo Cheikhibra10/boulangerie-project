@@ -1,6 +1,6 @@
 package com.boulangerie.production.internal;
 
-import com.boulangerie.production.api.DistributionService;
+import com.boulangerie.production.api.DistributionServiceApi;
 import com.boulangerie.production.repository.DestinationProductionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,7 @@ import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
-class DistributionServiceImpl implements DistributionService {
+class DistributionServiceApiImpl implements DistributionServiceApi {
 
     private final DestinationProductionRepository repository;
 

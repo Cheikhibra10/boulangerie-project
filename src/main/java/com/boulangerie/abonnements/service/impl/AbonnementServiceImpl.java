@@ -10,7 +10,7 @@ import com.boulangerie.abonnements.model.*;
 import com.boulangerie.abonnements.repository.*;
 import com.boulangerie.abonnements.service.*;
 import com.boulangerie.administration.service.LivreurService;
-import com.boulangerie.production.api.DistributionService;
+import com.boulangerie.production.api.DistributionServiceApi;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.ConflictException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
@@ -44,7 +44,7 @@ public class AbonnementServiceImpl implements AbonnementService {
     private final AbonnementFactory abonnementFactory;
     private final ClientFactory clientFactory;
 
-    private final DistributionService distributionService;
+    private final DistributionServiceApi distributionServiceApi;
     private final AbonnementMapper abonnementMapper;
     private final LigneAbonnementMapper ligneMapper;
     private final PaiementAbonnementService paiementAbonnementService;
@@ -102,7 +102,7 @@ public class AbonnementServiceImpl implements AbonnementService {
         if(!abonnement.estValidePour(dto.getDate())) {
             throw new AbonnementExpireException(abonnement.getId());
         }
-        BigDecimal quantiteDistribuee = distributionService.getQuantiteDistribuee(
+        BigDecimal quantiteDistribuee = distributionServiceApi.getQuantiteDistribuee(
                         abonnement.getId(),
                         dto.getDate()
                 );
@@ -267,7 +267,7 @@ public class AbonnementServiceImpl implements AbonnementService {
             BigDecimal quantite
     ) {
         BigDecimal quantiteDistribuee =
-                distributionService.getQuantiteDistribuee(
+                distributionServiceApi.getQuantiteDistribuee(
                         abonnement.getId(),
                         date
                 );
@@ -285,7 +285,7 @@ public class AbonnementServiceImpl implements AbonnementService {
             LocalDate date,
             BigDecimal nouvelleQuantite
     ) {
-        BigDecimal quantiteDistribuee = distributionService.getQuantiteDistribuee(
+        BigDecimal quantiteDistribuee = distributionServiceApi.getQuantiteDistribuee(
                         abonnement.getId(),
                         date
                 );

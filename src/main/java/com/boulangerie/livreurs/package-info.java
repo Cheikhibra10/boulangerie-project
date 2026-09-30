@@ -4,6 +4,7 @@
                 "administration::repository",
                 "administration::security",
                 "administration::service",
+                "abonnements ::api",
                 "production::model",
                 "production::api",
                 "production::dto",

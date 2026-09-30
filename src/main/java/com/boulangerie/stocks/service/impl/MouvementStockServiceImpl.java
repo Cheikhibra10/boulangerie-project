@@ -54,8 +54,16 @@ public class MouvementStockServiceImpl implements MouvementStockService {
             Long lotProductionId,
             Long ligneAchatId) {
 
+        if (type == null) {
+            throw new BadRequestException("Le type de mouvement est obligatoire");
+        }
+
         if (quantite == null || quantite.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("La quantité doit être positive");
+        }
+
+        if (montant == null || montant.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("Le montant doit être positif");
         }
 
         Ingredient ingredient = ingredientRepository.findById(ingredientId)

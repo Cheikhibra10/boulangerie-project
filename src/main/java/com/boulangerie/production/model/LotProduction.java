@@ -94,16 +94,31 @@ public class LotProduction extends AbstractAuditingEntity {
     }
     public void finaliser(BigDecimal quantiteRealisee) {
 
-        verifierNonFinalisee();
-        verifierQuantiteRealisee(quantiteRealisee);
+        verifierPeutEtreFinalisee(quantiteRealisee);
 
         this.quantiteRealisee = quantiteRealisee;
         this.statut = StatutProduction.TERMINEE;
     }
 
+    public void verifierPeutEtreFinalisee(
+            BigDecimal quantiteRealisee
+    ) {
+        if (statut != StatutProduction.PLANIFIEE) {
+            throw new BadRequestException(
+                    "Seule une production planifiée peut être finalisée."
+            );
+        }
+
+        verifierQuantiteRealisee(quantiteRealisee);
+    }
+
     public void verifierDistributionPossible() {
         if (statut != StatutProduction.TERMINEE) {
             throw new BadRequestException("La production doit être terminée.");
+        }
+
+    if(quantiteRealisee == null || quantiteRealisee.compareTo(BigDecimal.ZERO) <= 0) {
+        throw new BadRequestException("La production terminée doit avoir une quantité réalisée.");
         }
     }
 
@@ -127,9 +142,6 @@ public class LotProduction extends AbstractAuditingEntity {
             throw new BadRequestException("La quantité réalisée doit être positive.");
         }
 
-        if (quantite.compareTo(quantitePrevue) > 0) {
-            throw new BadRequestException("La quantité réalisée dépasse la quantité prévue.");
-        }
     }
 
     public BigDecimal getQuantiteDistribuee() {

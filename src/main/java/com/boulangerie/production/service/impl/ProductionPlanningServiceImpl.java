@@ -50,7 +50,7 @@ public class ProductionPlanningServiceImpl implements ProductionPlanningService 
                         .setRecetteId(recette.getId())
                         .setDate(dto.getDate())
                         .setSacsFarineUtilises(dto.getSacsFarineUtilises())
-                        .setQuantitePrevue(recette.getRendement().multiply(dto.getSacsFarineUtilises()))
+                        .setQuantitePrevue(plan.quantitePrevue())
                         .setStatut(StatutProduction.PLANIFIEE);
 
         lot = lotRepository.save(lot);

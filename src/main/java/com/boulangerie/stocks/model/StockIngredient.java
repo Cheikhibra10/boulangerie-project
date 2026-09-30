@@ -60,18 +60,26 @@ public class StockIngredient extends AbstractAuditingEntity {
     }
 
     public void ajouter(BigDecimal quantite, BigDecimal montant) {
+        if (quantite == null || quantite.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("La quantité à ajouter doit être positive.");
+        }
         this.quantite = this.quantite.add(quantite);
         this.valeurTotale = this.valeurTotale.add(montant);
     }
 
     public void retirer(BigDecimal quantite, BigDecimal montant) {
-
+        if (quantite == null || quantite.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("La quantité à retirer doit être positive.");
+        }
         verifierDisponibilite(quantite);
         this.quantite = this.quantite.subtract(quantite);
         this.valeurTotale = this.valeurTotale.subtract(montant);
     }
 
     public void verifierDisponibilite(BigDecimal quantiteDemandee) {
+        if (quantiteDemandee == null || quantiteDemandee.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("La quantité demandée doit être positive.");
+        }
         if (quantite.compareTo(quantiteDemandee) < 0) {
             throw new StockInsuffisantException(ingredient.getId());
         }
@@ -86,8 +94,7 @@ public class StockIngredient extends AbstractAuditingEntity {
     }
 
     public boolean estSousSeuil() {
-
-        return quantite.compareTo(seuilAlerte) < 0;
+        return quantite.compareTo(seuilAlerte) <= 0;
     }
 
     public void appliquerMouvement(
@@ -95,7 +102,7 @@ public class StockIngredient extends AbstractAuditingEntity {
             BigDecimal quantite,
             BigDecimal montant
     ) {
-
+        verifierMouvement(type, quantite);
         switch (type) {
             case RECEPTION_ACHAT , AJUSTEMENT -> ajouter(quantite, montant);
             case CONSOMMATION_PRODUCTION, PERTE -> retirer(quantite, montant);
@@ -107,6 +114,10 @@ public class StockIngredient extends AbstractAuditingEntity {
             TypeMouvementStock type,
             BigDecimal quantite
     ) {
+
+        if (type == null) {
+            throw new BadRequestException("Le type de mouvement est obligatoire.");
+        }
 
         if (quantite == null || quantite.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("La quantité doit être positive.");

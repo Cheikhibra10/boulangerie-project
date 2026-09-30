@@ -38,11 +38,6 @@ public interface CompteLivreurJournalierRepository extends JpaRepository<CompteL
 
     Optional<CompteLivreurJournalier> findTopByLivreurIdOrderByDateDesc(Long livreurId);
 
-    /*
-     * Pour le rapport mensuel VERSEMENTS/FRAIS : tous les livreurs
-     * confondus, contrairement à findByLivreurIdAndDateBetween qui
-     * est scopé à un seul livreur.
-     */
     @EntityGraph(attributePaths = {"versement"})
     List<CompteLivreurJournalier> findByDateBetweenOrderByDateAsc(
             LocalDate debut,
@@ -57,4 +52,6 @@ public interface CompteLivreurJournalierRepository extends JpaRepository<CompteL
 
     @Query("SELECT COALESCE(SUM(c.soldeActuel), 0) FROM CompteLivreur c")
     BigDecimal sumSoldeActuel();
+
+    boolean existsByDateBetweenAndStatutNot(LocalDate debut, LocalDate fin, StatutCompteRendu statut);
 }

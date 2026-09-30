@@ -1,5 +1,6 @@
 package com.boulangerie.livreurs.service.impl;
 
+import com.boulangerie.abonnements.api.AbonnementApi;
 import com.boulangerie.administration.service.LivreurService;
 import com.boulangerie.comptabilite.api.CaisseApi;
 import com.boulangerie.livreurs.dto.*;
@@ -47,6 +48,7 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
     private final CompteRenduMapper compteRenduMapper;
     private final LigneCompteRenduMapper ligneMapper;
     private final CurrentUserService currentUserService;
+    private final AbonnementApi abonnementApi;
 
     @Override
     public CompteRenduDto creerOuRecupererCompteRendu(CompteRenduCreationDto dto) {
@@ -89,6 +91,8 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
 
     }
 
+
+
     @Override
     @Transactional(readOnly = true)
     public CompteRenduDto getCompteRendu(Long id) {
@@ -112,21 +116,55 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
 
     private void ajouterLignes(CompteLivreurJournalier journalier, List<LigneCompteRenduRequestDto> lignes) {
 
+        verifierQuantiteAbonnement(journalier, lignes);
+
         for (LigneCompteRenduRequestDto dto : lignes) {
             AllocationDetails allocation = productionApi.getAllocation(dto.getDestinationProductionId());
             verifierAllocation(journalier, allocation, dto);
             LigneCompteLivreur ligne = ligneMapper.toEntity(dto);
 
             BigDecimal prixCommission = commissionCalculator.calculate(
-                            journalier.getLivreurId(),
-                            allocation.produitId(),
-                            journalier.getDate());
+                    journalier.getLivreurId(),
+                    allocation.produitId(),
+                    journalier.getDate());
 
             if (dto.getQteLivree().compareTo(allocation.quantite()) > 0) {
                 throw new BadRequestException("Quantité supérieure à l'allocation");
             }
             ligne.initialiser(allocation.prixUnitaire(), prixCommission, allocation.destinationId());
             journalier.addLigne(ligne);
+        }
+    }
+
+    private void verifierQuantiteAbonnement(CompteLivreurJournalier journalier, List<LigneCompteRenduRequestDto> nouvellesLignes) {
+
+        List<Long> abonnementIds = abonnementApi.findIdsByLivreurId(journalier.getLivreurId());
+
+        BigDecimal nouvellementDeclare = nouvellesLignes.stream()
+                .map(LigneCompteRenduRequestDto::getQteAbonnement)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (abonnementIds.isEmpty()) {
+            if (nouvellementDeclare.signum() > 0) {
+                throw new BadRequestException(
+                        "Ce livreur ne dessert aucun abonnement — la quantité abonnement doit être nulle.");
+            }
+            return;
+        }
+
+        BigDecimal quantiteReelle = productionApi.getQuantiteDistribueeAbonnement(abonnementIds, journalier.getDate());
+
+        BigDecimal dejaDeclare = journalier.getLignes().stream()
+                .map(LigneCompteLivreur::getQteAbonnement)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalDeclare = dejaDeclare.add(nouvellementDeclare);
+
+        if (totalDeclare.compareTo(quantiteReelle) > 0) {
+            throw new BadRequestException(
+                    "Quantité abonnement déclarée (" + totalDeclare
+                            + ") supérieure à la quantité réellement distribuée aux abonnements ce jour-là ("
+                            + quantiteReelle + ").");
         }
     }
 

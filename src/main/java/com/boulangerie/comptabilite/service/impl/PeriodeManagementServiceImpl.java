@@ -47,14 +47,14 @@ public class PeriodeManagementServiceImpl  implements PeriodeManagementService {
         ));
     }
 
-//    @Override
-//    public PeriodeDto creerPeriodeMensuelle(YearMonth mois) {
-//        if (mois == null) {
-//            throw new IllegalArgumentException("Le mois est obligatoire.");
-//        }
-//
-//        return enregistrerNouvellePeriode(Periode.creerPourMois(mois));
-//    }
+    @Override
+    public PeriodeDto creerPeriodeMensuelle(YearMonth mois) {
+        if (mois == null) {
+            throw new IllegalArgumentException("Le mois est obligatoire.");
+        }
+
+        return enregistrerNouvellePeriode(Periode.creerPourMois(mois));
+    }
 
     @Override
     public PeriodeDto fermerPeriode(Long id) {
@@ -117,7 +117,7 @@ public class PeriodeManagementServiceImpl  implements PeriodeManagementService {
     public PageResponse<PeriodeDto> getPeriodes(int page, int size) {
 
         Page<Periode> result = periodeRepository.findAllByOrderByDateDebutDesc(
-                        PageRequest.of(page, size));
+                PageRequest.of(page, size));
 
         return PageUtils.toPageResponse(result.map(periodeMapper::toDto));
     }
@@ -137,15 +137,15 @@ public class PeriodeManagementServiceImpl  implements PeriodeManagementService {
         long totalResultats = resultatRepository.count();
 
         BigDecimal caTotal = Optional.ofNullable(resultatRepository.sumCaTotal())
-                        .orElse(BigDecimal.ZERO);
+                .orElse(BigDecimal.ZERO);
 
         BigDecimal benefice = Optional.ofNullable(resultatRepository.sumBeneficeNet())
-                        .orElse(BigDecimal.ZERO);
+                .orElse(BigDecimal.ZERO);
 
         BigDecimal beneficeMoyen = totalResultats == 0 ? BigDecimal.ZERO
                 : benefice.divide(BigDecimal.valueOf(totalResultats),
-                        2,
-                        RoundingMode.HALF_UP);
+                2,
+                RoundingMode.HALF_UP);
 
         return ComptabiliteStatistiquesDto.builder()
                 .totalPeriodes(totalPeriodes)

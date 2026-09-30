@@ -8,4 +8,6 @@ public interface LivreurStatisticsApi {
     BigDecimal calculerCAVentesLivreurs(LocalDate debut, LocalDate fin);
 
     BigDecimal calculerReliquatLivreurs();
+
+    boolean existeComptesNonClotures(LocalDate debut, LocalDate fin);
 }

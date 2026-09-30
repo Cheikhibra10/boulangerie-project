@@ -7,6 +7,7 @@ import java.util.List;
 public interface ProductionAllocationApi {
 
     AllocationDetails getAllocation(Long destinationId);
+    BigDecimal getQuantiteDistribueeAbonnement(List<Long> abonnementIds, LocalDate date);
     BoutiqueStockDto getDestinationBoutique(Long produitId);
     void verifierDisponibiliteBoutique(Long produitId, BigDecimal quantite);
     void retourner(Long produitId, BigDecimal quantite);

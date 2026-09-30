@@ -76,4 +76,6 @@ join fetch ri.ingredient
 where r.id=:id
 """)
     Optional<Recette> findByIdWithIngredients(Long id);
+
+    Optional<Recette> findByIdAndVersion(Long recetteId, Integer version);
 }

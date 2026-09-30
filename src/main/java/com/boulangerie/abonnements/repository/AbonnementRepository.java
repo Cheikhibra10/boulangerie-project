@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,4 +44,7 @@ public interface AbonnementRepository extends JpaRepository<Abonnement, Long> {
             @Param("debut") LocalDate debut,
             @Param("fin") LocalDate fin
     );
+
+
+    Collection<Abonnement> findByLivreurId(Long livreurId);
 }

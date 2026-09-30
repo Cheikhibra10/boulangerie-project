@@ -1,7 +1,5 @@
 package com.boulangerie.production.service.impl;
 
-import com.boulangerie.administration.model.Produit;
-import com.boulangerie.administration.service.ProduitService;
 import com.boulangerie.production.dto.*;
 import com.boulangerie.production.mapper.DestinationMapper;
 import com.boulangerie.production.mapper.LotProductionMapper;
@@ -37,12 +35,12 @@ public class ProductionServiceImpl implements ProductionService {
     private final DestinationProductionRepository destinationRepository;
     private final LotProductionMapper lotMapper;
     private final DestinationMapper destinationMapper;
-    private final ProduitService produitService;
 
     @Override
     public List<DestinationDto> distribuerProduction(Long productionId, DistribuerProductionRequestDto request) {
         LotProduction production = getProduction(productionId);
         production.verifierDistributionPossible();
+//        verifierAbonnementSansConflitLivreur(request.getDestinations(), production.getDate());
         // Récupérer la quantité déjà répartie
         BigDecimal dejaDistribue = destinationRepository.sumQuantiteByLotId(productionId);
         production.verifierQuantiteDistribuable(dejaDistribue, calculerDemande(request));
@@ -52,6 +50,30 @@ public class ProductionServiceImpl implements ProductionService {
                 .map(destinationMapper::toDto)
                 .toList();
     }
+
+//    private void verifierAbonnementSansConflitLivreur(List<DestinationRequestDto> destinations, LocalDate date) {
+//        for (DestinationRequestDto dto : destinations) {
+//            if (dto.getCanal() != CanalDistribution.ABONNEMENT) {
+//                continue;
+//            }
+//
+//            Long livreurId = abonnementApi.findLivreurId(dto.getAbonnementId());
+//
+//            BigDecimal dejaEnBase = destinationRepository.sumQuantiteByCanalAndLivreurIdAndDate(CanalDistribution.LIVREUR, livreurId, date);
+//            BigDecimal dejaDansCetteRequete = destinations.stream()
+//                    .filter(d -> d.getCanal() == CanalDistribution.LIVREUR)
+//                    .filter(d -> Objects.equals(d.getLivreurId(), livreurId))
+//                    .map(DestinationRequestDto::getQuantite)
+//                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+//
+//            BigDecimal totalLivreur = dejaEnBase.add(dejaDansCetteRequete);
+//            if (totalLivreur.signum() > 0) {
+//                throw new BadRequestException(
+//                        "Distribution impossible : le livreur rattaché à l'abonnement #" + dto.getAbonnementId()
+//                                + " a déjà une quantité distribuée ce jour-là.");
+//            }
+//        }
+//    }
 
     private BigDecimal calculerDemande(DistribuerProductionRequestDto request) {
         return request.getDestinations()

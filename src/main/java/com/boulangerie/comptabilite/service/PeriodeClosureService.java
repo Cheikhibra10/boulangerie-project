@@ -3,11 +3,13 @@ package com.boulangerie.comptabilite.service;
 import com.boulangerie.comptabilite.dto.AggregatedData;
 import com.boulangerie.comptabilite.dto.PeriodeDto;
 import com.boulangerie.comptabilite.exception.PeriodeNotFoundException;
+import com.boulangerie.comptabilite.exception.SaisiesIncompletesException;
 import com.boulangerie.comptabilite.mapper.PeriodeMapper;
 import com.boulangerie.comptabilite.model.Periode;
 import com.boulangerie.comptabilite.model.ResultatData;
 import com.boulangerie.comptabilite.model.ResultatPeriode;
 import com.boulangerie.comptabilite.repository.PeriodeRepository;
+import com.boulangerie.livreurs.api.LivreurStatisticsApi;
 import com.boulangerie.stocks.api.SnapshotServiceApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,17 +20,23 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 public class PeriodeClosureService {
-    
+
     private final PeriodeRepository periodeRepository;
     private final PeriodeMapper periodeMapper;
     private final DataAggregationService aggregationService;
     private final ResultatCalculator resultatCalculator;
     private final SnapshotServiceApi snapshotServiceApi;
+    private final LivreurStatisticsApi livreurStatisticsApi;
 
     @Transactional
     public PeriodeDto cloturerPeriode(Long id) {
         Periode periode = findPeriode(id);
         periode.verifierCloturable();
+
+        if (livreurStatisticsApi.existeComptesNonClotures(periode.getDateDebut(), periode.getDateFin())) {
+            throw new SaisiesIncompletesException();
+        }
+
         AggregatedData donnees = aggregationService.agregerDonnees(periode);
 
         ResultatData resultatData = resultatCalculator.calculer(periode, donnees);

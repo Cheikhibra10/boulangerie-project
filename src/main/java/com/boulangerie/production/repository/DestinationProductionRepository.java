@@ -49,6 +49,29 @@ public interface DestinationProductionRepository extends JpaRepository<Destinati
             @Param("date") LocalDate date
     );
 
+    @Query("""
+    select coalesce(sum(d.quantite), 0)
+    from DestinationProduction d
+    where d.canal = :canal
+      and d.livreurId = :livreurId
+      and d.date = :date
+    """)
+    BigDecimal sumQuantiteByCanalAndLivreurIdAndDate(
+            @Param("canal") CanalDistribution canal,
+            @Param("livreurId") Long livreurId,
+            @Param("date") LocalDate date);
+
+    @Query("""
+    select coalesce(sum(d.quantite), 0)
+    from DestinationProduction d
+    where d.canal = com.boulangerie.production.model.CanalDistribution.ABONNEMENT
+      and d.date = :date
+      and d.abonnementId in :abonnementIds
+    """)
+    BigDecimal sumQuantiteAbonnementByDateAndIds(
+            @Param("date") LocalDate date,
+            @Param("abonnementIds") List<Long> abonnementIds);
+
     @Query("SELECT d FROM DestinationProduction d JOIN FETCH d.lot WHERE d.id = :id")
     Optional<DestinationProduction> findByIdWithDetails(@Param("id") Long id);
 

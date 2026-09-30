@@ -71,6 +71,12 @@ class ProductionAllocationApiImpl implements ProductionAllocationApi {
          }
     }
 
+    @Override
+    public BigDecimal getQuantiteDistribueeAbonnement(List<Long> abonnementIds, LocalDate date) {
+        if (abonnementIds.isEmpty()) return BigDecimal.ZERO;
+        return repository.sumQuantiteAbonnementByDateAndIds(date, abonnementIds);
+    }
+
     private DestinationProduction chargerDestinationBoutique(Long produitId) {
 
         return repository.findFirstByProduitIdAndCanalOrderByDateDesc(

@@ -127,8 +127,6 @@ public class DestinationProduction extends AbstractAuditingEntity {
             throw new BadRequestException("Le livreur est obligatoire.");
         }
 
-
-
         if (canal != CanalDistribution.LIVREUR
                 && livreurId != null) {
 
@@ -157,13 +155,12 @@ public class DestinationProduction extends AbstractAuditingEntity {
             );
         }
 
-        if (canal != CanalDistribution.ABONNEMENT
-                && abonnementId != null) {
-
+        if (canal != CanalDistribution.ABONNEMENT && abonnementId != null) {
             throw new BadRequestException(
                     "Abonnement invalide pour ce canal."
             );
         }
+
     }
 
     public boolean estMemeDestination(DestinationRequestDto dto) {

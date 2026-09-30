@@ -59,18 +59,81 @@ public class Ingredient extends AbstractAuditingEntity implements GenericEntity<
 
     public BigDecimal getSeuilAlerteParDefaut() {
         String libelle = this.libelle.toLowerCase();
+
         if (libelle.contains("farine")) {
             return StockConstants.SEUIL_FARINE;
         }
-        if (libelle.contains("sucre")) {
+
+        if (libelle.contains("sucre") && !libelle.contains("glace")) {
             return StockConstants.SEUIL_SUCRE;
         }
+
+
+        if (libelle.contains("sel")) {
+            return StockConstants.SEUIL_SEL;
+        }
+
+
+
         if (libelle.contains("levure")) {
             return StockConstants.SEUIL_LEVURE;
         }
+
         if (libelle.contains("ameliorant")) {
             return StockConstants.SEUIL_AMELIORANT;
         }
+
+        if (libelle.contains("beurre")) {
+            return StockConstants.SEUIL_BEURRE;
+        }
+
+        if (libelle.contains("margarine")) {
+            return StockConstants.SEUIL_MARGARINE;
+        }
+
+        if (libelle.contains("lait") && !libelle.contains("poudre")) {
+            return StockConstants.SEUIL_LAIT;
+        }
+
+        if (libelle.contains("poudre de lait")) {
+            return StockConstants.SEUIL_POUDRE_DE_LAIT;
+        }
+
+        if (libelle.contains("oeuf")) {
+            return StockConstants.SEUIL_OEUFS;
+        }
+
+        if (libelle.contains("chocolat")) {
+            return StockConstants.SEUIL_CHOCOLAT;
+        }
+
+        if (libelle.contains("cacao")) {
+            return StockConstants.SEUIL_CACAO;
+        }
+
+        if (libelle.contains("vanille")) {
+            return StockConstants.SEUIL_VANILLE;
+        }
+
+
+
+
+        if (libelle.contains("confiture")) {
+            return StockConstants.SEUIL_CONFITURE;
+        }
+
+        if (libelle.contains("noix de coco")) {
+            return StockConstants.SEUIL_NOIX_DE_COCO;
+        }
+
+        if (libelle.contains("arachide")) {
+            return StockConstants.SEUIL_ARACHIDE;
+        }
+
+        if (libelle.contains("raisins secs")) {
+            return StockConstants.SEUIL_RAISINS_SECS;
+        }
+
         return StockConstants.SEUIL_PAR_DEFAUT;
     }
 }

@@ -89,7 +89,7 @@ public class StockServiceImpl implements StockService {
             throw new StockInitialAlreadyExistsException(periodeId, ingredientId
             );
         }
-        BigDecimal cmp = quantite.compareTo(BigDecimal.ZERO) > 0 ? valeur.divide(quantite, 2, RoundingMode.HALF_UP)
+        BigDecimal cmp = quantite.compareTo(BigDecimal.ZERO) > 0 ? valeur.divide(quantite, 6, RoundingMode.HALF_UP)
                         : BigDecimal.ZERO;
         StockInitial stockInitial = new StockInitial()
                         .setPeriodeId(periodeId)
@@ -202,7 +202,7 @@ public class StockServiceImpl implements StockService {
         }
     }
 
-    private BigDecimal calculerMontant(
+    private BigDecimal calculerCoutSortie(
             BigDecimal quantite,
             StockIngredient stock
     ) {
@@ -222,7 +222,7 @@ public class StockServiceImpl implements StockService {
 
         StockIngredient stock = chargerStock(ingredientId);
         stock.verifierMouvement(type, quantite);
-        BigDecimal montant = calculerMontant(quantite, stock);
+        BigDecimal montant = calculerCoutSortie(quantite, stock);
         MouvementStockDto mouvement = mouvementService.creerMouvement(
                 type,
                 ingredientId,
@@ -236,9 +236,6 @@ public class StockServiceImpl implements StockService {
         boolean etaitSousSeuil = stock.estSousSeuil();
         stock.appliquerMouvement(type, quantite, montant);
         verifierSeuil(stock, alertes, etaitSousSeuil);
-
-        stock.appliquerMouvement(type, quantite, montant);
-
         stockIngredientRepository.save(stock);
 
         return mouvement;

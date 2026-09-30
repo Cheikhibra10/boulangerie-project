@@ -1,6 +1,7 @@
 package com.boulangerie.livreurs.internal;
 
 import com.boulangerie.livreurs.api.LivreurStatisticsApi;
+import com.boulangerie.livreurs.model.StatutCompteRendu;
 import com.boulangerie.livreurs.repository.CompteLivreurJournalierRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,5 +23,10 @@ class LivreurStatisticsApiImpl implements LivreurStatisticsApi {
     @Override
     public BigDecimal calculerReliquatLivreurs() {
         return repository.sumSoldeActuel();
+    }
+
+    @Override
+    public boolean existeComptesNonClotures(LocalDate debut, LocalDate fin) {
+        return repository.existsByDateBetweenAndStatutNot(debut, fin, StatutCompteRendu.CLOTURE);
     }
 }

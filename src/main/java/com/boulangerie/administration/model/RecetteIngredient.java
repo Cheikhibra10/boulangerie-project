@@ -1,6 +1,7 @@
 package com.boulangerie.administration.model;
 
 import com.boulangerie.shared.dto.ConsommationIngredient;
+import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.model.AbstractAuditingEntity;
 import com.boulangerie.shared.model.GenericEntity;
 import jakarta.persistence.*;
@@ -39,6 +40,12 @@ public class RecetteIngredient extends AbstractAuditingEntity implements Generic
     }
 
     public ConsommationIngredient calculerConsommation(BigDecimal multiplicateur) {
+        if (multiplicateur == null || multiplicateur.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Le multiplicateur doit être positif.");
+        }
+        if (quantite == null || quantite.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("La quantité de l'ingrédient doit être positive.");
+        }
         return new ConsommationIngredient(ingredient.getId(),  quantite.multiply(multiplicateur)
         );
     }

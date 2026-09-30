@@ -27,4 +27,6 @@ public interface RecetteService extends DefaultService<Recette, RecetteDto> {
 
     @Transactional(readOnly = true)
     Recette findByIdOrThrow(Long recetteId);
+
+    Recette findByIdAndVersion(Long recetteId, Integer version);
 }

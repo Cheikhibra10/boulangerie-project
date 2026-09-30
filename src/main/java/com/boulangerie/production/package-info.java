@@ -6,6 +6,7 @@
                 "administration::security",
                 "administration::service",
                 "administration::api",
+                "abonnements ::api",
                 "comptabilite::repository",
                 "comptabilite::model",
                 "comptabilite::service",

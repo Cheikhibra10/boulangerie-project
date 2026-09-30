@@ -157,4 +157,14 @@ public class RecetteServiceImpl
                                 "Recette introuvable : " + recetteId
                         ));
     }
+
+    @Override
+    public Recette findByIdAndVersion(Long recetteId, Integer version) {
+        return recetteRepository
+                .findByIdAndVersion(recetteId, version)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Recette introuvable : " + recetteId + " version : " + version
+                        ));
+    }
 }
