@@ -66,7 +66,7 @@ class ProductionAllocationApiImpl implements ProductionAllocationApi {
     @Transactional(readOnly = true)
     public void verifierDisponibiliteBoutique(Long produitId, BigDecimal quantite) {
         DestinationProduction destination = chargerDestinationBoutique(produitId);
-         if(quantite.compareTo(destination.getQuantiteDisponible()) >= 0) {
+         if(quantite.compareTo(destination.getQuantiteDisponible()) > 0) {
              throw new BadRequestException("Stock insuffisant pour la destination BOUTIQUE");
          }
     }
