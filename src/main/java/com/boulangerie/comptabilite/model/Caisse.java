@@ -30,6 +30,7 @@ public class Caisse extends AbstractAuditingEntity {
     // silencieusement l'une l'autre — la seconde échoue proprement avec
     // OptimisticLockException plutôt que de remplacer en silence le solde
     // physique/motif d'écart du premier par le second.
+
     @Version
     private Long version;
 

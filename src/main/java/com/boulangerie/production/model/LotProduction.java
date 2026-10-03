@@ -12,9 +12,7 @@ import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "lots_production", uniqueConstraints = {
@@ -66,16 +64,51 @@ public class LotProduction extends AbstractAuditingEntity {
         return destinationProduction;
     }
 
-    public List<DestinationProduction> ajouterDestinations(
-            List<DestinationRequestDto> demandes) {
+    public List<DestinationProduction> ajouterDestinations(List<DestinationRequestDto> demandes) {
 
         List<DestinationProduction> nouvelles = new ArrayList<>();
 
         for (DestinationRequestDto dto : demandes) {
 
+            // 1. Create the original destination (ABONNEMENT, LIVREUR, BOUTIQUE...)
             DestinationProduction destination = ajouterDestination(dto);
-
             nouvelles.add(destination);
+
+            // 2. Special rule for ABONNEMENT canal
+            if (dto.getCanal() == CanalDistribution.ABONNEMENT) {
+
+                if (dto.getLivreurId() == null) {
+                    throw new BadRequestException(
+                            "livreurId is required when distributing to an ABONNEMENT"
+                    );
+                }
+
+                // --- Automatically credit the livreur with the same quantity ---
+                // This represents the physical bread given to the livreur.
+                // It does NOT affect the qteAbonnement check in Compte Rendu.
+
+                Optional<DestinationProduction> existingLivreurDest = this.destinations.stream()
+                        .filter(d -> d.getCanal() == CanalDistribution.LIVREUR
+                                && Objects.equals(d.getLivreurId(), dto.getLivreurId()))
+                        .findFirst();
+
+                if (existingLivreurDest.isPresent()) {
+                    // Increase existing LIVREUR destination
+                    DestinationProduction existing = existingLivreurDest.get();
+                    existing.setQuantite(existing.getQuantite().add(dto.getQuantite()));
+                } else {
+                    // Create a new LIVREUR destination
+                    DestinationRequestDto livreurDto = new DestinationRequestDto();
+                    livreurDto.setCanal(CanalDistribution.LIVREUR);
+                    livreurDto.setLivreurId(dto.getLivreurId());
+                    livreurDto.setQuantite(dto.getQuantite());
+                    livreurDto.setPrixUnitaire(dto.getPrixUnitaire());
+                    livreurDto.setEtatPain(dto.getEtatPain() != null ? dto.getEtatPain() : EtatPain.FRAIS);
+
+                    DestinationProduction livreurDestination = ajouterDestination(livreurDto);
+                    nouvelles.add(livreurDestination);
+                }
+            }
         }
 
         return nouvelles;

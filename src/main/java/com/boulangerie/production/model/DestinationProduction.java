@@ -55,9 +55,7 @@ public class DestinationProduction extends AbstractAuditingEntity {
     @Column
     private Long abonnementId;
 
-    public static DestinationProduction creer(
-            LotProduction lot,
-            DestinationRequestDto dto) {
+    public static DestinationProduction creer(LotProduction lot, DestinationRequestDto dto) {
 
         DestinationProduction destination = new DestinationProduction();
 
@@ -72,9 +70,7 @@ public class DestinationProduction extends AbstractAuditingEntity {
         destination.setLivreurId(dto.getLivreurId());
         destination.setAbonnementId(dto.getAbonnementId());
 
-        if(dto.getCanal() == CanalDistribution.ABONNEMENT){
-            destination.setLivreurId(null);
-        } else if (dto.getCanal() == CanalDistribution.LIVREUR) {
+       if (dto.getCanal() == CanalDistribution.LIVREUR) {
             destination.setAbonnementId(null);
         }
         destination.valider();
@@ -127,35 +123,30 @@ public class DestinationProduction extends AbstractAuditingEntity {
             throw new BadRequestException("Le livreur est obligatoire.");
         }
 
-        if (canal != CanalDistribution.LIVREUR
-                && livreurId != null) {
-
-            throw new BadRequestException(
-                    "Livreur invalide pour ce canal."
-            );
-        }
     }
 
 
     private void verifierUniciteDestination() {
 
-        if (livreurId != null && abonnementId != null) {
+        // A destination of type LIVREUR must not have an abonnementId.
+        // The ABONNEMENT-specific check is handled in verifierAbonnement().
+        if (canal == CanalDistribution.LIVREUR && abonnementId != null) {
             throw new BadRequestException(
-                    "Une destination ne peut pas être à la fois un livreur et un abonnement."
+                    "Une destination LIVREUR ne peut pas avoir d'abonnementId."
             );
         }
     }
+
     private void verifierAbonnement() {
+        boolean isAbonnement = canal == CanalDistribution.ABONNEMENT;
 
-        if (canal == CanalDistribution.ABONNEMENT
-                && abonnementId == null) {
-
+        if (isAbonnement && abonnementId == null) {
             throw new BadRequestException(
                     "L'abonnement est obligatoire."
             );
         }
 
-        if (canal != CanalDistribution.ABONNEMENT && abonnementId != null) {
+        if (!isAbonnement && abonnementId != null) {
             throw new BadRequestException(
                     "Abonnement invalide pour ce canal."
             );
