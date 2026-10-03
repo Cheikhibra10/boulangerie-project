@@ -1,16 +1,19 @@
 package com.boulangerie.livreurs.service.impl;
 
 import com.boulangerie.abonnements.api.AbonnementApi;
+import com.boulangerie.abonnements.api.AbonnementStatisticsApi;
 import com.boulangerie.administration.service.LivreurService;
 import com.boulangerie.comptabilite.api.CaisseApi;
 import com.boulangerie.livreurs.dto.*;
 import com.boulangerie.livreurs.event.CompteRenduLivreurClotureEvent;
+import com.boulangerie.livreurs.exception.QuantiteAbonnementIncoherenteException;
 import com.boulangerie.livreurs.mapper.CompteRenduMapper;
 import com.boulangerie.livreurs.mapper.LigneCompteRenduMapper;
 import com.boulangerie.livreurs.model.*;
 import com.boulangerie.livreurs.repository.CompteLivreurJournalierRepository;
 import com.boulangerie.livreurs.service.*;
 import com.boulangerie.production.api.AllocationDetails;
+import com.boulangerie.production.api.DistributionServiceApi;
 import com.boulangerie.production.api.ProductionAllocationApi;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
@@ -49,6 +52,8 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
     private final LigneCompteRenduMapper ligneMapper;
     private final CurrentUserService currentUserService;
     private final AbonnementApi abonnementApi;
+    private final AbonnementStatisticsApi abonnementStatisticsApi;
+    private final DistributionServiceApi distributionService;
 
     @Override
     public CompteRenduDto creerOuRecupererCompteRendu(CompteRenduCreationDto dto) {
@@ -69,6 +74,7 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
     public CompteRenduDto cloturerCompteRendu(Long journalierId, ClotureCompteRenduDto dto) {
         CompteLivreurJournalier journalier = findJournalierOrThrow(journalierId);
         journalier.verifierNonCloture();
+        verifierQuantiteAbonnementCoherente(journalier);
         VersementLivreur versement = versementLivreurService.creerVersement(journalier, dto);
         journalier.cloturer(versement);
         compteLivreurService.mettreAJourSolde(journalier.getLivreurId(), journalier.getReliquatFin());
@@ -91,6 +97,30 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
 
     }
 
+    /**
+     * Règle métier : la somme des qteAbonnement déclarées par le livreur
+     * sur l'ensemble de ses lignes doit correspondre exactement à ce qui a
+     * été officiellement distribué aux abonnements qui lui sont rattachés
+     * pour cette date (canal ABONNEMENT, voir
+     * ProductionServiceImpl.distribuerProduction). Comparaison numérique
+     * via compareTo (pas equals) pour ignorer les différences d'échelle
+     * BigDecimal (10.00 vs 10.0000 doivent être considérés égaux).
+     */
+    private void verifierQuantiteAbonnementCoherente(CompteLivreurJournalier journalier) {
+
+        BigDecimal declare = journalier.getLignes().stream()
+                .map(LigneCompteLivreur::getQteAbonnement)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal attendu = abonnementStatisticsApi.findAbonnementsParLivreur(journalier.getLivreurId()).stream()
+                .filter(abonnement -> abonnement.estValidePour(journalier.getDate()))
+                .map(abonnement -> distributionService.getQuantiteDistribuee(abonnement.getId(), journalier.getDate()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (declare.compareTo(attendu) != 0) {
+            throw new QuantiteAbonnementIncoherenteException(journalier.getLivreurId(), declare, attendu);
+        }
+    }
 
 
     @Override

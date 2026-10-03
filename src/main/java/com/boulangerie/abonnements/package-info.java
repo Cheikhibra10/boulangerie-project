@@ -12,7 +12,6 @@
                 "administration::repository",
                 "administration::service",
                 "administration::security",
-                "livreurs::repository",
                 "production::api",
                 "production::exception",
                 "reporting::dto",

@@ -18,6 +18,7 @@ public interface AbonnementStatisticsApi {
     BigDecimal calculerCC();
     Abonnement getAbonnement(Long id);
     List<Abonnement> findAbonnementsActifsPourPeriode(LocalDate debut, LocalDate fin);
+    List<Abonnement> findAbonnementsParLivreur(Long livreurId);
     List<ConsommationReportProjection> getReportData(
             List<Long> abonnementIds,
             LocalDate debut,
@@ -34,8 +35,8 @@ public interface AbonnementStatisticsApi {
 
     List<PaiementReportProjection> getReportData(
             Long abonnementId,
-             Instant debut,
-             Instant fin
+            Instant debut,
+            Instant fin
     );
     List<PaiementReportProjection> getReportData(
             List<Long> abonnementId,

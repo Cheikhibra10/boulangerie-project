@@ -53,6 +53,12 @@ class AbonnementStatisticsApiImpl implements AbonnementStatisticsApi {
     }
 
     @Override
+    public List<Abonnement> findAbonnementsParLivreur(Long livreurId) {
+        return repository.findByLivreurId(livreurId);
+    }
+
+
+    @Override
     public List<ConsommationReportProjection> getReportData(List<Long> abonnementIds, LocalDate debut, LocalDate fin) {
         return consommationRepository.findReportData(abonnementIds, debut, fin);
     }
@@ -81,6 +87,5 @@ class AbonnementStatisticsApiImpl implements AbonnementStatisticsApi {
     public List<PaiementReportProjection> getReportData(List<Long> abonnementId, Instant debut, Instant fin) {
         return paiementRepository.findReportData(abonnementId, debut, fin);
     }
-
 
 }

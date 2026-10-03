@@ -4,17 +4,18 @@
                 "administration::repository",
                 "administration::security",
                 "administration::service",
-                "abonnements ::api",
                 "production::model",
                 "production::api",
                 "production::dto",
+                "abonnements::api",
                 "shared::dto",
                 "shared::exception",
                 "shared::utils",
                 "shared::mapper",
                 "shared::model",
                 "comptabilite::model",
-                "comptabilite::service"
+                "comptabilite::service",
+                "comptabilite::api"
         }
 )
 package com.boulangerie.livreurs;

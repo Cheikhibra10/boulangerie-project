@@ -1,8 +1,11 @@
 package com.boulangerie.production.service.impl;
 
+import com.boulangerie.abonnements.api.AbonnementStatisticsApi;
 import com.boulangerie.production.dto.*;
+import com.boulangerie.production.exception.LivreurSansDistributionException;
 import com.boulangerie.production.mapper.DestinationMapper;
 import com.boulangerie.production.mapper.LotProductionMapper;
+import com.boulangerie.production.model.CanalDistribution;
 import com.boulangerie.production.model.DestinationProduction;
 import com.boulangerie.production.model.LotProduction;
 import com.boulangerie.production.repository.DestinationProductionRepository;
@@ -35,15 +38,16 @@ public class ProductionServiceImpl implements ProductionService {
     private final DestinationProductionRepository destinationRepository;
     private final LotProductionMapper lotMapper;
     private final DestinationMapper destinationMapper;
+    private final AbonnementStatisticsApi abonnementStatisticsApi;
 
     @Override
     public List<DestinationDto> distribuerProduction(Long productionId, DistribuerProductionRequestDto request) {
         LotProduction production = getProduction(productionId);
         production.verifierDistributionPossible();
-//        verifierAbonnementSansConflitLivreur(request.getDestinations(), production.getDate());
         // Récupérer la quantité déjà répartie
         BigDecimal dejaDistribue = destinationRepository.sumQuantiteByLotId(productionId);
         production.verifierQuantiteDistribuable(dejaDistribue, calculerDemande(request));
+        verifierLivreursRecoiventDistribution(production, request);
         List<DestinationProduction> nouvellesDestinations = production.ajouterDestinations(request.getDestinations());
         lotRepository.save(production);
         return nouvellesDestinations.stream()
@@ -51,29 +55,40 @@ public class ProductionServiceImpl implements ProductionService {
                 .toList();
     }
 
-//    private void verifierAbonnementSansConflitLivreur(List<DestinationRequestDto> destinations, LocalDate date) {
-//        for (DestinationRequestDto dto : destinations) {
-//            if (dto.getCanal() != CanalDistribution.ABONNEMENT) {
-//                continue;
-//            }
-//
-//            Long livreurId = abonnementApi.findLivreurId(dto.getAbonnementId());
-//
-//            BigDecimal dejaEnBase = destinationRepository.sumQuantiteByCanalAndLivreurIdAndDate(CanalDistribution.LIVREUR, livreurId, date);
-//            BigDecimal dejaDansCetteRequete = destinations.stream()
-//                    .filter(d -> d.getCanal() == CanalDistribution.LIVREUR)
-//                    .filter(d -> Objects.equals(d.getLivreurId(), livreurId))
-//                    .map(DestinationRequestDto::getQuantite)
-//                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-//
-//            BigDecimal totalLivreur = dejaEnBase.add(dejaDansCetteRequete);
-//            if (totalLivreur.signum() > 0) {
-//                throw new BadRequestException(
-//                        "Distribution impossible : le livreur rattaché à l'abonnement #" + dto.getAbonnementId()
-//                                + " a déjà une quantité distribuée ce jour-là.");
-//            }
-//        }
-//    }
+    /**
+     * Règle métier : on ne peut pas créditer un abonnement (canal
+     * ABONNEMENT) tant que le livreur qui lui est rattaché n'a lui-même
+     * reçu aucune distribution (canal LIVREUR) pour cette date —
+     * physiquement, il n'a rien à livrer. On vérifie à la fois ce qui est
+     * déjà en base ET les destinations LIVREUR de cette même requête (cas
+     * courant : on distribue au livreur et à ses abonnements en un seul
+     * envoi).
+     */
+    private void verifierLivreursRecoiventDistribution(LotProduction production, DistribuerProductionRequestDto request) {
+
+        for (DestinationRequestDto dto : request.getDestinations()) {
+
+            if (dto.getCanal() != CanalDistribution.ABONNEMENT) {
+                continue;
+            }
+
+            Long livreurId = abonnementStatisticsApi.getAbonnement(dto.getAbonnementId()).getLivreurId();
+
+            boolean recoitDansCetteRequete = request.getDestinations().stream()
+                    .anyMatch(d -> d.getCanal() == CanalDistribution.LIVREUR
+                            && livreurId.equals(d.getLivreurId()));
+
+            if (recoitDansCetteRequete) {
+                continue;
+            }
+
+            boolean recoitDejaEnBase = destinationRepository.existsByDateAndLivreurId(production.getDate(), livreurId);
+
+            if (!recoitDejaEnBase) {
+                throw new LivreurSansDistributionException(livreurId, dto.getAbonnementId());
+            }
+        }
+    }
 
     private BigDecimal calculerDemande(DistribuerProductionRequestDto request) {
         return request.getDestinations()
