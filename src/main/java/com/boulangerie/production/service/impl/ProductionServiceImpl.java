@@ -1,6 +1,5 @@
 package com.boulangerie.production.service.impl;
 
-import com.boulangerie.abonnements.api.AbonnementStatisticsApi;
 import com.boulangerie.production.dto.*;
 import com.boulangerie.production.exception.LivreurSansDistributionException;
 import com.boulangerie.production.mapper.DestinationMapper;
@@ -38,7 +37,6 @@ public class ProductionServiceImpl implements ProductionService {
     private final DestinationProductionRepository destinationRepository;
     private final LotProductionMapper lotMapper;
     private final DestinationMapper destinationMapper;
-    private final AbonnementStatisticsApi abonnementStatisticsApi;
 
     @Override
     public List<DestinationDto> distribuerProduction(Long productionId, DistribuerProductionRequestDto request) {
@@ -67,13 +65,10 @@ public class ProductionServiceImpl implements ProductionService {
     private void verifierLivreursRecoiventDistribution(LotProduction production, DistribuerProductionRequestDto request) {
 
         for (DestinationRequestDto dto : request.getDestinations()) {
-
             if (dto.getCanal() != CanalDistribution.ABONNEMENT) {
                 continue;
             }
-
-            Long livreurId = abonnementStatisticsApi.getAbonnement(dto.getAbonnementId()).getLivreurId();
-
+            Long livreurId = dto.getLivreurId();
             boolean recoitDansCetteRequete = request.getDestinations().stream()
                     .anyMatch(d -> d.getCanal() == CanalDistribution.LIVREUR
                             && livreurId.equals(d.getLivreurId()));

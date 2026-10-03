@@ -8,6 +8,7 @@
                 "production::api",
                 "production::dto",
                 "abonnements::api",
+                "abonnements::model",
                 "shared::dto",
                 "shared::exception",
                 "shared::utils",

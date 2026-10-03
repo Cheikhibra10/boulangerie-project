@@ -57,7 +57,6 @@ class AbonnementStatisticsApiImpl implements AbonnementStatisticsApi {
         return repository.findByLivreurId(livreurId);
     }
 
-
     @Override
     public List<ConsommationReportProjection> getReportData(List<Long> abonnementIds, LocalDate debut, LocalDate fin) {
         return consommationRepository.findReportData(abonnementIds, debut, fin);
