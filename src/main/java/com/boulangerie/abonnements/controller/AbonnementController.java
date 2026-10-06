@@ -203,6 +203,7 @@ public class AbonnementController {
         return abonnementAutocompleteService.search(q);
     }
 
+    @Operation(summary = "Rechercher abonnements-clients")
     @GetMapping("/clients/autocomplete")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public List<AutocompleteItemDto> autocompleteClients(@RequestParam String q) {
