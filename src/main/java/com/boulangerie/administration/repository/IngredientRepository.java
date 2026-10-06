@@ -3,8 +3,10 @@ package com.boulangerie.administration.repository;
 import com.boulangerie.administration.model.Ingredient;
 import com.boulangerie.shared.repository.GenericRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import java.util.List;
 
 import java.util.List;
 import java.util.Optional;

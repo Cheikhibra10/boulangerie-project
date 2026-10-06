@@ -7,6 +7,7 @@
                 "shared::repository",
                 "shared::model",
                 "shared::service",
+                "shared::specification",
                 "stocks::model",
                 "stocks::mapper",
                 "stocks::dto",

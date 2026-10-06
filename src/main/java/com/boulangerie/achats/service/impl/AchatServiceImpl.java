@@ -7,7 +7,7 @@ import com.boulangerie.achats.mapper.*;
 import com.boulangerie.achats.model.*;
 import com.boulangerie.achats.repository.*;
 import com.boulangerie.achats.service.*;
-import com.boulangerie.achats.specification.AchatSpecificationBuilder;
+import com.boulangerie.achats.specification.AchatSpecifications;
 import com.boulangerie.administration.model.Ingredient;
 import com.boulangerie.administration.repository.IngredientRepository;
 import com.boulangerie.administration.security.CurrentUserService;
@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -237,12 +238,15 @@ public class AchatServiceImpl implements AchatService {
 
     @Transactional(readOnly = true)
     @Override
-    public PageResponse<AchatDto> getAchats(AchatSearchRequest request, int page, int size) {
+    public PageResponse<AchatDto> getAchats(int page, int size) {
+        if (page < 0) {
+            throw new BadRequestException("La page doit être supérieure ou égale à 0");
+        }
+        if (size <= 0) {
+            throw new BadRequestException("La taille de page doit être supérieure à 0");
+        }
 
-        Specification<Achat> specification = AchatSpecificationBuilder.build(request);
-
-        Page<Achat> achats = achatRepository.findAll(specification, PageRequest.of(page, size));
-
+        Page<Achat> achats = achatRepository.findAll(PageRequest.of(page, size));
         return PageUtils.toPageResponse(achats.map(achatMapper::toDto));
     }
 
@@ -259,5 +263,16 @@ public class AchatServiceImpl implements AchatService {
     private LigneAchat findLigneOrThrow(Long id) {
         return ligneRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LigneAchat introuvable: " + id));
+    }
+
+    public PageResponse<AchatDto> search(AchatFilter filter, Pageable pageable) {
+        Specification<Achat> spec = AchatSpecifications.withFilters(
+                filter.fournisseurNom(),
+                filter.statutReception(),
+                filter.statutPaiement(),
+                filter.statutAchat()
+        );
+        return PageUtils.toPageResponse(achatRepository.findAll(spec, pageable)
+                .map(achatMapper::toDto));
     }
 }

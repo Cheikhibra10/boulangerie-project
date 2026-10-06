@@ -4,6 +4,8 @@ package com.boulangerie.abonnements.service;
 import com.boulangerie.abonnements.dto.*;
 import com.boulangerie.abonnements.model.ImportAction;
 import com.boulangerie.shared.dto.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface AbonnementService {
 
@@ -26,4 +28,6 @@ public interface AbonnementService {
     AbonnementDto getAbonnement(Long id);
 
     PageResponse<AbonnementDto> getAbonnements(int page, int size);
+
+    PageResponse<AbonnementDto> search(AbonnementFilter filter, Pageable pageable);
 }

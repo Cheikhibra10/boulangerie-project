@@ -12,6 +12,7 @@ import com.boulangerie.livreurs.mapper.LigneCompteRenduMapper;
 import com.boulangerie.livreurs.model.*;
 import com.boulangerie.livreurs.repository.CompteLivreurJournalierRepository;
 import com.boulangerie.livreurs.service.*;
+import com.boulangerie.livreurs.specification.CompteLivreurJournalierSpecifications;
 import com.boulangerie.production.api.AllocationDetails;
 import com.boulangerie.production.api.DistributionServiceApi;
 import com.boulangerie.production.api.ProductionAllocationApi;
@@ -27,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -219,4 +222,12 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
         }
     }
 
+    public PageResponse<CompteRenduDto> search(CompteLivreurJournalierFilter filter, Pageable pageable) {
+        Specification<CompteLivreurJournalier> spec = CompteLivreurJournalierSpecifications.withFilters(
+                filter.statut(),
+                filter.livreurNom()
+        );
+        return PageUtils.toPageResponse(journalierRepository.findAll(spec, pageable)
+                .map(compteRenduMapper::toDto));
+    }
 }

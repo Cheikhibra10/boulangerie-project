@@ -3,15 +3,22 @@ package com.boulangerie.production.controller;
 
 import com.boulangerie.abonnements.dto.ConsommationImportResultDto;
 import com.boulangerie.abonnements.dto.ConsommationMensuelleReportDto;
+import com.boulangerie.administration.service.ProduitAutocompleteService;
 import com.boulangerie.production.api.ProductionMensuelleReportDto;
 import com.boulangerie.production.dto.*;
+import com.boulangerie.production.model.CanalDistribution;
+import com.boulangerie.production.model.EtatPain;
+import com.boulangerie.production.model.StatutProduction;
 import com.boulangerie.production.service.*;
 import com.boulangerie.shared.dto.ApiResponse;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,6 +46,8 @@ public class ProductionController {
     private final ProductionExecutionService productionExecutionService;
     private final ProductionPlanningService productionPlanningService;
     private final ProductionCsvExportService csvExportService;
+    private final LotProductionAutocompleteService lotProductionAutocompleteService;
+
     @Operation(summary = "Créer un lot de production")
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'GESTIONNAIRE_PRODUCTION')")
@@ -95,6 +104,35 @@ public class ProductionController {
             @RequestParam Long livreurId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(productionService.getDestinationsByLivreurEtDate(livreurId, date));
+    }
+
+    @GetMapping("/lots/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'GESTIONNAIRE_PRODUCTION')")
+    public ResponseEntity<PageResponse<LotProductionDto>> searchLots(
+            @RequestParam(required = false) String produitNom,
+            @RequestParam(required = false) StatutProduction statut,
+            Pageable pageable
+    ) {
+        LotProductionFilter filter = new LotProductionFilter(produitNom, statut);
+        return ResponseEntity.ok(productionService.search(filter, pageable));
+    }
+
+    @GetMapping("/destinations/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'GESTIONNAIRE_PRODUCTION')")
+    public ResponseEntity<PageResponse<DestinationDto>> searchDestinations(
+            @RequestParam(required = false) CanalDistribution canal,
+            @RequestParam(required = false) EtatPain etatPain,
+            @RequestParam(required = false) String livreurNom,
+            Pageable pageable
+    ) {
+        DestinationProductionFilter filter = new DestinationProductionFilter(canal, etatPain, livreurNom);
+        return ResponseEntity.ok(productionService.search(filter, pageable));
+    }
+
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'GESTIONNAIRE_PRODUCTION')")
+    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
+        return lotProductionAutocompleteService.search(q);
     }
 
     @GetMapping(

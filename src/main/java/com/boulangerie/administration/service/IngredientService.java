@@ -1,8 +1,11 @@
 package com.boulangerie.administration.service;
 
 import com.boulangerie.administration.dto.IngredientDto;
+import com.boulangerie.administration.dto.IngredientFilter;
 import com.boulangerie.administration.model.Ingredient;
+import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.service.DefaultService;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
@@ -12,5 +15,5 @@ public interface IngredientService extends DefaultService<Ingredient, Ingredient
     // Méthodes spécifiques si nécessaire
     Ingredient findIngredientOrThrow(Long id);
     Map<Long, Ingredient> findIngredientsByIds(List<Long> ingredientIds);
-
+    PageResponse<IngredientDto> search(IngredientFilter filter, Pageable pageable);
 }

@@ -5,10 +5,13 @@ import com.boulangerie.abonnements.dto.*;
 import com.boulangerie.abonnements.exception.AbonnementExpireException;
 import com.boulangerie.abonnements.exception.DepassementConsommationException;
 import com.boulangerie.abonnements.mapper.AbonnementMapper;
+import com.boulangerie.abonnements.mapper.ClientMapper;
 import com.boulangerie.abonnements.mapper.LigneAbonnementMapper;
 import com.boulangerie.abonnements.model.*;
 import com.boulangerie.abonnements.repository.*;
 import com.boulangerie.abonnements.service.*;
+import com.boulangerie.abonnements.specification.AbonnementSpecifications;
+import com.boulangerie.abonnements.specification.ClientSpecifications;
 import com.boulangerie.administration.service.LivreurService;
 import com.boulangerie.production.api.DistributionServiceApi;
 import com.boulangerie.shared.dto.PageResponse;
@@ -20,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +45,7 @@ public class AbonnementServiceImpl implements AbonnementService {
     private final ConsommationJournaliereRepository consommationRepository;
 
     private final LivreurService livreurService;
-
+    private final ClientMapper clientMapper;
     private final AbonnementFactory abonnementFactory;
     private final ClientFactory clientFactory;
 
@@ -323,4 +328,24 @@ public class AbonnementServiceImpl implements AbonnementService {
                         () -> new EntityNotFoundException("Abonnement introuvable: " + abonnementId)
                 );
     }
+
+    public PageResponse<AbonnementDto> search(AbonnementFilter filter, Pageable pageable) {
+        Specification<Abonnement> spec = AbonnementSpecifications.withFilters(
+                filter.actif(),
+                filter.livreurNom()
+        );
+        return PageUtils.toPageResponse(abonnementRepository.findAll(spec, pageable)
+                .map(abonnementMapper::toDto));
+    }
+
+//    public PageResponse<ClientDto> search(ClientFilter filter, Pageable pageable) {
+//        Specification<Client> spec = ClientSpecifications.withFilters(
+//                filter.nom(),
+//                filter.prenom(),
+//                filter.telephone(),
+//                filter.actif()
+//        );
+//        return PageUtils.toPageResponse(clientRepository.findAll(spec, pageable)
+//                .map(clientMapper::toDto));
+//    }
 }

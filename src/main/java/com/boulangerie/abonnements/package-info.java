@@ -5,6 +5,7 @@
                 "shared::utils",
                 "shared::mapper",
                 "shared::model",
+                "shared::specification",
                 "comptabilite::service",
                 "comptabilite::model",
                 "comptabilite::mapper",

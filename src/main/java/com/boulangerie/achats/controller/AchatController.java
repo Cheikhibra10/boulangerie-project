@@ -1,12 +1,14 @@
 package com.boulangerie.achats.controller;
 
 import com.boulangerie.achats.dto.*;
+import com.boulangerie.achats.model.*;
 import com.boulangerie.achats.service.AchatService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -89,9 +91,21 @@ public class AchatController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<PageResponse<AchatDto>> getAchats(
-            @ModelAttribute AchatSearchRequest criteria,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(achatService.getAchats(criteria, page, size));
+        return ResponseEntity.ok(achatService.getAchats(page, size));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PageResponse<AchatDto>> search(
+            @RequestParam(required = false) String fournisseurNom,
+            @RequestParam(required = false) StatutReception statutReception,
+            @RequestParam(required = false) StatutPaiement statutPaiement,
+            @RequestParam(required = false) StatutAchat statutAchat,
+            Pageable pageable
+    ) {
+        AchatFilter filter = new AchatFilter(fournisseurNom, statutReception, statutPaiement, statutAchat);
+        return ResponseEntity.ok(achatService.search(filter, pageable));
     }
 }

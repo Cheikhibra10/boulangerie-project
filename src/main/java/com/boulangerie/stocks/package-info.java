@@ -8,6 +8,7 @@
                 "shared::dto",
                 "shared::utils",
                 "shared::model",
+                "shared::specification",
                 "administration::service",
                 "comptabilite::service"
         }

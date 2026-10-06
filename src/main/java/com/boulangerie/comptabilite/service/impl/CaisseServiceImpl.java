@@ -1,10 +1,7 @@
 package com.boulangerie.comptabilite.service.impl;
 
 import com.boulangerie.administration.model.Utilisateur;
-import com.boulangerie.comptabilite.dto.CaisseDto;
-import com.boulangerie.comptabilite.dto.FermetureCaisseDto;
-import com.boulangerie.comptabilite.dto.JournalCaisseDto;
-import com.boulangerie.comptabilite.dto.OuvertureCaisseDto;
+import com.boulangerie.comptabilite.dto.*;
 import com.boulangerie.comptabilite.exception.AucuneCaisseOuverteException;
 import com.boulangerie.comptabilite.exception.CaisseDejaOuverteException;
 import com.boulangerie.comptabilite.exception.CaisseFermeeException;
@@ -12,11 +9,11 @@ import com.boulangerie.comptabilite.exception.SaisiesIncompletesException;
 import com.boulangerie.comptabilite.mapper.CaisseMapper;
 import com.boulangerie.comptabilite.model.Caisse;
 import com.boulangerie.comptabilite.model.StatutCaisse;
-import com.boulangerie.comptabilite.dto.MouvementCaisseDto;
 import com.boulangerie.comptabilite.repository.CaisseRepository;
 import com.boulangerie.comptabilite.service.CaisseClotureService;
 import com.boulangerie.comptabilite.service.CaisseService;
 import com.boulangerie.comptabilite.service.MouvementCaisseService;
+import com.boulangerie.comptabilite.specification.CaisseSpecifications;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.administration.security.CurrentUserService;
@@ -26,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -193,5 +192,10 @@ public class CaisseServiceImpl implements CaisseService {
         return caisseRepository.findById(id)
                 .orElseThrow(() ->
                         new EntityNotFoundException("Caisse introuvable " + id));
+    }
+
+    public PageResponse<CaisseDto> search(CaisseFilter filter, Pageable pageable) {
+        Specification<Caisse> spec = CaisseSpecifications.withFilters(filter.statut());
+        return PageUtils.toPageResponse(caisseRepository.findAll(spec, pageable).map(caisseMapper::toDto));
     }
 }

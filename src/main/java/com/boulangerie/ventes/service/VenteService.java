@@ -3,6 +3,8 @@ package com.boulangerie.ventes.service;
 
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.ventes.dto.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 
@@ -19,4 +21,6 @@ public interface VenteService {
     VenteDto getVente(Long id);
     VenteDto retournerVente(Long venteId, RetourVenteRequestDto dto);
     PageResponse<VenteDto> getVentes(LocalDate date, Long produitId, int page, int size);
+
+    PageResponse<VenteDto> search(VenteBoutiqueFilter filter, Pageable pageable);
 }

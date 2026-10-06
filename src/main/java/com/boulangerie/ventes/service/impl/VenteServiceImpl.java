@@ -17,11 +17,14 @@ import com.boulangerie.ventes.model.Paiement;
 import com.boulangerie.ventes.model.VenteBoutique;
 import com.boulangerie.ventes.repository.VenteBoutiqueRepository;
 import com.boulangerie.ventes.service.*;
+import com.boulangerie.ventes.specification.VenteBoutiqueSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -235,5 +238,11 @@ public class VenteServiceImpl implements VenteService {
             pageResult = venteRepository.findAll(PageRequest.of(page, size));
         }
         return PageUtils.toPageResponse(pageResult.map(venteMapper::toDto));
+    }
+
+    public PageResponse<VenteDto> search(VenteBoutiqueFilter filter, Pageable pageable) {
+        Specification<VenteBoutique> spec = VenteBoutiqueSpecifications.withFilters(filter.statut());
+        return PageUtils.toPageResponse(venteRepository.findAll(spec, pageable)
+                .map(venteMapper::toDto));
     }
 }

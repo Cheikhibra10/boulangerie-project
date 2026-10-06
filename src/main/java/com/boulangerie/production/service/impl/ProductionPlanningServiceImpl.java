@@ -74,4 +74,6 @@ public class ProductionPlanningServiceImpl implements ProductionPlanningService 
             throw new LotAlreadyExistsException(dto.getDate(), produitId);
         }
     }
+
+
 }

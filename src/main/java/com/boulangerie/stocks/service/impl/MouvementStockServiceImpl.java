@@ -8,6 +8,7 @@ import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.shared.utils.PageUtils;
 import com.boulangerie.stocks.dto.MouvementStockDto;
+import com.boulangerie.stocks.dto.MouvementStockFilter;
 import com.boulangerie.stocks.mapper.MouvementStockMapper;
 import com.boulangerie.stocks.model.MouvementStock;
 import com.boulangerie.stocks.model.StatutMouvement;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -176,4 +178,5 @@ public class MouvementStockServiceImpl implements MouvementStockService {
         return mouvementRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MouvementStock introuvable" +id));
     }
+
 }

@@ -7,6 +7,7 @@
                 "administration::security",
                 "shared::exception",
                 "shared::mapper",
+                "shared::specification",
                 "shared::dto",
                 "shared::utils",
                 "shared::model",

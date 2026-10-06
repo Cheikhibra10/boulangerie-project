@@ -4,8 +4,12 @@ package com.boulangerie.stocks.controller;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.stocks.dto.*;
+import com.boulangerie.stocks.model.StatutMouvement;
 import com.boulangerie.stocks.model.TypeMouvementStock;
+import com.boulangerie.stocks.service.MouvementStockService;
 import com.boulangerie.stocks.service.StockService;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -26,6 +30,7 @@ import java.math.BigDecimal;
 public class StockController {
 
     private final StockService stockService;
+    private final MouvementStockService mouvementStockService;
 
     // ===================== INGRÉDIENTS =====================
 
@@ -105,4 +110,22 @@ public class StockController {
         return ResponseEntity.ok((stockService.getSnapshots(periodeId, page, size)));
     }
 
+    @Operation(summary = "Rechercher les mouvements de stock (paginé)")
+    @GetMapping("/mouvements/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'GESTIONNAIRE_PRODUCTION')")
+    public ResponseEntity<PageResponse<MouvementStockDto>> search(
+            @RequestParam(required = false) Long ingredientId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin,
+            @RequestParam(required = false) TypeMouvementStock type,
+            @RequestParam(required = false) StatutMouvement statut,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        String typeStr = type != null ? type.name() : null;
+        String statutStr = statut != null ? statut.name() : null;
+
+        return ResponseEntity.ok(mouvementStockService.rechercher(
+                ingredientId, dateDebut, dateFin, typeStr, statutStr, page, size));
+    }
 }

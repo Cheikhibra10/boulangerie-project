@@ -2,6 +2,8 @@ package com.boulangerie.achats.service;
 
 import com.boulangerie.achats.dto.*;
 import com.boulangerie.shared.dto.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,5 +24,7 @@ public interface AchatService {
     AchatDto getAchat(Long id);
     List<LigneAchatDto> getLignesByAchat(Long achatId);
 
-    PageResponse<AchatDto> getAchats(AchatSearchRequest request, int page, int size);
+    PageResponse<AchatDto> getAchats(int page, int size);
+
+    PageResponse<AchatDto> search(AchatFilter filter, Pageable pageable);
 }

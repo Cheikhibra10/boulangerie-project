@@ -8,6 +8,7 @@
                 "shared::utils",
                 "shared::repository",
                 "shared::model",
+                "shared::specification",
                 "administration::model",
                 "administration::repository",
                 "administration::security",

@@ -13,6 +13,7 @@
                 "comptabilite::service",
                 "comptabilite::api",
                 "shared::exception",
+                "shared::specification",
                 "shared::mapper",
                 "shared::dto",
                 "shared::utils",

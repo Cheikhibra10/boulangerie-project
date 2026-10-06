@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface RecetteRepository extends GenericRepository<Recette> {
@@ -68,13 +71,10 @@ public interface RecetteRepository extends GenericRepository<Recette> {
      */
     Optional<Recette> findByProduitIdAndVersion(Long produitId, Integer version);
 
-    @Query("""
-select r
-from Recette r
-join fetch r.ingredients ri
-join fetch ri.ingredient
-where r.id=:id
-""")
+    @Query("SELECT r FROM Recette r " +
+            "JOIN FETCH r.produit p " +
+            "WHERE r.actif = true " +
+            "ORDER BY p.libelle")
     Optional<Recette> findByIdWithIngredients(Long id);
 
     Optional<Recette> findByIdAndVersion(Long recetteId, Integer version);

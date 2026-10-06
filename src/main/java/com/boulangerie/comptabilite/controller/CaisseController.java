@@ -1,17 +1,19 @@
 // caisse/controller/CaisseController.java
 package com.boulangerie.comptabilite.controller;
 
-import com.boulangerie.comptabilite.dto.CaisseDto;
-import com.boulangerie.comptabilite.dto.FermetureCaisseDto;
-import com.boulangerie.comptabilite.dto.JournalCaisseDto;
-import com.boulangerie.comptabilite.dto.OuvertureCaisseDto;
+import com.boulangerie.comptabilite.dto.*;
+import com.boulangerie.comptabilite.model.StatutCaisse;
 import com.boulangerie.comptabilite.service.CaisseService;
+import com.boulangerie.comptabilite.service.MouvementCaisseService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.model.SensMouvement;
+import com.boulangerie.shared.model.TypeMouvement;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,7 @@ import java.time.LocalDate;
 public class CaisseController {
 
     private final CaisseService caisseService;
+    private final MouvementCaisseService mouvementService;
 
     // ===================== OUVERTURE / FERMETURE =====================
     @Operation(summary = "Ouvrir une caisse")
@@ -86,5 +89,26 @@ public class CaisseController {
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok((
                 caisseService.getJournal(id, dateDebut, dateFin, type, categorieId, page, size)));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
+    public ResponseEntity<PageResponse<CaisseDto>> search(
+            @RequestParam(required = false) StatutCaisse statut,
+            Pageable pageable
+    ) {
+        CaisseFilter filter = new CaisseFilter(statut);
+        return ResponseEntity.ok(caisseService.search(filter, pageable));
+    }
+
+    @GetMapping("/mouvements/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
+    public ResponseEntity<PageResponse<MouvementCaisseDto>> searchMouvements(
+            @RequestParam(required = false) TypeMouvement type,
+            @RequestParam(required = false) SensMouvement sens,
+            Pageable pageable
+    ) {
+        MouvementCaisseFilter filter = new MouvementCaisseFilter(type, sens);
+        return ResponseEntity.ok(mouvementService.search(filter, pageable));
     }
 }

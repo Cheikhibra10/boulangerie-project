@@ -2,13 +2,18 @@
 package com.boulangerie.ventes.controller;
 
 import com.boulangerie.shared.dto.ApiResponse;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.ventes.dto.*;
+import com.boulangerie.ventes.model.StatutVente;
+import com.boulangerie.ventes.service.VenteBoutiqueAutocompleteService;
 import com.boulangerie.ventes.service.VenteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/ventes")
@@ -24,6 +30,7 @@ import java.time.LocalDate;
 public class VenteController {
 
     private final VenteService venteService;
+    private final VenteBoutiqueAutocompleteService venteBoutiqueAutocompleteService;
 
     // ===================== CRÉATION =====================
 
@@ -92,5 +99,21 @@ public class VenteController {
                         venteService.annulerVente(venteId, dto)
                 )
         );
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
+    public ResponseEntity<PageResponse<VenteDto>> search(
+            @RequestParam(required = false) StatutVente statut,
+            Pageable pageable
+    ) {
+        VenteBoutiqueFilter filter = new VenteBoutiqueFilter(statut);
+        return ResponseEntity.ok(venteService.search(filter, pageable));
+    }
+
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
+    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
+        return venteBoutiqueAutocompleteService.search(q);
     }
 }

@@ -2,6 +2,7 @@
 package com.boulangerie.livreurs.controller;
 
 import com.boulangerie.livreurs.dto.*;
+import com.boulangerie.livreurs.model.StatutCompteRendu;
 import com.boulangerie.livreurs.service.CompteRenduLivreurService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
@@ -9,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -70,5 +73,16 @@ public class CompteRenduLivreurController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(compteRenduLivreurService.getHistorique(livreurId, dateDebut, dateFin, page, size));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PageResponse<CompteRenduDto>> search(
+            @RequestParam(required = false) StatutCompteRendu statut,
+            @RequestParam(required = false) String livreurNom,
+            Pageable pageable
+    ) {
+        CompteLivreurJournalierFilter filter = new CompteLivreurJournalierFilter(statut, livreurNom);
+        return ResponseEntity.ok(compteRenduLivreurService.search(filter, pageable));
     }
 }

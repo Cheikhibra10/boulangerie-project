@@ -3,6 +3,9 @@ package com.boulangerie.comptabilite.repository;
 
 import com.boulangerie.comptabilite.model.Caisse;
 import com.boulangerie.comptabilite.model.StatutCaisse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -24,4 +27,6 @@ public interface CaisseRepository extends JpaRepository<Caisse, Long> {
     Optional<Caisse> findById(Long id);
 
     boolean existsByStatut(StatutCaisse statut);
+
+    Page<Caisse> findAll(Specification<Caisse> specification, Pageable pageable);
 }

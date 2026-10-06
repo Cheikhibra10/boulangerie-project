@@ -7,7 +7,10 @@ import com.boulangerie.comptabilite.model.MouvementCaisse;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.model.*;
 import com.boulangerie.shared.model.TypePaiement;
-import org.springframework.transaction.annotation.Transactional;
+import com.boulangerie.comptabilite.dto.MouvementCaisseFilter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+ 
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,5 +41,8 @@ public interface MouvementCaisseService {
 //    void enregistrerPaiementAbonnement(PaiementAbonnementEnregistreEvent event);
 
     void creerMouvementReportBenefice(Long periodeId, BigDecimal montant);
+
+    // Recherche par filtre + Pageable (optionnelle)
+    PageResponse<MouvementCaisseDto> search(MouvementCaisseFilter filter, Pageable pageable);
 
 }

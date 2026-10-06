@@ -11,6 +11,8 @@ import com.boulangerie.production.repository.DestinationProductionRepository;
 import com.boulangerie.production.repository.LotProductionRepository;
 import com.boulangerie.production.repository.LotQuantiteDistribueeProjection;
 import com.boulangerie.production.service.ProductionService;
+import com.boulangerie.production.specification.DestinationProductionSpecifications;
+import com.boulangerie.production.specification.LotProductionSpecifications;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.shared.utils.PageUtils;
@@ -18,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -153,4 +157,22 @@ public class ProductionServiceImpl implements ProductionService {
                 .orElseThrow(() -> new EntityNotFoundException("Production introuvable" +lotId));
     }
 
+    public PageResponse<LotProductionDto> search(LotProductionFilter filter, Pageable pageable) {
+        Specification<LotProduction> spec = LotProductionSpecifications.withFilters(
+                filter.produitNom(),
+                filter.statut()
+        );
+        return PageUtils.toPageResponse(lotRepository.findAll(spec, pageable)
+                .map(lotMapper::toDto));
+    }
+
+    public PageResponse<DestinationDto> search(DestinationProductionFilter filter, Pageable pageable) {
+        Specification<DestinationProduction> spec = DestinationProductionSpecifications.withFilters(
+                filter.canal(),
+                filter.etatPain(),
+                filter.livreurNom()
+        );
+        return PageUtils.toPageResponse(destinationRepository.findAll(spec, pageable)
+                .map(destinationMapper::toDto));
+    }
 }

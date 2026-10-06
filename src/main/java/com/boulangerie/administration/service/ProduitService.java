@@ -1,10 +1,13 @@
 package com.boulangerie.administration.service;
 
 import com.boulangerie.administration.dto.ProduitDto;
+import com.boulangerie.administration.dto.ProduitFilter;
 import com.boulangerie.administration.dto.ProduitUpdateDto;
 import com.boulangerie.administration.model.Produit;
 import com.boulangerie.administration.model.TypeProduit;
 import com.boulangerie.shared.dto.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
@@ -31,4 +34,6 @@ public interface ProduitService{
     Long getIdByIdLibelle(String libelle);
 
     PageResponse<ProduitDto> findAll(int page, int size);
+
+    PageResponse<ProduitDto> search(ProduitFilter filter, Pageable pageable);
 }

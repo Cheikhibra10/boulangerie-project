@@ -1,6 +1,7 @@
 package com.boulangerie.administration.service.Impl;
 
 import com.boulangerie.administration.dto.ProduitDto;
+import com.boulangerie.administration.dto.ProduitFilter;
 import com.boulangerie.administration.dto.ProduitUpdateDto;
 import com.boulangerie.administration.mapper.ProduitMapper;
 import com.boulangerie.administration.model.CategorieProduit;
@@ -9,6 +10,7 @@ import com.boulangerie.administration.model.TypeProduit;
 import com.boulangerie.administration.repository.CategorieProduitRepository;
 import com.boulangerie.administration.repository.ProduitRepository;
 import com.boulangerie.administration.repository.RecetteRepository;
+import com.boulangerie.administration.specification.ProduitSpecifications;
 import com.boulangerie.administration.storage.dto.ImageUploadResult;
 import com.boulangerie.administration.storage.service.ImageStorageService;
 import com.boulangerie.administration.service.ProduitService;
@@ -18,6 +20,8 @@ import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.shared.utils.PageUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -208,5 +212,15 @@ public class ProduitServiceImpl implements ProduitService {
                         ));
     }
 
+    public PageResponse<ProduitDto> search(ProduitFilter filter, Pageable pageable) {
+        Specification<Produit> spec = ProduitSpecifications.withFilters(
+                filter.libelle(),
+                filter.actif(),
+                filter.typeProduit(),
+                filter.categorieNom()
+        );
+        return PageUtils.toPageResponse(repository.findAll(spec, pageable)
+                .map(mapper::toDto));
+    }
 
 }

@@ -5,6 +5,7 @@ import com.boulangerie.livreurs.model.CompteLivreurJournalier;
 import com.boulangerie.livreurs.model.StatutCompteRendu;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -54,4 +55,6 @@ public interface CompteLivreurJournalierRepository extends JpaRepository<CompteL
     BigDecimal sumSoldeActuel();
 
     boolean existsByDateBetweenAndStatutNot(LocalDate debut, LocalDate fin, StatutCompteRendu statut);
+
+    Page<CompteLivreurJournalier> findAll(Specification<CompteLivreurJournalier> spec, Pageable pageable);
 }

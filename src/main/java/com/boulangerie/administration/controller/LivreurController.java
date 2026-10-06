@@ -4,7 +4,9 @@ import com.boulangerie.administration.dto.FournisseurDto;
 import com.boulangerie.administration.dto.LivreurDto;
 import com.boulangerie.administration.model.Livreur;
 import com.boulangerie.administration.service.LivreurService;
+import com.boulangerie.administration.service.LivreurAutocompleteService;
 import com.boulangerie.shared.controller.GenericCrudController;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,10 +25,12 @@ public class LivreurController
         extends GenericCrudController<Livreur, LivreurDto> {
 
     private final LivreurService livreurService;
+    private final LivreurAutocompleteService livreurAutocompleteService;
 
-    public LivreurController(LivreurService service) {
+    public LivreurController(LivreurService service, LivreurAutocompleteService livreurAutocompleteService) {
         super(service);
         this.livreurService = service;
+        this.livreurAutocompleteService = livreurAutocompleteService;
     }
 
     @Operation(summary = "Lister les livreurs")
@@ -48,5 +52,11 @@ public class LivreurController
     @GetMapping("/{id}/is-active")
     public ResponseEntity<Boolean> isActive(@PathVariable Long id) {
         return ResponseEntity.ok(livreurService.isActive(id));
+    }
+
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
+        return livreurAutocompleteService.search(q);
     }
 }

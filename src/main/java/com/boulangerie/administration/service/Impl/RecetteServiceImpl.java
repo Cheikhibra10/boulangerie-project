@@ -1,6 +1,7 @@
 package com.boulangerie.administration.service.Impl;
 
 import com.boulangerie.administration.dto.RecetteDto;
+import com.boulangerie.administration.dto.RecetteFilter;
 import com.boulangerie.administration.mapper.RecetteMapper;
 import com.boulangerie.administration.model.Ingredient;
 import com.boulangerie.administration.model.Produit;
@@ -10,9 +11,15 @@ import com.boulangerie.administration.repository.IngredientRepository;
 import com.boulangerie.administration.repository.ProduitRepository;
 import com.boulangerie.administration.repository.RecetteRepository;
 import com.boulangerie.administration.service.RecetteService;
+import com.boulangerie.administration.specification.RecetteSpecifications;
+import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.shared.service.impl.AbstractCrudService;
+import com.boulangerie.shared.utils.PageUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -166,5 +173,15 @@ public class RecetteServiceImpl
                         new EntityNotFoundException(
                                 "Recette introuvable : " + recetteId + " version : " + version
                         ));
+    }
+
+    public PageResponse<RecetteDto> search(RecetteFilter filter, Pageable pageable) {
+        Specification<Recette> spec = RecetteSpecifications.withFilters(
+                filter.version(),
+                filter.actif(),
+                filter.produitNom()
+        );
+        return PageUtils.toPageResponse(recetteRepository.findAll(spec, pageable)
+                .map(mapper::toDto));
     }
 }

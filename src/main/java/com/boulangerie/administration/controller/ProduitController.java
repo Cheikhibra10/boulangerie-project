@@ -1,11 +1,15 @@
 package com.boulangerie.administration.controller;
 
 import com.boulangerie.administration.dto.ProduitDto;
+import com.boulangerie.administration.dto.ProduitFilter;
 import com.boulangerie.administration.dto.ProduitMultipartRequest;
 import com.boulangerie.administration.dto.ProduitUpdateDto;
+import com.boulangerie.administration.model.TypeProduit;
 import com.boulangerie.administration.service.ProduitService;
+import com.boulangerie.administration.service.ProduitAutocompleteService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,12 +18,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/produits")
@@ -29,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ProduitController {
 
     private final ProduitService produitService;
+    private final ProduitAutocompleteService produitAutocompleteService;
 
     @Operation(summary = "Créer un produit")
     @RequestBody(
@@ -131,6 +140,25 @@ public class ProduitController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(produitService.findAll(page, size));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE_PRODUCTION','CAISSIER','ADMIN','MANAGER')")
+    public ResponseEntity<PageResponse<ProduitDto>> search(
+            @RequestParam(required = false) String nom,
+            @RequestParam(required = false) Boolean actif,
+            @RequestParam(required = false) TypeProduit typeProduit,
+            @RequestParam(required = false) String categorieNom,
+            Pageable pageable
+    ) {
+        ProduitFilter filter = new ProduitFilter(nom, actif, typeProduit, categorieNom);
+        return ResponseEntity.ok(produitService.search(filter, pageable));
+    }
+
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('GESTIONNAIRE_PRODUCTION','CAISSIER','ADMIN','MANAGER')")
+    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
+        return produitAutocompleteService.search(q);
     }
 
 }

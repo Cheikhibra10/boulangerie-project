@@ -8,9 +8,11 @@ import com.boulangerie.comptabilite.service.MouvementCaisseService;
 import com.boulangerie.comptabilite.specification.MouvementCaisseSpecification;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.model.*;
+import com.boulangerie.comptabilite.dto.MouvementCaisseFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -118,5 +120,17 @@ public class MouvementCaisseServiceImpl implements MouvementCaisseService {
                 .first(page.isFirst())
                 .last(page.isLast())
                 .build();
+    }
+
+    // Recherche paginée utilisée par les contrôleurs REST (facultative)
+    public PageResponse<MouvementCaisseDto> search(MouvementCaisseFilter filter, Pageable pageable) {
+        // Construire la spécification à partir du filtre fourni
+        Specification<MouvementCaisse> spec = Specification
+                .where(MouvementCaisseSpecification.byType(filter.typeMouvement()))
+                .and(MouvementCaisseSpecification.bySens(filter.sens()));
+
+        Page<MouvementCaisse> pageResult = repository.findAll(spec, pageable);
+        Page<MouvementCaisseDto> dtoPage = pageResult.map(mouvementMapper::toDto);
+        return toPageResponse(dtoPage);
     }
 }

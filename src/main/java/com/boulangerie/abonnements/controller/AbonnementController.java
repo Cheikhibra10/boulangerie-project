@@ -5,12 +5,17 @@ import com.boulangerie.abonnements.dto.*;
 import com.boulangerie.abonnements.service.AbonnementService;
 import com.boulangerie.abonnements.service.CsvImportService;
 import com.boulangerie.abonnements.service.ExcelImportService;
+import com.boulangerie.abonnements.service.AbonnementAutocompleteService;
+import com.boulangerie.abonnements.service.ClientAutocompleteService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.YearMonth;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/abonnements")
@@ -31,6 +37,9 @@ public class AbonnementController {
     private final AbonnementService abonnementService;
     private final ExcelImportService excelImportService;
     private final CsvImportService csvImportService;
+    private final AbonnementAutocompleteService abonnementAutocompleteService;
+    private final ClientAutocompleteService clientAutocompleteService;
+
     // ===================== ABONNEMENT =====================
 
     @Operation(summary = "Créer un abonnement")
@@ -109,6 +118,17 @@ public class AbonnementController {
         return ResponseEntity.ok(abonnementService.getAbonnements(page, size));
     }
 
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PageResponse<AbonnementDto>> search(
+            @RequestParam(required = false) Boolean actif,
+            @RequestParam(required = false) String livreurNom,
+            Pageable pageable
+    ) {
+        AbonnementFilter filter = new AbonnementFilter(actif, livreurNom);
+        return ResponseEntity.ok(abonnementService.search(filter, pageable));
+    }
+
     @PostMapping(
             value = "/{abonnementId}/consommations/mensuel/excel",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -176,5 +196,17 @@ public class AbonnementController {
                 );
 
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public List<AutocompleteItemDto> autocompleteAbonnements(@RequestParam String q) {
+        return abonnementAutocompleteService.search(q);
+    }
+
+    @GetMapping("/clients/autocomplete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public List<AutocompleteItemDto> autocompleteClients(@RequestParam String q) {
+        return clientAutocompleteService.search(q);
     }
 }

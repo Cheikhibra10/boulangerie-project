@@ -1,12 +1,10 @@
 // caisse/service/CaisseService.java
 package com.boulangerie.comptabilite.service;
 
-import com.boulangerie.comptabilite.dto.CaisseDto;
-import com.boulangerie.comptabilite.dto.FermetureCaisseDto;
-import com.boulangerie.comptabilite.dto.JournalCaisseDto;
+import com.boulangerie.comptabilite.dto.*;
 import com.boulangerie.comptabilite.model.Caisse;
-import com.boulangerie.comptabilite.dto.OuvertureCaisseDto;
 import com.boulangerie.shared.dto.PageResponse;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 
@@ -36,4 +34,5 @@ public interface CaisseService {
 
     Caisse findCaisseOrThrow(Long caisseId);
 
+    PageResponse<CaisseDto> search(CaisseFilter filter, Pageable pageable);
 }
