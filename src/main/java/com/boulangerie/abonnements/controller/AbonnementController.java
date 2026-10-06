@@ -1,6 +1,5 @@
 package com.boulangerie.abonnements.controller;
 
-import com.boulangerie.abonnements.service.AbonnementReportingService;
 import com.boulangerie.abonnements.dto.*;
 import com.boulangerie.abonnements.service.AbonnementService;
 import com.boulangerie.abonnements.service.CsvImportService;
@@ -14,7 +13,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -198,6 +196,7 @@ public class AbonnementController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Rechercher abonnements")
     @GetMapping("/autocomplete")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public List<AutocompleteItemDto> autocompleteAbonnements(@RequestParam String q) {
