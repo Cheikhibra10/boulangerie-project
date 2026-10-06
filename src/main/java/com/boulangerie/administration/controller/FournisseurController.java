@@ -1,7 +1,6 @@
 package com.boulangerie.administration.controller;
 
 import com.boulangerie.administration.dto.FournisseurDto;
-import com.boulangerie.administration.dto.RecetteDto;
 import com.boulangerie.administration.model.Fournisseur;
 import com.boulangerie.administration.service.FournisseurAutocompleteService;
 import com.boulangerie.administration.service.FournisseurService;
