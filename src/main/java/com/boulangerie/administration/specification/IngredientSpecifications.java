@@ -1,21 +1,21 @@
 package com.boulangerie.administration.specification;
 
+import com.boulangerie.administration.dto.IngredientFilter;
 import com.boulangerie.administration.model.Ingredient;
-import com.boulangerie.administration.model.Produit;
-import com.boulangerie.administration.model.TypeProduit;
-import com.boulangerie.administration.model.UniteMesure;
-import com.boulangerie.shared.specification.Specs;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import org.springframework.data.jpa.domain.Specification;
 
-public class IngredientSpecifications {
-    public static Specification<Ingredient> withFilters(
-            String libelle,
-            UniteMesure unite,
-            Boolean actif
-    ) {
+public final class IngredientSpecifications {
+
+    private IngredientSpecifications() {}
+
+    public static Specification<Ingredient> withFilters(IngredientFilter filter) {
         return Specification
-                .<Ingredient>where(Specs.<Ingredient>equal("libelle", libelle))
-                .and(actif == null ? null : (actif ? Specs.<Ingredient>isTrue("actif") : Specs.<Ingredient>isFalse("actif")))
-                .and(Specs.<Ingredient>equal("unite", unite));
+                .<Ingredient>where(SearchSpecifications.like("libelle", filter.libelle()))
+                .and(SearchSpecifications.equal("unite", filter.unite()))
+                .and(filter.actif() == null ? null :
+                        filter.actif()
+                                ? SearchSpecifications.isTrue("actif")
+                                : SearchSpecifications.isFalse("actif"));
     }
 }

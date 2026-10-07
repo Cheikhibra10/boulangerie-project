@@ -4,6 +4,7 @@ package com.boulangerie.comptabilite.service;
 import com.boulangerie.comptabilite.model.Caisse;
 import com.boulangerie.comptabilite.dto.MouvementCaisseDto;
 import com.boulangerie.comptabilite.model.MouvementCaisse;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.model.*;
 import com.boulangerie.shared.model.TypePaiement;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public interface MouvementCaisseService {
 
@@ -25,16 +27,6 @@ public interface MouvementCaisseService {
             String libelle,
             BigDecimal montant);
 
-    PageResponse<MouvementCaisseDto> rechercher(
-            Long caisseId,
-            LocalDate dateDebut,
-            LocalDate dateFin,
-            String type,
-            Long categorieId,
-            Long livreurId,
-            int page,
-            int size
-    );
     BigDecimal calculerTotalEntrees(Long caisseId);
 
     BigDecimal calculerTotalSorties(Long caisseId);
@@ -43,6 +35,9 @@ public interface MouvementCaisseService {
     void creerMouvementReportBenefice(Long periodeId, BigDecimal montant);
 
     // Recherche par filtre + Pageable (optionnelle)
-    PageResponse<MouvementCaisseDto> search(MouvementCaisseFilter filter, Pageable pageable);
+    Page<MouvementCaisseDto> search(MouvementCaisseFilter filter, Pageable pageable);
 
+    List<AutocompleteItemDto> autocomplete(String q);
+
+    Page<MouvementCaisseDto> searchByCaisse(Long caisseId, MouvementCaisseFilter filter, Pageable pageable);
 }

@@ -1,7 +1,9 @@
 package com.boulangerie.administration.service;
 
 import com.boulangerie.administration.dto.LivreurDto;
+import com.boulangerie.administration.dto.LivreurFilter;
 import com.boulangerie.administration.model.Livreur;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.service.DefaultService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,4 +24,8 @@ public interface LivreurService extends DefaultService<Livreur, LivreurDto> {
 
     Long findLivreurOrThrow(Long id);
     Livreur findLivreurById(Long id);
+
+    Page<LivreurDto> search(LivreurFilter filter, Pageable pageable);
+
+    List<AutocompleteItemDto> autocomplete(String q);
 }

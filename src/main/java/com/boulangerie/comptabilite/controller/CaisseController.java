@@ -6,9 +6,11 @@ import com.boulangerie.comptabilite.model.StatutCaisse;
 import com.boulangerie.comptabilite.service.CaisseService;
 import com.boulangerie.comptabilite.service.MouvementCaisseService;
 import com.boulangerie.shared.dto.ApiResponse;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.model.SensMouvement;
 import com.boulangerie.shared.model.TypeMouvement;
+import com.boulangerie.shared.utils.PageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/caisses")
@@ -77,38 +80,67 @@ public class CaisseController {
 
     // ===================== JOURNAL =====================
     @Operation(summary = "Consulter le journal de caisse (paginé)")
-    @GetMapping("/{id}/journal")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
-    public ResponseEntity<JournalCaisseDto> getJournal(
-            @PathVariable Long id,
+    @GetMapping("/{caisseId}/journal")
+    public JournalCaisseDto getJournal(
+            @PathVariable Long caisseId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin,
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) Long categorieId,
+            @RequestParam(required = false) TypeMouvement type,
+            @RequestParam(required = false) SensMouvement sens,
+            @RequestParam(required = false) String libelle,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok((
-                caisseService.getJournal(id, dateDebut, dateFin, type, categorieId, page, size)));
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return caisseService.getJournal(
+                caisseId, dateDebut, dateFin, type, sens, libelle, page, size
+        );
     }
 
+    @Operation(summary = "Rechercher des caisses")
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
-    public ResponseEntity<PageResponse<CaisseDto>> search(
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CAISSIER')")
+    public PageResponse<CaisseDto> search(
             @RequestParam(required = false) StatutCaisse statut,
             Pageable pageable
     ) {
         CaisseFilter filter = new CaisseFilter(statut);
-        return ResponseEntity.ok(caisseService.search(filter, pageable));
+        return PageUtils.toPageResponse(caisseService.search(filter, pageable));
     }
 
+    @Operation(summary = "Rechercher des caisses par Autocomplétion")
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CAISSIER')")
+    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
+        return caisseService.autocomplete(q);
+    }
+
+    @Operation(summary = "Rechercher des mouvements de caisse")
     @GetMapping("/mouvements/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
-    public ResponseEntity<PageResponse<MouvementCaisseDto>> searchMouvements(
-            @RequestParam(required = false) TypeMouvement type,
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CAISSIER')")
+    public PageResponse<MouvementCaisseDto> search(
+            @RequestParam(required = false) TypeMouvement typeMouvement,
             @RequestParam(required = false) SensMouvement sens,
+            @RequestParam(required = false) String libelle,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin,
+            @RequestParam(required = false) StatutCaisse caisseStatut,
             Pageable pageable
     ) {
-        MouvementCaisseFilter filter = new MouvementCaisseFilter(type, sens);
-        return ResponseEntity.ok(mouvementService.search(filter, pageable));
+        MouvementCaisseFilter filter = new MouvementCaisseFilter(
+                typeMouvement,
+                sens,
+                libelle,
+                dateDebut,
+                dateFin,
+                caisseStatut
+        );
+        return PageUtils.toPageResponse(mouvementService.search(filter, pageable));
+    }
+
+    @Operation(summary = "Rechercher des mouvements de caisse par Autocomplétion")
+    @GetMapping("/mouvements/autocomplete")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CAISSIER')")
+    public List<AutocompleteItemDto> autocompletemouvement(@RequestParam String q) {
+        return mouvementService.autocomplete(q);
     }
 }

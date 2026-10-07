@@ -1,25 +1,35 @@
 package com.boulangerie.abonnements.specification;
 
+import com.boulangerie.abonnements.dto.AbonnementFilter;
 import com.boulangerie.abonnements.model.Abonnement;
-import com.boulangerie.administration.model.Recette;
-import com.boulangerie.shared.specification.Specs;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import org.springframework.data.jpa.domain.Specification;
 
-public class AbonnementSpecifications {
+import java.util.List;
 
-    public static Specification<Abonnement> withFilters(Boolean actif, String livreurNom) {
+public final class AbonnementSpecifications {
+
+    private AbonnementSpecifications() {}
+
+    public static Specification<Abonnement> withFilters(AbonnementFilter filter, List<Long> livreurIds) {
         return Specification
-                .where(actif == null ? null : (actif ? Specs.<Abonnement>isTrue("actif") : Specs.<Abonnement>isFalse("actif")))
-                .and(livreurNomContains(livreurNom));
+                .<Abonnement>where(filter.actif() == null ? null :
+                        filter.actif()
+                                ? SearchSpecifications.isTrue("actif")
+                                : SearchSpecifications.isFalse("actif"))
+                .and(livreurIdsIn(livreurIds));
     }
 
-    private static Specification<Abonnement> livreurNomContains(String nom) {
+    public static Specification<Abonnement> livreurIdsIn(List<Long> livreurIds) {
         return (root, query, cb) -> {
-            if (nom == null || nom.isBlank()) return null;
-            return cb.or(
-                    cb.like(cb.lower(root.get("livreur").get("nom")), "%" + nom.toLowerCase() + "%"),
-                    cb.like(cb.lower(root.get("livreur").get("prenom")), "%" + nom.toLowerCase() + "%")
-            );
+            if (livreurIds == null || livreurIds.isEmpty()) {
+                return null;
+            }
+            return root.get("livreurId").in(livreurIds);
         };
+    }
+
+    public static Specification<Abonnement> isActive() {
+        return SearchSpecifications.isTrue("actif");
     }
 }

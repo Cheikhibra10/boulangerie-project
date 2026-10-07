@@ -7,5 +7,5 @@ public record ProduitFilter(
         String libelle,
         Boolean actif,
         TypeProduit typeProduit,
-        String categorieNom
+        String categorieLibelle
 ) {}

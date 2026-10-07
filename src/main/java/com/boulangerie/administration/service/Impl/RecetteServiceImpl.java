@@ -12,16 +12,21 @@ import com.boulangerie.administration.repository.ProduitRepository;
 import com.boulangerie.administration.repository.RecetteRepository;
 import com.boulangerie.administration.service.RecetteService;
 import com.boulangerie.administration.specification.RecetteSpecifications;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.shared.service.impl.AbstractCrudService;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import com.boulangerie.shared.utils.PageUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -175,13 +180,30 @@ public class RecetteServiceImpl
                         ));
     }
 
-    public PageResponse<RecetteDto> search(RecetteFilter filter, Pageable pageable) {
-        Specification<Recette> spec = RecetteSpecifications.withFilters(
-                filter.version(),
-                filter.actif(),
-                filter.produitNom()
-        );
-        return PageUtils.toPageResponse(recetteRepository.findAll(spec, pageable)
-                .map(mapper::toDto));
+    @Transactional(readOnly = true)
+    public Page<RecetteDto> search(RecetteFilter filter, Pageable pageable) {
+        return recetteRepository
+                .findAll(RecetteSpecifications.withFilters(filter), pageable)
+                .map(mapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+
+        Specification<Recette> spec = Specification
+                .<Recette>where(SearchSpecifications.isActive())
+                .and(SearchSpecifications.like("produit.libelle", q));
+
+        return recetteRepository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(r -> AutocompleteItemDto.of(
+                        r.getId(),
+                        r.getProduit().getLibelle() + " v" + r.getVersion()
+                ))
+                .toList();
     }
 }

@@ -6,6 +6,7 @@ import com.boulangerie.administration.model.TypeProduit;
 import com.boulangerie.shared.repository.GenericRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Repository
-public interface ProduitRepository extends GenericRepository<Produit> {
+public interface ProduitRepository extends GenericRepository<Produit>, JpaSpecificationExecutor<Produit> {
 
     /**
      * Recherche un produit par son nom (unique)
@@ -86,4 +87,10 @@ public interface ProduitRepository extends GenericRepository<Produit> {
     Set<Long> findIdsByType(@Param("type") TypeProduit type);
 
     Produit getProduitByid(Long id);
+
+    @Query("""
+    SELECT p.id FROM Produit p
+    WHERE LOWER(p.libelle) LIKE LOWER(CONCAT('%', :libelle, '%'))
+    """)
+    List<Long> findIdsByLibelleContainingIgnoreCase(@Param("libelle") String libelle);
 }

@@ -1,5 +1,9 @@
 package com.boulangerie.production.service.impl;
 
+import com.boulangerie.administration.api.LivreurLookupApi;
+import com.boulangerie.administration.api.ProduitLookupApi;
+import com.boulangerie.administration.model.Produit;
+import com.boulangerie.administration.repository.ProduitRepository;
 import com.boulangerie.production.dto.*;
 import com.boulangerie.production.exception.LivreurSansDistributionException;
 import com.boulangerie.production.mapper.DestinationMapper;
@@ -13,6 +17,7 @@ import com.boulangerie.production.repository.LotQuantiteDistribueeProjection;
 import com.boulangerie.production.service.ProductionService;
 import com.boulangerie.production.specification.DestinationProductionSpecifications;
 import com.boulangerie.production.specification.LotProductionSpecifications;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.shared.utils.PageUtils;
@@ -41,6 +46,8 @@ public class ProductionServiceImpl implements ProductionService {
     private final DestinationProductionRepository destinationRepository;
     private final LotProductionMapper lotMapper;
     private final DestinationMapper destinationMapper;
+    private final ProduitLookupApi produitLookupApi;
+    private final LivreurLookupApi livreurLookupApi;
 
     @Override
     public List<DestinationDto> distribuerProduction(Long productionId, DistribuerProductionRequestDto request) {
@@ -157,22 +164,127 @@ public class ProductionServiceImpl implements ProductionService {
                 .orElseThrow(() -> new EntityNotFoundException("Production introuvable" +lotId));
     }
 
-    public PageResponse<LotProductionDto> search(LotProductionFilter filter, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<LotProductionDto> search(LotProductionFilter filter, Pageable pageable) {
+        List<Long> produitIds = null;
+
+        if (filter.produitLibelle() != null && !filter.produitLibelle().isBlank()) {
+            produitIds = produitLookupApi.findIdsByLibelle(filter.produitLibelle());
+            if (produitIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+        }
+
         Specification<LotProduction> spec = LotProductionSpecifications.withFilters(
-                filter.produitNom(),
-                filter.statut()
+                produitIds,
+                filter.statut(),
+                filter.dateDebut(),
+                filter.dateFin()
         );
-        return PageUtils.toPageResponse(lotRepository.findAll(spec, pageable)
-                .map(lotMapper::toDto));
+
+        return lotRepository
+                .findAll(spec, pageable)
+                .map(lotMapper::toDto);
     }
 
-    public PageResponse<DestinationDto> search(DestinationProductionFilter filter, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+
+        List<Long> produitIds = produitLookupApi.findIdsByLibelle(q);
+        if (produitIds.isEmpty()) {
+            return List.of();
+        }
+
+        // One batch call — no N+1
+        Map<Long, String> produitLibelles = produitLookupApi.findLibellesByIds(produitIds);
+
+        Specification<LotProduction> spec = Specification
+                .<LotProduction>where(LotProductionSpecifications.produitIdsIn(produitIds));
+
+        return lotRepository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(lot -> AutocompleteItemDto.of(
+                        lot.getId(),
+                        "Lot #" + lot.getId() + " - " + lot.getDate(),
+                        produitLibelles.get(lot.getProduitId())
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<DestinationDto> search(DestinationProductionFilter filter, Pageable pageable) {
+
+        List<Long> produitIds = null;
+        if (filter.produitLibelle() != null && !filter.produitLibelle().isBlank()) {
+            produitIds = produitLookupApi.findIdsByLibelle(filter.produitLibelle());
+            if (produitIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+        }
+
+        List<Long> livreurIds = null;
+        if (filter.livreurNom() != null && !filter.livreurNom().isBlank()) {
+            livreurIds = livreurLookupApi.findIdsByNom(filter.livreurNom());
+            if (livreurIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+        }
+
         Specification<DestinationProduction> spec = DestinationProductionSpecifications.withFilters(
                 filter.canal(),
                 filter.etatPain(),
-                filter.livreurNom()
+                produitIds,
+                livreurIds,
+                filter.dateDebut(),
+                filter.dateFin()
         );
-        return PageUtils.toPageResponse(destinationRepository.findAll(spec, pageable)
-                .map(destinationMapper::toDto));
+
+        return destinationRepository
+                .findAll(spec, pageable)
+                .map(destinationMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocompleteDestination(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+
+        // Search by product name or livreur name
+        List<Long> produitIds = produitLookupApi.findIdsByLibelle(q);
+        List<Long> livreurIds = livreurLookupApi.findIdsByNom(q);
+
+        if (produitIds.isEmpty() && livreurIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, String> produitLibelles = produitLookupApi.findLibellesByIds(produitIds);
+        Map<Long, String> livreurNoms = livreurLookupApi.findNomsByIds(livreurIds);
+
+        Specification<DestinationProduction> spec = Specification
+                .<DestinationProduction>where(DestinationProductionSpecifications.idsIn("produitId", produitIds))
+                .or(DestinationProductionSpecifications.idsIn("livreurId", livreurIds));
+
+        return destinationRepository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(d -> {
+                    String subtitle = null;
+                    if (d.getLivreurId() != null) {
+                        subtitle = livreurNoms.get(d.getLivreurId());
+                    } else if (d.getProduitId() != null) {
+                        subtitle = produitLibelles.get(d.getProduitId());
+                    }
+                    return AutocompleteItemDto.of(
+                            d.getId(),
+                            d.getCanal() + " - " + d.getDate(),
+                            subtitle
+                    );
+                })
+                .toList();
     }
 }

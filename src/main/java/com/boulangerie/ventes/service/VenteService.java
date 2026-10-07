@@ -1,12 +1,14 @@
 // ventes/service/VenteService.java
 package com.boulangerie.ventes.service;
 
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.ventes.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface VenteService {
 
@@ -22,5 +24,7 @@ public interface VenteService {
     VenteDto retournerVente(Long venteId, RetourVenteRequestDto dto);
     PageResponse<VenteDto> getVentes(LocalDate date, Long produitId, int page, int size);
 
-    PageResponse<VenteDto> search(VenteBoutiqueFilter filter, Pageable pageable);
+    Page<VenteDto> search(VenteBoutiqueFilter filter, Pageable pageable);
+
+    List<AutocompleteItemDto> autocomplete(String q);
 }

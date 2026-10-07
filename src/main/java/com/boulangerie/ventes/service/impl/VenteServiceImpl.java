@@ -1,6 +1,7 @@
 package com.boulangerie.ventes.service.impl;
 
 import com.boulangerie.production.api.ProductionAllocationApi;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.administration.security.CurrentUserService;
@@ -240,9 +241,43 @@ public class VenteServiceImpl implements VenteService {
         return PageUtils.toPageResponse(pageResult.map(venteMapper::toDto));
     }
 
-    public PageResponse<VenteDto> search(VenteBoutiqueFilter filter, Pageable pageable) {
-        Specification<VenteBoutique> spec = VenteBoutiqueSpecifications.withFilters(filter.statut());
-        return PageUtils.toPageResponse(venteRepository.findAll(spec, pageable)
-                .map(venteMapper::toDto));
+    @Transactional(readOnly = true)
+    public Page<VenteDto> search(VenteBoutiqueFilter filter, Pageable pageable) {
+        Specification<VenteBoutique> spec = VenteBoutiqueSpecifications.withFilters(filter);
+
+        return venteRepository
+                .findAll(spec, pageable)
+                .map(venteMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 1) {
+            return List.of();
+        }
+
+        Specification<VenteBoutique> spec;
+
+        // If numeric → search by id, else by statut or utilisateur name
+        try {
+            Long id = Long.parseLong(q.trim());
+            spec = (root, query, cb) -> cb.equal(root.get("id"), id);
+        } catch (NumberFormatException e) {
+            spec = Specification
+                    .<VenteBoutique>where(VenteBoutiqueSpecifications.utilisateurNomContains(q))
+                    .or((root, query, cb) ->
+                            cb.like(cb.lower(root.get("statut").as(String.class)),
+                                    "%" + q.toLowerCase().trim() + "%"));
+        }
+
+        return venteRepository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(v -> AutocompleteItemDto.of(
+                        v.getId(),
+                        v.getNumero(),  // "VENTE-0000{id}"
+                        v.getStatut() != null ? v.getStatut().name() : null
+                ))
+                .toList();
     }
 }

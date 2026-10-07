@@ -1,29 +1,19 @@
 package com.boulangerie.achats.specification;
 
-import com.boulangerie.achats.model.*;
-import com.boulangerie.shared.specification.Specs;
+import com.boulangerie.achats.dto.AchatFilter;
+import com.boulangerie.achats.model.Achat;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import org.springframework.data.jpa.domain.Specification;
 
-public class AchatSpecifications {
+public final class AchatSpecifications {
 
-    public static Specification<Achat> withFilters(
-            String fournisseurNom,
-            StatutReception statutReception,
-            StatutPaiement statutPaiement,
-            StatutAchat statutAchat
-    ) {
+    private AchatSpecifications() {}
+
+    public static Specification<Achat> withFilters(AchatFilter filter) {
         return Specification
-                .where(fournisseurNomContains(fournisseurNom))
-                .and(Specs.equal("statutReception", statutReception))
-                .and(Specs.equal("statutPaiement", statutPaiement))
-                .and(Specs.equal("statutAchat", statutAchat));
-    }
-
-    private static Specification<Achat> fournisseurNomContains(String nom) {
-        return (root, query, cb) -> {
-            if (nom == null || nom.isBlank()) return null;
-            return cb.like(cb.lower(root.get("fournisseur").get("nom")),
-                    "%" + nom.toLowerCase() + "%");
-        };
+                .<Achat>where(SearchSpecifications.like("fournisseur.nom", filter.fournisseurNom()))
+                .and(SearchSpecifications.equal("statutReception", filter.statutReception()))
+                .and(SearchSpecifications.equal("statutPaiement", filter.statutPaiement()))
+                .and(SearchSpecifications.equal("statutAchat", filter.statutAchat()));
     }
 }

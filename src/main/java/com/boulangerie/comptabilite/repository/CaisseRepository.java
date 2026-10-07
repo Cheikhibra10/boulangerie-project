@@ -6,6 +6,7 @@ import com.boulangerie.comptabilite.model.StatutCaisse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -16,7 +17,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @Repository
-public interface CaisseRepository extends JpaRepository<Caisse, Long> {
+public interface CaisseRepository extends JpaRepository<Caisse, Long>, JpaSpecificationExecutor<Caisse> {
 
     @EntityGraph(attributePaths = {"ouvertePar", "fermeePar"})
     Optional<Caisse> findByStatut(StatutCaisse statut);

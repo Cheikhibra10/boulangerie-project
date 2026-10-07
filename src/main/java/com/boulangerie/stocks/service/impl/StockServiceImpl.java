@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,17 +65,31 @@ public class StockServiceImpl implements StockService {
     @Transactional(readOnly = true)
     public StockDetailDto getStockDetail(Long ingredientId, int page, int size) {
         Ingredient ingredient = ingredientService.findIngredientOrThrow(ingredientId);
+
         StockIngredient stock = stockIngredientRepository.findByIngredient(ingredient)
-                .orElseThrow(() -> new EntityNotFoundException("Stock pour cet ingrédient est introuvable" + ingredient.getLibelle()));
-        // Utilisation de Specification via le service de mouvement
-        PageResponse<MouvementStockDto> mouvements = mouvementService.rechercher(
-                ingredientId, null, null, null, null, page, size
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Stock pour cet ingrédient est introuvable : " + ingredient.getLibelle()));
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<MouvementStockDto> mouvementsPage = mouvementService.search(
+                new MouvementStockFilter(
+                        null,                       // type
+                        null,                       // statut
+                        ingredient.getLibelle(),    // ingredientLibelle
+                        null,                       // motif
+                        null,                       // dateDebut
+                        null                        // dateFin
+                ),
+                pageable
         );
+
         boolean alerte = stock.getQuantite().compareTo(stock.getSeuilAlerte()) < 0;
+
         return StockDetailDto.builder()
                 .stockActuel(stockIngredientMapper.toDto(stock))
-                .mouvements(mouvements.getContent())
-                .totalElements(mouvements.getTotalElements())
+                .mouvements(mouvementsPage.getContent())
+                .totalElements(mouvementsPage.getTotalElements())
                 .page(page)
                 .size(size)
                 .alerte(alerte)

@@ -4,13 +4,14 @@ import com.boulangerie.administration.model.Fournisseur;
 import com.boulangerie.shared.repository.GenericRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface FournisseurRepository extends GenericRepository<Fournisseur> {
+public interface FournisseurRepository extends GenericRepository<Fournisseur>, JpaSpecificationExecutor<Fournisseur> {
 
     /**
      * Recherche un fournisseur par son nom

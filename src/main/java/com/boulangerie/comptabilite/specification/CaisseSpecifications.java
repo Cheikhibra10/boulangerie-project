@@ -1,13 +1,16 @@
 package com.boulangerie.comptabilite.specification;
 
+import com.boulangerie.comptabilite.dto.CaisseFilter;
 import com.boulangerie.comptabilite.model.Caisse;
-import com.boulangerie.comptabilite.model.StatutCaisse;
-import com.boulangerie.shared.specification.Specs;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import org.springframework.data.jpa.domain.Specification;
 
-public class CaisseSpecifications {
+public final class CaisseSpecifications {
 
-    public static Specification<Caisse> withFilters(StatutCaisse statut) {
-        return Specs.equal("statut", statut);
+    private CaisseSpecifications() {}
+
+    public static Specification<Caisse> withFilters(CaisseFilter filter) {
+        return Specification
+                .<Caisse>where(SearchSpecifications.equal("statut", filter.statut()));
     }
 }

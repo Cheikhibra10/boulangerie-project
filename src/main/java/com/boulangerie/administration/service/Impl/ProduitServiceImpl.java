@@ -14,9 +14,11 @@ import com.boulangerie.administration.specification.ProduitSpecifications;
 import com.boulangerie.administration.storage.dto.ImageUploadResult;
 import com.boulangerie.administration.storage.service.ImageStorageService;
 import com.boulangerie.administration.service.ProduitService;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import com.boulangerie.shared.utils.PageUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -212,15 +215,31 @@ public class ProduitServiceImpl implements ProduitService {
                         ));
     }
 
-    public PageResponse<ProduitDto> search(ProduitFilter filter, Pageable pageable) {
-        Specification<Produit> spec = ProduitSpecifications.withFilters(
-                filter.libelle(),
-                filter.actif(),
-                filter.typeProduit(),
-                filter.categorieNom()
-        );
-        return PageUtils.toPageResponse(repository.findAll(spec, pageable)
-                .map(mapper::toDto));
+    @Transactional(readOnly = true)
+    public Page<ProduitDto> search(ProduitFilter filter, Pageable pageable) {
+        return repository
+                .findAll(ProduitSpecifications.withFilters(filter), pageable)
+                .map(mapper::toDto);
     }
 
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+
+        Specification<Produit> spec = Specification
+                .<Produit>where(SearchSpecifications.isActive())
+                .and(SearchSpecifications.like("libelle", q));
+
+        return repository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(p -> AutocompleteItemDto.of(
+                        p.getId(),
+                        p.getLibelle(),
+                        p.getTypeProduit() != null ? p.getTypeProduit().name() : null
+                ))
+                .toList();
+    }
 }

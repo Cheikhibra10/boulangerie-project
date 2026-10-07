@@ -3,9 +3,11 @@ package com.boulangerie.stocks.service.impl;
 
 import com.boulangerie.administration.model.Ingredient;
 import com.boulangerie.administration.repository.IngredientRepository;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import com.boulangerie.shared.utils.PageUtils;
 import com.boulangerie.stocks.dto.MouvementStockDto;
 import com.boulangerie.stocks.dto.MouvementStockFilter;
@@ -15,7 +17,7 @@ import com.boulangerie.stocks.model.StatutMouvement;
 import com.boulangerie.stocks.model.TypeMouvementStock;
 import com.boulangerie.stocks.repository.MouvementStockRepository;
 import com.boulangerie.stocks.service.MouvementStockService;
-import com.boulangerie.stocks.specification.MouvementStockSpecification;
+import com.boulangerie.stocks.specification.MouvementStockSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -140,35 +142,36 @@ public class MouvementStockServiceImpl implements MouvementStockService {
         }
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public PageResponse<MouvementStockDto> rechercher(
-            Long ingredientId,
-            LocalDate dateDebut,
-            LocalDate dateFin,
-            String type,
-            String statut,
-            int page,
-            int size) {
+    public Page<MouvementStockDto> search(MouvementStockFilter filter, Pageable pageable) {
+        Specification<MouvementStock> spec = MouvementStockSpecifications.withFilters(filter);
 
-        Instant start = dateDebut != null
-                ? dateDebut.atStartOfDay(ZoneId.systemDefault()).toInstant()
-                : null;
-        Instant end = dateFin != null
-                ? dateFin.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()
-                : null;
+        return mouvementRepository
+                .findAll(spec, pageable)
+                .map(mouvementMapper::toDto);
+    }
 
-        TypeMouvementStock typeEnum = type != null ? TypeMouvementStock.valueOf(type) : null;
-        StatutMouvement statutEnum = statut != null ? StatutMouvement.valueOf(statut) : null;
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
 
         Specification<MouvementStock> spec = Specification
-                .where(MouvementStockSpecification.byIngredient(ingredientId))
-                .and(MouvementStockSpecification.dateBetween(start, end))
-                .and(MouvementStockSpecification.byType(typeEnum))
-                .and(MouvementStockSpecification.byStatut(statutEnum));
+                .<MouvementStock>where(SearchSpecifications.like("ingredient.libelle", q))
+                .or(SearchSpecifications.like("motif", q));
 
-        Page<MouvementStock> pageResult = mouvementRepository.findAll(spec, PageRequest.of(page, size));
-        return PageUtils.toPageResponse(pageResult.map(mouvementMapper::toDto));
+        return mouvementRepository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(m -> AutocompleteItemDto.of(
+                        m.getId(),
+                        m.getIngredient() != null
+                                ? m.getIngredient().getLibelle()
+                                : "Mouvement #" + m.getId(),
+                        m.getType() != null ? m.getType().name() : null
+                ))
+                .toList();
     }
 
 

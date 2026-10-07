@@ -14,9 +14,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Repository
-public interface MouvementStockRepository
-        extends JpaRepository<MouvementStock, Long>,
-        JpaSpecificationExecutor<MouvementStock> {
+public interface MouvementStockRepository extends JpaRepository<MouvementStock, Long>, JpaSpecificationExecutor<MouvementStock> {
 
     @Query("SELECT COALESCE(SUM(m.montant), 0) FROM MouvementStock m WHERE m.ingredient.id = :ingredientId AND m.type = :type")
     BigDecimal sumMontantByIngredientIdAndType(@Param("ingredientId") Long ingredientId, @Param("type") TypeMouvementStock type);

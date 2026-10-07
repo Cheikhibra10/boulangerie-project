@@ -4,11 +4,10 @@ import com.boulangerie.abonnements.dto.*;
 import com.boulangerie.abonnements.service.AbonnementService;
 import com.boulangerie.abonnements.service.CsvImportService;
 import com.boulangerie.abonnements.service.ExcelImportService;
-import com.boulangerie.abonnements.service.AbonnementAutocompleteService;
-import com.boulangerie.abonnements.service.ClientAutocompleteService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
+import com.boulangerie.shared.utils.PageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -35,8 +34,6 @@ public class AbonnementController {
     private final AbonnementService abonnementService;
     private final ExcelImportService excelImportService;
     private final CsvImportService csvImportService;
-    private final AbonnementAutocompleteService abonnementAutocompleteService;
-    private final ClientAutocompleteService clientAutocompleteService;
 
     // ===================== ABONNEMENT =====================
 
@@ -116,15 +113,23 @@ public class AbonnementController {
         return ResponseEntity.ok(abonnementService.getAbonnements(page, size));
     }
 
+    @Operation(summary = "Rechercher des abonnements")
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<PageResponse<AbonnementDto>> search(
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public PageResponse<AbonnementDto> search(
             @RequestParam(required = false) Boolean actif,
             @RequestParam(required = false) String livreurNom,
             Pageable pageable
     ) {
         AbonnementFilter filter = new AbonnementFilter(actif, livreurNom);
-        return ResponseEntity.ok(abonnementService.search(filter, pageable));
+        return PageUtils.toPageResponse(abonnementService.search(filter, pageable));
+    }
+
+    @Operation(summary = "Autocomplétion pour les abonnements")
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
+        return abonnementService.autocomplete(q);
     }
 
     @PostMapping(
@@ -196,17 +201,4 @@ public class AbonnementController {
         return ResponseEntity.ok(result);
     }
 
-    @Operation(summary = "Rechercher abonnements")
-    @GetMapping("/autocomplete")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public List<AutocompleteItemDto> autocompleteAbonnements(@RequestParam String q) {
-        return abonnementAutocompleteService.search(q);
-    }
-
-    @Operation(summary = "Rechercher abonnements-clients")
-    @GetMapping("/clients/autocomplete")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public List<AutocompleteItemDto> autocompleteClients(@RequestParam String q) {
-        return clientAutocompleteService.search(q);
-    }
 }

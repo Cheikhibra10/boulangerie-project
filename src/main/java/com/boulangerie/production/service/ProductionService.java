@@ -2,6 +2,7 @@
 package com.boulangerie.production.service;
 
 import com.boulangerie.production.dto.*;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +24,9 @@ public interface ProductionService {
 
     List<DestinationDto> getDestinationsByLivreurEtDate(Long livreurId, LocalDate date);
 
-    PageResponse<DestinationDto> search(DestinationProductionFilter filter, Pageable pageable);
-    PageResponse<LotProductionDto> search(LotProductionFilter filter, Pageable pageable);
+    Page<DestinationDto> search(DestinationProductionFilter filter, Pageable pageable);
+    Page<LotProductionDto> search(LotProductionFilter filter, Pageable pageable);
 
+    List<AutocompleteItemDto> autocomplete(String q);
+    List<AutocompleteItemDto> autocompleteDestination(String q);
 }

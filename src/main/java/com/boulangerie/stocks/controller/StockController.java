@@ -2,12 +2,15 @@
 package com.boulangerie.stocks.controller;
 
 import com.boulangerie.shared.dto.ApiResponse;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.utils.PageUtils;
 import com.boulangerie.stocks.dto.*;
 import com.boulangerie.stocks.model.StatutMouvement;
 import com.boulangerie.stocks.model.TypeMouvementStock;
 import com.boulangerie.stocks.service.MouvementStockService;
 import com.boulangerie.stocks.service.StockService;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +25,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/stocks")
@@ -112,20 +116,26 @@ public class StockController {
 
     @Operation(summary = "Rechercher les mouvements de stock (paginé)")
     @GetMapping("/mouvements/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'GESTIONNAIRE_PRODUCTION')")
-    public ResponseEntity<PageResponse<MouvementStockDto>> search(
-            @RequestParam(required = false) Long ingredientId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin,
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
+    public PageResponse<MouvementStockDto> search(
             @RequestParam(required = false) TypeMouvementStock type,
             @RequestParam(required = false) StatutMouvement statut,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(required = false) String ingredientLibelle,
+            @RequestParam(required = false) String motif,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin,
+            Pageable pageable
+    ) {
+        MouvementStockFilter filter = new MouvementStockFilter(
+                type, statut, ingredientLibelle, motif, dateDebut, dateFin
+        );
+        return PageUtils.toPageResponse(mouvementStockService.search(filter, pageable));
+    }
 
-        String typeStr = type != null ? type.name() : null;
-        String statutStr = statut != null ? statut.name() : null;
-
-        return ResponseEntity.ok(mouvementStockService.rechercher(
-                ingredientId, dateDebut, dateFin, typeStr, statutStr, page, size));
+    @Operation(summary = "Rechercher par auto-complétion pour les mouvements de stock")
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
+    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
+        return mouvementStockService.autocomplete(q);
     }
 }

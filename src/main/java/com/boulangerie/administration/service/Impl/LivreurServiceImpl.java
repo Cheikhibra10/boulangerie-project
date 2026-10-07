@@ -1,12 +1,20 @@
 package com.boulangerie.administration.service.Impl;
 
 import com.boulangerie.administration.dto.LivreurDto;
+import com.boulangerie.administration.dto.LivreurFilter;
 import com.boulangerie.administration.mapper.LivreurMapper;
 import com.boulangerie.administration.model.Livreur;
 import com.boulangerie.administration.repository.LivreurRepository;
 import com.boulangerie.administration.service.LivreurService;
+import com.boulangerie.administration.specification.LivreurSpecifications;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.shared.service.impl.AbstractCrudService;
+import com.boulangerie.shared.specification.SearchSpecifications;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,5 +71,33 @@ public class LivreurServiceImpl
     @Override
     public Livreur findLivreurById(Long id) {
         return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Livreur introuvable : " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<LivreurDto> search(LivreurFilter filter, Pageable pageable) {
+        return repository
+                .findAll(LivreurSpecifications.withFilters(filter), pageable)
+                .map(mapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+
+        Specification<Livreur> spec = Specification
+                .<Livreur>where(SearchSpecifications.isActive())
+                .and(SearchSpecifications.likeAny(q, "nom", "prenom", "telephone"));
+
+        return repository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(l -> AutocompleteItemDto.of(
+                        l.getId(),
+                        l.getNom() + " " + l.getPrenom(),
+                        l.getTelephone()
+                ))
+                .toList();
     }
 }

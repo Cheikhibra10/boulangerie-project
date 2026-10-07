@@ -1,14 +1,13 @@
 package com.boulangerie.administration.controller;
 
-import com.boulangerie.administration.dto.ProduitDto;
 import com.boulangerie.administration.dto.RecetteDto;
 import com.boulangerie.administration.dto.RecetteFilter;
 import com.boulangerie.administration.model.Recette;
-import com.boulangerie.administration.service.RecetteAutocompleteService;
 import com.boulangerie.administration.service.RecetteService;
 import com.boulangerie.shared.controller.GenericCrudController;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.utils.PageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,12 +26,10 @@ public class RecetteController
         extends GenericCrudController<Recette, RecetteDto> {
 
     private final RecetteService recetteService;
-    private final RecetteAutocompleteService recetteAutocompleteService;
 
-    public RecetteController(RecetteService service, RecetteAutocompleteService recetteAutocompleteService) {
+    public RecetteController(RecetteService service) {
         super(service);
         this.recetteService = service;
-        this.recetteAutocompleteService = recetteAutocompleteService;
     }
 
     @Operation(summary = "Lister les recettes")
@@ -67,19 +64,18 @@ public class RecetteController
 
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
-    public ResponseEntity<PageResponse<RecetteDto>> search(
-            @RequestParam(required = false) Integer version,
+    public PageResponse<RecetteDto> search(
             @RequestParam(required = false) Boolean actif,
-            @RequestParam(required = false) String produitNom,
+            @RequestParam(required = false) String produitLibelle,
             Pageable pageable
     ) {
-        RecetteFilter filter = new RecetteFilter(version, actif, produitNom);
-        return ResponseEntity.ok(recetteService.search(filter, pageable));
+        RecetteFilter filter = new RecetteFilter(actif, produitLibelle);
+        return PageUtils.toPageResponse(recetteService.search(filter, pageable));
     }
 
     @GetMapping("/autocomplete")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
     public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
-        return recetteAutocompleteService.search(q);
+        return recetteService.autocomplete(q);
     }
 }

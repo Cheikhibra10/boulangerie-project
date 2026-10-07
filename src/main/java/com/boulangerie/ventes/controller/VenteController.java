@@ -4,15 +4,14 @@ package com.boulangerie.ventes.controller;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.utils.PageUtils;
 import com.boulangerie.ventes.dto.*;
 import com.boulangerie.ventes.model.StatutVente;
-import com.boulangerie.ventes.service.VenteBoutiqueAutocompleteService;
 import com.boulangerie.ventes.service.VenteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -30,7 +29,6 @@ import java.util.List;
 public class VenteController {
 
     private final VenteService venteService;
-    private final VenteBoutiqueAutocompleteService venteBoutiqueAutocompleteService;
 
     // ===================== CRÉATION =====================
 
@@ -101,19 +99,24 @@ public class VenteController {
         );
     }
 
+    @Operation(summary = "Rechercher des ventes")
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
-    public ResponseEntity<PageResponse<VenteDto>> search(
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CAISSIER')")
+    public PageResponse<VenteDto> search(
             @RequestParam(required = false) StatutVente statut,
+            @RequestParam(required = false) String utilisateurNom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin,
             Pageable pageable
     ) {
-        VenteBoutiqueFilter filter = new VenteBoutiqueFilter(statut);
-        return ResponseEntity.ok(venteService.search(filter, pageable));
+        VenteBoutiqueFilter filter = new VenteBoutiqueFilter(statut, utilisateurNom, dateDebut, dateFin);
+        return PageUtils.toPageResponse(venteService.search(filter, pageable));
     }
 
+    @Operation(summary = "Rechercher des éléments pour l'auto-complétion")
     @GetMapping("/autocomplete")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CAISSIER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CAISSIER')")
     public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
-        return venteBoutiqueAutocompleteService.search(q);
+        return venteService.autocomplete(q);
     }
 }

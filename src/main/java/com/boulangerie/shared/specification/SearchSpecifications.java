@@ -1,89 +1,58 @@
 package com.boulangerie.shared.specification;
 
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
-/**
- * Centralized specifications for autocomplete and search operations.
- * Follows the DRY principle and provides reusable search predicates.
- */
-public class SearchSpecifications {
+public final class SearchSpecifications {
 
     private SearchSpecifications() {}
 
-    /**
-     * Search by a single text field (case-insensitive LIKE match).
-     */
-    public static <T> Specification<T> searchByField(String field, String query) {
-        return (root, queryContext, cb) -> {
-            if (query == null || query.isBlank()) return null;
-            return cb.like(cb.lower(root.get(field)), "%" + query.toLowerCase() + "%");
-        };
+    private static <T> Path<?> resolvePath(Root<T> root, String field) {
+        Path<?> path = root;
+        for (String part : field.split("\\.")) {
+            path = path.get(part);
+        }
+        return path;
     }
 
-    /**
-     * Search by multiple fields with OR logic (case-insensitive LIKE) - 2 fields.
-     */
-    public static <T> Specification<T> searchByMultipleFields(String query, String field1, String field2) {
-        return (root, queryContext, cb) -> {
-            if (query == null || query.isBlank()) {
-                return null;
-            }
-            String lowerQuery = "%" + query.toLowerCase() + "%";
-            return cb.or(
-                    cb.like(cb.lower(root.get(field1)), lowerQuery),
-                    cb.like(cb.lower(root.get(field2)), lowerQuery)
+    public static <T> Specification<T> equal(String field, Object value) {
+        return (root, query, cb) ->
+                value == null ? null : cb.equal(resolvePath(root, field), value);
+    }
+
+    public static <T> Specification<T> like(String field, String value) {
+        return (root, query, cb) -> {
+            if (value == null || value.isBlank()) return null;
+            return cb.like(
+                    cb.lower(resolvePath(root, field).as(String.class)),
+                    "%" + value.toLowerCase().trim() + "%"
             );
         };
     }
 
-    /**
-     * Search by multiple fields with OR logic (case-insensitive LIKE) - 3 fields.
-     */
-    public static <T> Specification<T> searchByMultipleFields(String query, String field1, String field2, String field3) {
-        return (root, queryContext, cb) -> {
-            if (query == null || query.isBlank()) {
+    public static <T> Specification<T> likeAny(String value, String... fields) {
+        return (root, query, cb) -> {
+            if (value == null || value.isBlank() || fields == null || fields.length == 0) {
                 return null;
             }
-            String lowerQuery = "%" + query.toLowerCase() + "%";
-            return cb.or(
-                    cb.like(cb.lower(root.get(field1)), lowerQuery),
-                    cb.like(cb.lower(root.get(field2)), lowerQuery),
-                    cb.like(cb.lower(root.get(field3)), lowerQuery)
-            );
+            String pattern = "%" + value.toLowerCase().trim() + "%";
+            var predicates = java.util.Arrays.stream(fields)
+                    .map(f -> cb.like(cb.lower(resolvePath(root, f).as(String.class)), pattern))
+                    .toArray(jakarta.persistence.criteria.Predicate[]::new);
+            return cb.or(predicates);
         };
     }
 
-    /**
-     * Filter by active status (actif = true).
-     */
+    public static <T> Specification<T> isTrue(String field) {
+        return (root, query, cb) -> cb.isTrue(resolvePath(root, field).as(Boolean.class));
+    }
+
+    public static <T> Specification<T> isFalse(String field) {
+        return (root, query, cb) -> cb.isFalse(resolvePath(root, field).as(Boolean.class));
+    }
+
     public static <T> Specification<T> isActive() {
-        return (root, queryContext, cb) -> cb.isTrue(root.get("actif"));
-    }
-
-    /**
-     * Combine search and active filter - single field.
-     */
-    public static <T> Specification<T> activeAndSearchByField(String field, String query) {
-        Specification<T> active = isActive();
-        Specification<T> search = searchByField(field, query);
-        return Specification.where(active).and(search);
-    }
-
-    /**
-     * Combine search (2 fields) and active filter.
-     */
-    public static <T> Specification<T> activeAndSearchByMultipleFields(String query, String field1, String field2) {
-        Specification<T> active = isActive();
-        Specification<T> search = searchByMultipleFields(query, field1, field2);
-        return Specification.where(active).and(search);
-    }
-
-    /**
-     * Combine search (3 fields) and active filter.
-     */
-    public static <T> Specification<T> activeAndSearchByMultipleFields(String query, String field1, String field2, String field3) {
-        Specification<T> active = isActive();
-        Specification<T> search = searchByMultipleFields(query, field1, field2, field3);
-        return Specification.where(active).and(search);
+        return isTrue("actif");
     }
 }

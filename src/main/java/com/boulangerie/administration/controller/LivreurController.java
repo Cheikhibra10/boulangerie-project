@@ -1,16 +1,17 @@
 package com.boulangerie.administration.controller;
 
-import com.boulangerie.administration.dto.FournisseurDto;
 import com.boulangerie.administration.dto.LivreurDto;
+import com.boulangerie.administration.dto.LivreurFilter;
 import com.boulangerie.administration.model.Livreur;
 import com.boulangerie.administration.service.LivreurService;
-import com.boulangerie.administration.service.LivreurAutocompleteService;
 import com.boulangerie.shared.controller.GenericCrudController;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.utils.PageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,12 +26,10 @@ public class LivreurController
         extends GenericCrudController<Livreur, LivreurDto> {
 
     private final LivreurService livreurService;
-    private final LivreurAutocompleteService livreurAutocompleteService;
 
-    public LivreurController(LivreurService service, LivreurAutocompleteService livreurAutocompleteService) {
+    public LivreurController(LivreurService service) {
         super(service);
         this.livreurService = service;
-        this.livreurAutocompleteService = livreurAutocompleteService;
     }
 
     @Operation(summary = "Lister les livreurs")
@@ -54,9 +53,23 @@ public class LivreurController
         return ResponseEntity.ok(livreurService.isActive(id));
     }
 
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public PageResponse<LivreurDto> search(
+            @RequestParam(required = false) String nom,
+            @RequestParam(required = false) String prenom,
+            @RequestParam(required = false) String telephone,
+            @RequestParam(required = false) Boolean actif,
+            Pageable pageable
+    ) {
+        LivreurFilter filter = new LivreurFilter(nom, prenom, telephone, actif);
+        return PageUtils.toPageResponse(livreurService.search(filter, pageable));
+    }
+
     @GetMapping("/autocomplete")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
-        return livreurAutocompleteService.search(q);
+        return livreurService.autocomplete(q);
     }
+
 }

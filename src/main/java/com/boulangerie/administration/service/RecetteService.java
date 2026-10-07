@@ -3,11 +3,14 @@ package com.boulangerie.administration.service;
 import com.boulangerie.administration.dto.RecetteDto;
 import com.boulangerie.administration.dto.RecetteFilter;
 import com.boulangerie.administration.model.Recette;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.service.DefaultService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 public interface RecetteService extends DefaultService<Recette, RecetteDto> {
 
@@ -34,5 +37,7 @@ public interface RecetteService extends DefaultService<Recette, RecetteDto> {
 
     Recette findByIdAndVersion(Long recetteId, Integer version);
 
-    PageResponse<RecetteDto> search(RecetteFilter filter, Pageable pageable);
+    Page<RecetteDto> search(RecetteFilter filter, Pageable pageable);
+
+    List<AutocompleteItemDto> autocomplete(String q);
 }

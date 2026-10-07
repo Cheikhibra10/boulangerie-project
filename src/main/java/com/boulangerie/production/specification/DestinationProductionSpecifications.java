@@ -3,29 +3,53 @@ package com.boulangerie.production.specification;
 import com.boulangerie.production.model.CanalDistribution;
 import com.boulangerie.production.model.DestinationProduction;
 import com.boulangerie.production.model.EtatPain;
-import com.boulangerie.shared.specification.Specs;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import org.springframework.data.jpa.domain.Specification;
 
-public class DestinationProductionSpecifications {
+import java.time.LocalDate;
+import java.util.List;
+
+public final class DestinationProductionSpecifications {
+
+    private DestinationProductionSpecifications() {}
 
     public static Specification<DestinationProduction> withFilters(
             CanalDistribution canal,
             EtatPain etatPain,
-            String livreurNom
+            List<Long> produitIds,
+            List<Long> livreurIds,
+            LocalDate dateDebut,
+            LocalDate dateFin
     ) {
         return Specification
-                .<DestinationProduction>where(Specs.<DestinationProduction>equal("canal", canal))
-                .and(Specs.<DestinationProduction>equal("etatPain", etatPain))
-                .and(livreurNomContains(livreurNom));
+                .<DestinationProduction>where(SearchSpecifications.equal("canal", canal))
+                .and(SearchSpecifications.equal("etatPain", etatPain))
+                .and(idsIn("produitId", produitIds))
+                .and(idsIn("livreurId", livreurIds))
+                .and(dateBetween(dateDebut, dateFin));
     }
 
-    private static Specification<DestinationProduction> livreurNomContains(String nom) {
+    public static Specification<DestinationProduction> idsIn(String field, List<Long> ids) {
         return (root, query, cb) -> {
-            if (nom == null || nom.isBlank()) return null;
+            if (ids == null || ids.isEmpty()) {
+                return null;
+            }
+            return root.get(field).in(ids);
+        };
+    }
 
-            // DestinationProduction stores a livreurId, not a nested livreur entity.
-            // Keep the filter safe by checking the associated id is present when a livreur name is provided.
-            return cb.isNotNull(root.get("livreurId"));
+    public static Specification<DestinationProduction> dateBetween(LocalDate start, LocalDate end) {
+        return (root, query, cb) -> {
+            if (start == null && end == null) {
+                return null;
+            }
+            if (start != null && end != null) {
+                return cb.between(root.get("date"), start, end);
+            }
+            if (start != null) {
+                return cb.greaterThanOrEqualTo(root.get("date"), start);
+            }
+            return cb.lessThanOrEqualTo(root.get("date"), end);
         };
     }
 }

@@ -1,11 +1,15 @@
 // stocks/service/MouvementStockService.java
 package com.boulangerie.stocks.service;
 
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.stocks.dto.MouvementStockDto;
+import com.boulangerie.stocks.dto.MouvementStockFilter;
 import com.boulangerie.stocks.model.MouvementStock;
 import com.boulangerie.stocks.model.StatutMouvement;
 import com.boulangerie.stocks.model.TypeMouvementStock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,16 +27,11 @@ public interface MouvementStockService {
             Long ligneAchatId
     );
 
-    PageResponse<MouvementStockDto> rechercher(
-            Long ingredientId,
-            LocalDate dateDebut,
-            LocalDate dateFin,
-            String type,
-            String statut,
-            int page,
-            int size
-    );
     List<MouvementStockDto> creerMouvements(List<MouvementStock> mouvements);
 
     MouvementStock getMouvementEntity(Long id);
+
+    Page<MouvementStockDto> search(MouvementStockFilter filter, Pageable pageable);
+
+    List<AutocompleteItemDto> autocomplete(String q);
 }

@@ -1,15 +1,14 @@
 package com.boulangerie.administration.controller;
 
-import com.boulangerie.administration.dto.FournisseurDto;
 import com.boulangerie.administration.dto.IngredientDto;
 import com.boulangerie.administration.dto.IngredientFilter;
 import com.boulangerie.administration.model.Ingredient;
 import com.boulangerie.administration.model.UniteMesure;
-import com.boulangerie.administration.service.IngredientAutocompleteService;
 import com.boulangerie.administration.service.IngredientService;
 import com.boulangerie.shared.controller.GenericCrudController;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.utils.PageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,12 +30,10 @@ public class IngredientController
         extends GenericCrudController<Ingredient, IngredientDto> {
 
     private final IngredientService ingredientService;
-    private final IngredientAutocompleteService ingredientAutocompleteService;
 
-    public IngredientController(IngredientService service, IngredientAutocompleteService ingredientAutocompleteService) {
+    public IngredientController(IngredientService service) {
         super(service);
         this.ingredientService = service;
-        this.ingredientAutocompleteService = ingredientAutocompleteService;
     }
 
     @Operation(summary = "Lister les ingrédients")
@@ -49,22 +46,23 @@ public class IngredientController
         return ResponseEntity.ok( ingredientService.findAll(page, size) );
     }
 
+    @Operation(summary = "Rechercher des ingrédients")
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
-    public ResponseEntity<PageResponse<IngredientDto>> search(
+    public PageResponse<IngredientDto> search(
             @RequestParam(required = false) String libelle,
             @RequestParam(required = false) UniteMesure unite,
             @RequestParam(required = false) Boolean actif,
             Pageable pageable
-            ){
+    ) {
         IngredientFilter filter = new IngredientFilter(libelle, unite, actif);
-        return ResponseEntity.ok(ingredientService.search(filter, pageable));
+        return PageUtils.toPageResponse(ingredientService.search(filter, pageable));
     }
 
-
+    @Operation(summary = "Autocomplété les ingrédients")
     @GetMapping("/autocomplete")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
     public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
-        return ingredientAutocompleteService.search(q);
+        return ingredientService.autocomplete(q);
     }
 }

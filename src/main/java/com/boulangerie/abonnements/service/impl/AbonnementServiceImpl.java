@@ -12,8 +12,11 @@ import com.boulangerie.abonnements.repository.*;
 import com.boulangerie.abonnements.service.*;
 import com.boulangerie.abonnements.specification.AbonnementSpecifications;
 import com.boulangerie.abonnements.specification.ClientSpecifications;
+import com.boulangerie.administration.model.Livreur;
+import com.boulangerie.administration.repository.LivreurRepository;
 import com.boulangerie.administration.service.LivreurService;
 import com.boulangerie.production.api.DistributionServiceApi;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.ConflictException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
@@ -30,6 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -45,7 +51,7 @@ public class AbonnementServiceImpl implements AbonnementService {
     private final ConsommationJournaliereRepository consommationRepository;
 
     private final LivreurService livreurService;
-    private final ClientMapper clientMapper;
+    private final LivreurRepository livreurRepository;
     private final AbonnementFactory abonnementFactory;
     private final ClientFactory clientFactory;
 
@@ -329,23 +335,56 @@ public class AbonnementServiceImpl implements AbonnementService {
                 );
     }
 
-    public PageResponse<AbonnementDto> search(AbonnementFilter filter, Pageable pageable) {
-        Specification<Abonnement> spec = AbonnementSpecifications.withFilters(
-                filter.actif(),
-                filter.livreurNom()
-        );
-        return PageUtils.toPageResponse(abonnementRepository.findAll(spec, pageable)
-                .map(abonnementMapper::toDto));
+    @Transactional(readOnly = true)
+    public Page<AbonnementDto> search(AbonnementFilter filter, Pageable pageable) {
+        List<Long> livreurIds = null;
+
+        if (filter.livreurNom() != null && !filter.livreurNom().isBlank()) {
+            livreurIds = livreurRepository.findIdsByNomOrPrenomContainingIgnoreCase(filter.livreurNom());
+            if (livreurIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+        }
+
+        Specification<Abonnement> spec = AbonnementSpecifications.withFilters(filter, livreurIds);
+
+        return abonnementRepository
+                .findAll(spec, pageable)
+                .map(abonnementMapper::toDto);
     }
 
-//    public PageResponse<ClientDto> search(ClientFilter filter, Pageable pageable) {
-//        Specification<Client> spec = ClientSpecifications.withFilters(
-//                filter.nom(),
-//                filter.prenom(),
-//                filter.telephone(),
-//                filter.actif()
-//        );
-//        return PageUtils.toPageResponse(clientRepository.findAll(spec, pageable)
-//                .map(clientMapper::toDto));
-//    }
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+
+        // 1. Find matching livreur IDs
+        List<Long> livreurIds = livreurRepository.findIdsByNomOrPrenomContainingIgnoreCase(q);
+        if (livreurIds.isEmpty()) {
+            return List.of();
+        }
+
+        // 2. Load all matching livreurs in one query (avoid N+1)
+        Map<Long, String> livreurNames = livreurRepository.findAllById(livreurIds).stream()
+                .collect(Collectors.toMap(
+                        Livreur::getId,
+                        l -> l.getNom() + " " + l.getPrenom()
+                ));
+
+        // 3. Find abonnements
+        Specification<Abonnement> spec = Specification
+                .<Abonnement>where(AbonnementSpecifications.isActive())
+                .and(AbonnementSpecifications.livreurIdsIn(livreurIds));
+
+        return abonnementRepository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(a -> AutocompleteItemDto.of(
+                        a.getId(),
+                        "Abonnement #" + a.getId(),
+                        livreurNames.get(a.getLivreurId())
+                ))
+                .toList();
+    }
 }

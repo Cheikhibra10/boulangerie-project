@@ -1,9 +1,6 @@
 // production/controller/ProductionController.java
 package com.boulangerie.production.controller;
 
-import com.boulangerie.abonnements.dto.ConsommationImportResultDto;
-import com.boulangerie.abonnements.dto.ConsommationMensuelleReportDto;
-import com.boulangerie.administration.service.ProduitAutocompleteService;
 import com.boulangerie.production.api.ProductionMensuelleReportDto;
 import com.boulangerie.production.dto.*;
 import com.boulangerie.production.model.CanalDistribution;
@@ -13,17 +10,16 @@ import com.boulangerie.production.service.*;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.utils.PageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -46,7 +42,6 @@ public class ProductionController {
     private final ProductionExecutionService productionExecutionService;
     private final ProductionPlanningService productionPlanningService;
     private final ProductionCsvExportService csvExportService;
-    private final LotProductionAutocompleteService lotProductionAutocompleteService;
 
     @Operation(summary = "Créer un lot de production")
     @PostMapping
@@ -106,33 +101,50 @@ public class ProductionController {
         return ResponseEntity.ok(productionService.getDestinationsByLivreurEtDate(livreurId, date));
     }
 
+    @Operation(summary = "Rechercher des lots")
     @GetMapping("/lots/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'GESTIONNAIRE_PRODUCTION')")
-    public ResponseEntity<PageResponse<LotProductionDto>> searchLots(
-            @RequestParam(required = false) String produitNom,
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
+    public PageResponse<LotProductionDto> search(
             @RequestParam(required = false) StatutProduction statut,
+            @RequestParam(required = false) String produitLibelle,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin,
             Pageable pageable
     ) {
-        LotProductionFilter filter = new LotProductionFilter(produitNom, statut);
-        return ResponseEntity.ok(productionService.search(filter, pageable));
+        LotProductionFilter filter = new LotProductionFilter(statut, produitLibelle, dateDebut, dateFin);
+        return PageUtils.toPageResponse(productionService.search(filter, pageable));
     }
 
+    @Operation(summary = "Autocomplétion lots")
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
+    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
+        return productionService.autocomplete(q);
+    }
+
+    @Operation(summary = "Rechercher des destinations")
     @GetMapping("/destinations/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'GESTIONNAIRE_PRODUCTION')")
-    public ResponseEntity<PageResponse<DestinationDto>> searchDestinations(
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
+    public PageResponse<DestinationDto> search(
             @RequestParam(required = false) CanalDistribution canal,
             @RequestParam(required = false) EtatPain etatPain,
+            @RequestParam(required = false) String produitLibelle,
             @RequestParam(required = false) String livreurNom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin,
             Pageable pageable
     ) {
-        DestinationProductionFilter filter = new DestinationProductionFilter(canal, etatPain, livreurNom);
-        return ResponseEntity.ok(productionService.search(filter, pageable));
+        DestinationProductionFilter filter = new DestinationProductionFilter(
+                canal, etatPain, produitLibelle, livreurNom, dateDebut, dateFin
+        );
+        return PageUtils.toPageResponse(productionService.search(filter, pageable));
     }
 
-    @GetMapping("/autocomplete")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'GESTIONNAIRE_PRODUCTION')")
-    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
-        return lotProductionAutocompleteService.search(q);
+    @Operation(summary = "Autocomplétion destinations")
+    @GetMapping("/destinations/autocomplete")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
+    public List<AutocompleteItemDto> autocompleteDestination(@RequestParam String q) {
+        return productionService.autocompleteDestination(q);
     }
 
     @GetMapping(

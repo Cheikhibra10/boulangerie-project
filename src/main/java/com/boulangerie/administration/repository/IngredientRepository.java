@@ -3,16 +3,20 @@ package com.boulangerie.administration.repository;
 import com.boulangerie.administration.model.Ingredient;
 import com.boulangerie.shared.repository.GenericRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+
+import java.util.Collection;
 import java.util.List;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface IngredientRepository extends GenericRepository<Ingredient> {
+public interface IngredientRepository extends GenericRepository<Ingredient>, JpaSpecificationExecutor<Ingredient> {
 
     /**
      * Recherche un ingrédient par son libellé
@@ -45,4 +49,5 @@ public interface IngredientRepository extends GenericRepository<Ingredient> {
      * Recherche un ingrédient actif par ID
      */
     Optional<Ingredient> findByIdAndActifTrue(Long id);
+
 }

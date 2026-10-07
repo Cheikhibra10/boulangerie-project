@@ -6,10 +6,10 @@ import com.boulangerie.administration.dto.ProduitMultipartRequest;
 import com.boulangerie.administration.dto.ProduitUpdateDto;
 import com.boulangerie.administration.model.TypeProduit;
 import com.boulangerie.administration.service.ProduitService;
-import com.boulangerie.administration.service.ProduitAutocompleteService;
 import com.boulangerie.shared.dto.ApiResponse;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
+import com.boulangerie.shared.utils.PageUtils;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,7 +36,6 @@ import java.util.List;
 public class ProduitController {
 
     private final ProduitService produitService;
-    private final ProduitAutocompleteService produitAutocompleteService;
 
     @Operation(summary = "Créer un produit")
     @RequestBody(
@@ -143,22 +141,22 @@ public class ProduitController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('GESTIONNAIRE_PRODUCTION','CAISSIER','ADMIN','MANAGER')")
-    public ResponseEntity<PageResponse<ProduitDto>> search(
-            @RequestParam(required = false) String nom,
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
+    public PageResponse<ProduitDto> search(
+            @RequestParam(required = false) String libelle,
             @RequestParam(required = false) Boolean actif,
             @RequestParam(required = false) TypeProduit typeProduit,
-            @RequestParam(required = false) String categorieNom,
+            @RequestParam(required = false) String categorieLibelle,
             Pageable pageable
     ) {
-        ProduitFilter filter = new ProduitFilter(nom, actif, typeProduit, categorieNom);
-        return ResponseEntity.ok(produitService.search(filter, pageable));
+        ProduitFilter filter = new ProduitFilter(libelle, actif, typeProduit, categorieLibelle);
+        return PageUtils.toPageResponse(produitService.search(filter, pageable));
     }
 
     @GetMapping("/autocomplete")
-    @PreAuthorize("hasAnyRole('GESTIONNAIRE_PRODUCTION','CAISSIER','ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'GESTIONNAIRE_PRODUCTION')")
     public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
-        return produitAutocompleteService.search(q);
+        return produitService.autocomplete(q);
     }
 
 }

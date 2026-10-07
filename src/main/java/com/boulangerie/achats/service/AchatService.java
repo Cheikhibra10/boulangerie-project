@@ -1,6 +1,7 @@
 package com.boulangerie.achats.service;
 
 import com.boulangerie.achats.dto.*;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,5 +27,7 @@ public interface AchatService {
 
     PageResponse<AchatDto> getAchats(int page, int size);
 
-    PageResponse<AchatDto> search(AchatFilter filter, Pageable pageable);
+    Page<AchatDto> search(AchatFilter filter, Pageable pageable);
+
+    List<AutocompleteItemDto> autocomplete(String q);
 }

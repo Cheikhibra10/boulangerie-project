@@ -4,8 +4,6 @@ import com.boulangerie.administration.model.Utilisateur;
 import com.boulangerie.comptabilite.dto.*;
 import com.boulangerie.comptabilite.exception.AucuneCaisseOuverteException;
 import com.boulangerie.comptabilite.exception.CaisseDejaOuverteException;
-import com.boulangerie.comptabilite.exception.CaisseFermeeException;
-import com.boulangerie.comptabilite.exception.SaisiesIncompletesException;
 import com.boulangerie.comptabilite.mapper.CaisseMapper;
 import com.boulangerie.comptabilite.model.Caisse;
 import com.boulangerie.comptabilite.model.StatutCaisse;
@@ -14,9 +12,12 @@ import com.boulangerie.comptabilite.service.CaisseClotureService;
 import com.boulangerie.comptabilite.service.CaisseService;
 import com.boulangerie.comptabilite.service.MouvementCaisseService;
 import com.boulangerie.comptabilite.specification.CaisseSpecifications;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.administration.security.CurrentUserService;
+import com.boulangerie.shared.model.SensMouvement;
+import com.boulangerie.shared.model.TypeMouvement;
 import com.boulangerie.shared.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +25,14 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @Transactional
@@ -132,28 +134,31 @@ public class CaisseServiceImpl implements CaisseService {
         return PageUtils.toPageResponse(result.map(caisseMapper::toDto));
     }
 
-    @Override
     @Transactional(readOnly = true)
+    @Override
     public JournalCaisseDto getJournal(
             Long caisseId,
             LocalDate dateDebut,
             LocalDate dateFin,
-            String type,
-            Long categorieId,
+            TypeMouvement type,
+            SensMouvement sens,
+            String libelle,
             int page,
-            int size) {
+            int size
+    ) {
+        MouvementCaisseFilter filter = new MouvementCaisseFilter(
+                type,
+                sens,
+                libelle,
+                dateDebut,
+                dateFin,
+                null // caisseStatut not needed when filtering by caisseId
+        );
 
-        PageResponse<MouvementCaisseDto> mouvements =
-                mouvementService.rechercher(
-                        caisseId,
-                        dateDebut,
-                        dateFin,
-                        type,
-                        categorieId,
-                        null,
-                        page,
-                        size
-                );
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<MouvementCaisseDto> mouvements =
+                mouvementService.searchByCaisse(caisseId, filter, pageable);
 
         BigDecimal totalEntrees =
                 mouvementService.calculerTotalEntrees(caisseId);
@@ -176,7 +181,6 @@ public class CaisseServiceImpl implements CaisseService {
                 .size(size)
                 .build();
     }
-
     @Override
     @Transactional(readOnly = true)
     public Caisse getCaisseOuverte() {
@@ -194,8 +198,40 @@ public class CaisseServiceImpl implements CaisseService {
                         new EntityNotFoundException("Caisse introuvable " + id));
     }
 
-    public PageResponse<CaisseDto> search(CaisseFilter filter, Pageable pageable) {
-        Specification<Caisse> spec = CaisseSpecifications.withFilters(filter.statut());
-        return PageUtils.toPageResponse(caisseRepository.findAll(spec, pageable).map(caisseMapper::toDto));
+    @Transactional(readOnly = true)
+    public Page<CaisseDto> search(CaisseFilter filter, Pageable pageable) {
+        return caisseRepository
+                .findAll(CaisseSpecifications.withFilters(filter), pageable)
+                .map(caisseMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 1) {
+            return List.of();
+        }
+
+        // Search by id (numeric) or by statut name
+        Specification<Caisse> spec;
+
+        try {
+            Long id = Long.parseLong(q.trim());
+            spec = (root, query, cb) -> cb.equal(root.get("id"), id);
+        } catch (NumberFormatException e) {
+            // Try matching statut
+            spec = (root, query, cb) ->
+                    cb.like(cb.lower(root.get("statut").as(String.class)),
+                            "%" + q.toLowerCase().trim() + "%");
+        }
+
+        return caisseRepository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(c -> AutocompleteItemDto.of(
+                        c.getId(),
+                        "Caisse #" + c.getId(),
+                        c.getStatut() != null ? c.getStatut().name() : null
+                ))
+                .toList();
     }
 }

@@ -5,11 +5,13 @@ import com.boulangerie.administration.dto.ProduitFilter;
 import com.boulangerie.administration.dto.ProduitUpdateDto;
 import com.boulangerie.administration.model.Produit;
 import com.boulangerie.administration.model.TypeProduit;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Set;
 
 public interface ProduitService{
@@ -35,5 +37,7 @@ public interface ProduitService{
 
     PageResponse<ProduitDto> findAll(int page, int size);
 
-    PageResponse<ProduitDto> search(ProduitFilter filter, Pageable pageable);
+    Page<ProduitDto> search(ProduitFilter filter, Pageable pageable);
+
+    List<AutocompleteItemDto> autocomplete(String q);
 }

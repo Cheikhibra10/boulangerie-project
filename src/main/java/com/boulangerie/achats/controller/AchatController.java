@@ -4,7 +4,9 @@ import com.boulangerie.achats.dto.*;
 import com.boulangerie.achats.model.*;
 import com.boulangerie.achats.service.AchatService;
 import com.boulangerie.shared.dto.ApiResponse;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.utils.PageUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -97,15 +99,26 @@ public class AchatController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<PageResponse<AchatDto>> search(
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public PageResponse<AchatDto> search(
             @RequestParam(required = false) String fournisseurNom,
             @RequestParam(required = false) StatutReception statutReception,
             @RequestParam(required = false) StatutPaiement statutPaiement,
             @RequestParam(required = false) StatutAchat statutAchat,
             Pageable pageable
     ) {
-        AchatFilter filter = new AchatFilter(fournisseurNom, statutReception, statutPaiement, statutAchat);
-        return ResponseEntity.ok(achatService.search(filter, pageable));
+        AchatFilter filter = new AchatFilter(
+                fournisseurNom,
+                statutReception,
+                statutPaiement,
+                statutAchat
+        );
+        return PageUtils.toPageResponse(achatService.search(filter, pageable));
+    }
+
+    @GetMapping("/autocomplete")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
+        return achatService.autocomplete(q);
     }
 }

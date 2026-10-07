@@ -11,9 +11,11 @@ import com.boulangerie.achats.specification.AchatSpecifications;
 import com.boulangerie.administration.model.Ingredient;
 import com.boulangerie.administration.repository.IngredientRepository;
 import com.boulangerie.administration.security.CurrentUserService;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import com.boulangerie.shared.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -265,14 +267,29 @@ public class AchatServiceImpl implements AchatService {
                 .orElseThrow(() -> new EntityNotFoundException("LigneAchat introuvable: " + id));
     }
 
-    public PageResponse<AchatDto> search(AchatFilter filter, Pageable pageable) {
-        Specification<Achat> spec = AchatSpecifications.withFilters(
-                filter.fournisseurNom(),
-                filter.statutReception(),
-                filter.statutPaiement(),
-                filter.statutAchat()
-        );
-        return PageUtils.toPageResponse(achatRepository.findAll(spec, pageable)
-                .map(achatMapper::toDto));
+    @Transactional(readOnly = true)
+    public Page<AchatDto> search(AchatFilter filter, Pageable pageable) {
+        return achatRepository
+                .findAll(AchatSpecifications.withFilters(filter), pageable)
+                .map(achatMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+
+        Specification<Achat> spec = SearchSpecifications.like("fournisseur.nom", q);
+
+        return achatRepository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(a -> AutocompleteItemDto.of(
+                        a.getId(),
+                        "Achat #" + a.getId(),
+                        a.getFournisseur() != null ? a.getFournisseur().getNom() : null
+                ))
+                .toList();
     }
 }

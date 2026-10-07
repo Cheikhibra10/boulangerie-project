@@ -2,11 +2,13 @@
 package com.boulangerie.livreurs.service;
 
 import com.boulangerie.livreurs.dto.*;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface CompteRenduLivreurService {
 
@@ -21,5 +23,7 @@ public interface CompteRenduLivreurService {
 
     PageResponse<CompteRenduDto> getHistorique(Long livreurId, LocalDate dateDebut, LocalDate dateFin, int page, int size);
 
-    PageResponse<CompteRenduDto> search(CompteLivreurJournalierFilter filter, Pageable pageable);
+    Page<CompteRenduDto> search(CompteLivreurJournalierFilter filter, Pageable pageable);
+
+    List<AutocompleteItemDto> autocomplete(String q);
 }

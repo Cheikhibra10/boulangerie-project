@@ -5,10 +5,12 @@ import com.boulangerie.comptabilite.dto.MouvementCaisseDto;
 import com.boulangerie.comptabilite.mapper.MouvementCaisseMapper;
 import com.boulangerie.comptabilite.repository.MouvementCaisseRepository;
 import com.boulangerie.comptabilite.service.MouvementCaisseService;
-import com.boulangerie.comptabilite.specification.MouvementCaisseSpecification;
+import com.boulangerie.comptabilite.specification.MouvementCaisseSpecifications;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.model.*;
 import com.boulangerie.comptabilite.dto.MouvementCaisseFilter;
+import com.boulangerie.shared.specification.SearchSpecifications;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -56,49 +59,12 @@ public class MouvementCaisseServiceImpl implements MouvementCaisseService {
         return repository.save(MouvementCaisse.creer(type, sens, modePaiement, caisse, libelle, montant));
     }
 
-
     @Override
-    @Transactional(readOnly = true)
-    public PageResponse<MouvementCaisseDto> rechercher(
-            Long caisseId,
-            LocalDate dateDebut,
-            LocalDate dateFin,
-            String type,
-            Long categorieId,
-            Long livreurId,
-            int page,
-            int size) {
-
-        Instant start = dateDebut != null
-                ? dateDebut.atStartOfDay(ZoneId.systemDefault()).toInstant()
-                : null;
-        Instant end = dateFin != null
-                ? dateFin.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()
-                : null;
-
-        TypeMouvement typeEnum = type != null ? TypeMouvement.valueOf(type) : null;
-
-        Specification<MouvementCaisse> spec = Specification
-                .where(MouvementCaisseSpecification.byCaisse(caisseId))
-                .and(MouvementCaisseSpecification.dateBetween(start, end))
-                .and(MouvementCaisseSpecification.byType(typeEnum))
-                .and(MouvementCaisseSpecification.byCategorieDepense(categorieId))
-                .and(MouvementCaisseSpecification.byLivreur(livreurId));
-
-        Page<MouvementCaisse> pageResult = repository.findAll(spec, PageRequest.of(page, size));
-        Page<MouvementCaisseDto> dtoPage = pageResult.map(mouvementMapper::toDto);
-        return toPageResponse(dtoPage);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public BigDecimal calculerTotalEntrees(Long caisseId) {
-        return Optional.ofNullable(
-                        repository.sumMontantByCaisseIdAndSens(
-                                caisseId,
-                                SensMouvement.ENTREE))
+        return Optional.ofNullable(repository.sumMontantByCaisseIdAndSens(caisseId, SensMouvement.ENTREE))
                 .orElse(BigDecimal.ZERO);
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -121,16 +87,50 @@ public class MouvementCaisseServiceImpl implements MouvementCaisseService {
                 .last(page.isLast())
                 .build();
     }
-
-    // Recherche paginée utilisée par les contrôleurs REST (facultative)
-    public PageResponse<MouvementCaisseDto> search(MouvementCaisseFilter filter, Pageable pageable) {
-        // Construire la spécification à partir du filtre fourni
+    @Transactional(readOnly = true)
+    public Page<MouvementCaisseDto> searchByCaisse(
+            Long caisseId,
+            MouvementCaisseFilter filter,
+            Pageable pageable
+    ) {
         Specification<MouvementCaisse> spec = Specification
-                .where(MouvementCaisseSpecification.byType(filter.typeMouvement()))
-                .and(MouvementCaisseSpecification.bySens(filter.sens()));
+                .<MouvementCaisse>where((root, query, cb) ->
+                        cb.equal(root.get("caisse").get("id"), caisseId))
+                .and(MouvementCaisseSpecifications.withFilters(filter));
 
-        Page<MouvementCaisse> pageResult = repository.findAll(spec, pageable);
-        Page<MouvementCaisseDto> dtoPage = pageResult.map(mouvementMapper::toDto);
-        return toPageResponse(dtoPage);
+        return repository
+                .findAll(spec, pageable)
+                .map(mouvementMapper::toDto);
     }
+
+    @Transactional(readOnly = true)
+    public Page<MouvementCaisseDto> search(MouvementCaisseFilter filter, Pageable pageable) {
+
+        Specification<MouvementCaisse> spec = MouvementCaisseSpecifications
+                .withFilters(filter);
+
+        return repository
+                .findAll(spec, pageable)
+                .map(mouvementMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+
+        Specification<MouvementCaisse> spec = SearchSpecifications.like("libelle", q);
+
+        return repository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(m -> AutocompleteItemDto.of(
+                        m.getId(),
+                        m.getLibelle() != null ? m.getLibelle() : "Mouvement #" + m.getId(),
+                        m.getTypeMouvement() != null ? m.getTypeMouvement().name() : null
+                ))
+                .toList();
+    }
+
 }

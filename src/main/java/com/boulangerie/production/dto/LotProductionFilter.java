@@ -3,7 +3,11 @@ package com.boulangerie.production.dto;
 
 import com.boulangerie.production.model.StatutProduction;
 
+import java.time.LocalDate;
+
 public record LotProductionFilter(
-        String produitNom,
-        StatutProduction statut
+        StatutProduction statut,
+        String produitLibelle,
+        LocalDate dateDebut,
+        LocalDate dateFin
 ) {}

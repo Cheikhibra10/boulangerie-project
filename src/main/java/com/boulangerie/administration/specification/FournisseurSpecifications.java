@@ -1,18 +1,17 @@
-package com.boulangerie.abonnements.specification;
+package com.boulangerie.administration.specification;
 
-import com.boulangerie.abonnements.dto.ClientFilter;
-import com.boulangerie.abonnements.model.Client;
+import com.boulangerie.administration.dto.FournisseurFilter;
+import com.boulangerie.administration.model.Fournisseur;
 import com.boulangerie.shared.specification.SearchSpecifications;
 import org.springframework.data.jpa.domain.Specification;
 
-public final class ClientSpecifications {
+public final class FournisseurSpecifications {
 
-    private ClientSpecifications() {}
+    private FournisseurSpecifications() {}
 
-    public static Specification<Client> withFilters(ClientFilter filter) {
+    public static Specification<Fournisseur> withFilters(FournisseurFilter filter) {
         return Specification
-                .<Client>where(SearchSpecifications.like("nom", filter.nom()))
-                .and(SearchSpecifications.like("prenom", filter.prenom()))
+                .<Fournisseur>where(SearchSpecifications.like("nom", filter.nom()))
                 .and(SearchSpecifications.like("telephone", filter.telephone()))
                 .and(filter.actif() == null ? null :
                         filter.actif()

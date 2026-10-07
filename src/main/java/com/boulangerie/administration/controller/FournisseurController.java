@@ -1,15 +1,17 @@
 package com.boulangerie.administration.controller;
 
 import com.boulangerie.administration.dto.FournisseurDto;
+import com.boulangerie.administration.dto.FournisseurFilter;
 import com.boulangerie.administration.model.Fournisseur;
-import com.boulangerie.administration.service.FournisseurAutocompleteService;
 import com.boulangerie.administration.service.FournisseurService;
 import com.boulangerie.shared.controller.GenericCrudController;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
+import com.boulangerie.shared.utils.PageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,12 +29,11 @@ public class FournisseurController
         extends GenericCrudController<Fournisseur, FournisseurDto> {
 
     private final FournisseurService fournisseurService;
-    private final FournisseurAutocompleteService fournisseurAutocompleteService;
 
-    public FournisseurController(FournisseurService service, FournisseurAutocompleteService fournisseurAutocompleteService) {
+
+    public FournisseurController(FournisseurService service) {
         super(service);
         this.fournisseurService = service;
-        this.fournisseurAutocompleteService = fournisseurAutocompleteService;
     }
 
     @Operation(summary = "Lister les fournisseurs")
@@ -45,10 +46,22 @@ public class FournisseurController
         return ResponseEntity.ok( fournisseurService.findAll(page, size) );
     }
 
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public PageResponse<FournisseurDto> search(
+            @RequestParam(required = false) String nom,
+            @RequestParam(required = false) String telephone,
+            @RequestParam(required = false) Boolean actif,
+            Pageable pageable
+    ) {
+        FournisseurFilter filter = new FournisseurFilter(nom, telephone, actif);
+        return PageUtils.toPageResponse(fournisseurService.search(filter, pageable));
+    }
+
     @GetMapping("/autocomplete")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public List<AutocompleteItemDto> autocomplete(@RequestParam String q) {
-        return fournisseurAutocompleteService.search(q);
+        return fournisseurService.autocomplete(q);
     }
 
 }

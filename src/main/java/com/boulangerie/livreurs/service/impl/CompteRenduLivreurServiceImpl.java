@@ -2,6 +2,7 @@ package com.boulangerie.livreurs.service.impl;
 
 import com.boulangerie.abonnements.api.AbonnementApi;
 import com.boulangerie.abonnements.api.AbonnementStatisticsApi;
+import com.boulangerie.administration.api.LivreurLookupApi;
 import com.boulangerie.administration.service.LivreurService;
 import com.boulangerie.comptabilite.api.CaisseApi;
 import com.boulangerie.livreurs.dto.*;
@@ -16,6 +17,7 @@ import com.boulangerie.livreurs.specification.CompteLivreurJournalierSpecificati
 import com.boulangerie.production.api.AllocationDetails;
 import com.boulangerie.production.api.DistributionServiceApi;
 import com.boulangerie.production.api.ProductionAllocationApi;
+import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
@@ -36,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -46,6 +49,7 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
     private final CompteLivreurJournalierRepository journalierRepository;
     private final LivreurService livreurService;
     private final ProductionAllocationApi productionApi;
+    private final LivreurLookupApi livreurLookupApi;
     private final CompteLivreurJournalierFactory journalierFactory;
     private final CommissionCalculator commissionCalculator;
     private final VersementLivreurService versementLivreurService;
@@ -222,12 +226,57 @@ public class CompteRenduLivreurServiceImpl implements CompteRenduLivreurService 
         }
     }
 
-    public PageResponse<CompteRenduDto> search(CompteLivreurJournalierFilter filter, Pageable pageable) {
-        Specification<CompteLivreurJournalier> spec = CompteLivreurJournalierSpecifications.withFilters(
-                filter.statut(),
-                filter.livreurNom()
-        );
-        return PageUtils.toPageResponse(journalierRepository.findAll(spec, pageable)
-                .map(compteRenduMapper::toDto));
+    @Transactional(readOnly = true)
+    public Page<CompteRenduDto> search(CompteLivreurJournalierFilter filter, Pageable pageable) {
+        List<Long> livreurIds = null;
+
+        if (filter.livreurNom() != null && !filter.livreurNom().isBlank()) {
+            livreurIds = livreurLookupApi.findIdsByNom(filter.livreurNom());
+            if (livreurIds.isEmpty()) {
+                return Page.empty(pageable);
+            }
+        }
+
+        Specification<CompteLivreurJournalier> spec =
+                CompteLivreurJournalierSpecifications.withFilters(
+                        filter.statut(),
+                        livreurIds,
+                        filter.dateDebut(),
+                        filter.dateFin()
+                );
+
+        return journalierRepository
+                .findAll(spec, pageable)
+                .map(compteRenduMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AutocompleteItemDto> autocomplete(String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+
+        List<Long> livreurIds = livreurLookupApi.findIdsByNom(q);
+        if (livreurIds.isEmpty()) {
+            return List.of();
+        }
+
+        // Batch load names — no N+1
+        Map<Long, String> livreurNoms = livreurLookupApi.findNomsByIds(livreurIds);
+
+        Specification<CompteLivreurJournalier> spec = Specification
+                .<CompteLivreurJournalier>where(
+                        CompteLivreurJournalierSpecifications.livreurIdsIn(livreurIds)
+                );
+
+        return journalierRepository
+                .findAll(spec, PageRequest.of(0, 15))
+                .stream()
+                .map(c -> AutocompleteItemDto.of(
+                        c.getId(),
+                        "CR #" + c.getId() + " - " + c.getDate(),
+                        livreurNoms.get(c.getLivreurId())
+                ))
+                .toList();
     }
 }
