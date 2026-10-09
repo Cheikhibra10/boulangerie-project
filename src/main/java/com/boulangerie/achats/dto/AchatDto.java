@@ -18,8 +18,7 @@ import java.util.List;
 public class AchatDto extends AbstractAuditingDto {
     Long id;
     Long fournisseurId;
-    String fournisseurPrenom;
-    String fournisseurNom;
+    String fournisseurNomComplet;
     private StatutAchat statutAchat;
     private StatutReception statutReception;
     private StatutPaiement statutPaiement;
