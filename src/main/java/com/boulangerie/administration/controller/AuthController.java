@@ -10,6 +10,7 @@ import com.boulangerie.administration.security.keycloak.dto.LogoutRequest;
 import com.boulangerie.administration.security.keycloak.dto.RefreshRequest;
 import com.boulangerie.administration.service.UtilisateurService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,8 +29,21 @@ public class AuthController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    public LoginResponseDto login(@RequestBody @Valid LoginRequestDto request){
-        return authenticationService.login(request);
+    public LoginResponseDto login(
+            @RequestBody @Valid LoginRequestDto request,
+            HttpServletRequest httpRequest
+    ) {
+        String clientIp = resolveClientIp(httpRequest);
+        return authenticationService.login(request, clientIp);
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            // First IP in the chain is the original client
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     @PostMapping("/refresh")

@@ -57,6 +57,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ExceptionSchema> handleRateLimit(RateLimitExceededException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request.getRequestURI());
+    }
+
     // --- Écriture concurrente perdue (optimistic locking, @Version) : deux
 // requêtes ont chargé la même ligne, l'une a sauvegardé entre-temps —
 // la seconde échoue proprement au lieu d'écraser silencieusement la

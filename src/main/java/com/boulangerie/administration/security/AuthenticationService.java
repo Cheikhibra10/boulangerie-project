@@ -20,6 +20,7 @@ import org.springframework.web.client.RestClientResponseException;
 public class AuthenticationService {
 
     private final RestClient securityRestClient;
+    private final LoginRateLimiter loginRateLimiter;
 
     @Value("${keycloak.server-url}")
     private String serverUrl;
@@ -33,20 +34,23 @@ public class AuthenticationService {
     @Value("${keycloak.admin.client-secret}")
     private String clientSecret;
 
-    public LoginResponseDto login(LoginRequestDto request) {
+    public LoginResponseDto login(LoginRequestDto request, String clientIp) {
+        loginRateLimiter.checkAllowed(request.getEmail(), clientIp);
 
-        MultiValueMap<String,String> form = new LinkedMultiValueMap<>();
-
-        form.add("grant_type","password");
-        form.add("client_id",clientId);
-        form.add("client_secret",clientSecret);
-        form.add("username",request.getEmail());
-        form.add("password",request.getPassword());
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "password");
+        form.add("client_id", clientId);
+        form.add("client_secret", clientSecret);
+        form.add("username", request.getEmail());
+        form.add("password", request.getPassword());
 
         try {
-            return toDto(requestToken(form));
+            LoginResponseDto response = toDto(requestToken(form));
+            loginRateLimiter.recordSuccess(request.getEmail(), clientIp);
+            return response;
         } catch (RestClientResponseException ex) {
-            log.warn("Authentication failed: {}", ex.getResponseBodyAsString());
+            loginRateLimiter.recordFailure(request.getEmail(), clientIp);
+            log.warn("Authentication failed for {}: {}", request.getEmail(), ex.getResponseBodyAsString());
             throw new AuthenticationException("Email ou mot de passe incorrect", ex);
         }
     }
