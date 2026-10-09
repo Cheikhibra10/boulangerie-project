@@ -116,7 +116,7 @@ public class CaisseController {
 
     @Operation(summary = "Rechercher des mouvements de caisse")
     @GetMapping("/mouvements/search")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CAISSIER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public PageResponse<MouvementCaisseDto> search(
             @RequestParam(required = false) TypeMouvement typeMouvement,
             @RequestParam(required = false) SensMouvement sens,
@@ -139,7 +139,7 @@ public class CaisseController {
 
     @Operation(summary = "Rechercher des mouvements de caisse par Autocomplétion")
     @GetMapping("/mouvements/autocomplete")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'CAISSIER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public List<AutocompleteItemDto> autocompletemouvement(@RequestParam String q) {
         return mouvementService.autocomplete(q);
     }

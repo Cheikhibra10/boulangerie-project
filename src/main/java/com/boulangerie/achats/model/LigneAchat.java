@@ -168,7 +168,7 @@ public class LigneAchat extends AbstractAuditingEntity {
     }
 
     public BigDecimal getEcart() {
-        return quantiteCommandee.subtract(quantiteRecue);
+        return quantiteCommandee.subtract(quantiteRecue).subtract(quantiteRetournee);
     }
 
     public boolean estTotalementRecue() {
