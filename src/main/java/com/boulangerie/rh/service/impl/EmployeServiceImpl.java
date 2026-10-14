@@ -1,5 +1,6 @@
 package com.boulangerie.rh.service.impl;
 
+import com.boulangerie.administration.api.LivreurLookupApi;
 import com.boulangerie.administration.api.UtilisateurLookupApi;
 import com.boulangerie.rh.dto.CreateEmployeRequest;
 import com.boulangerie.rh.dto.EmployeDto;
@@ -40,19 +41,24 @@ public class EmployeServiceImpl implements EmployeService {
     private final EmployeRepository employeRepository;
     private final EmployeMapper employeMapper;
     private final UtilisateurLookupApi utilisateurLookupApi;
+    private final LivreurLookupApi livreurLookupApi;
 
     @Override
     public EmployeDto create(CreateEmployeRequest request) {
+        if (employeRepository.existsByTelephone(request.telephone())) {
+            throw new BadRequestException("Un employé avec ce numéro de téléphone existe déjà.");
+        }
         Employe employe = employeMapper.toEntity(request);
-        employe.setTelephone(PhoneUtils.isValidFormat(requireText(request.telephone(), "Le numéro de téléphone est obligatoire")));
         employe.setDateEmbauche(requireDate(request.dateEmbauche(), "La date d'embauche est obligatoire"));
-        employe.setLivreurId(request.livreurId());
         employe.setStatut(StatutEmploye.ACTIF);
 
         if (request.utilisateurId() != null) {
             linkUtilisateur(employe, request.utilisateurId());
-        } else {
-            applyManualIdentity(employe, request.prenom(), request.nom(), request.email());
+        }else if(request.livreurId() != null){
+            linkLivreur(employe, request.livreurId());
+        }
+        else {
+            applyManualIdentity(employe, request.prenom(), request.nom(), request.email(),request.telephone());
         }
 
         employe = employeRepository.saveAndFlush(employe);
@@ -61,10 +67,11 @@ public class EmployeServiceImpl implements EmployeService {
         return employeMapper.toDto(employeRepository.save(employe));
     }
 
-    private void applyManualIdentity(Employe employe, String prenom, String nom, @Email String email) {
+    private void applyManualIdentity(Employe employe, String prenom, String nom, String email, String telephone) {
         employe.setPrenom(requireText(prenom, "Le prénom est obligatoire."));
         employe.setNom(requireText(nom, "Le nom est obligatoire."));
         employe.setEmail(blankToNull(email));
+        employe.setTelephone(PhoneUtils.isValidFormat(requireText(telephone, "Le telephone est obligatoire")));
     }
 
     @Override
@@ -95,7 +102,7 @@ public class EmployeServiceImpl implements EmployeService {
             }
         }
         if (request.telephone() != null) {
-            employe.setTelephone(requireText(request.telephone(), "Le numéro de téléphone est obligatoire"));
+            employe.setTelephone(PhoneUtils.isValidFormat(requireText(request.telephone(), "Le numéro de téléphone est obligatoire")));
         }
         if (request.dateSortie() != null) {
             employe.setDateSortie(request.dateSortie());
@@ -153,6 +160,21 @@ public class EmployeServiceImpl implements EmployeService {
         employe.setPrenom(requireText(user.prenom(), "Le prénom de l'utilisateur est obligatoire."));
         employe.setNom(requireText(user.nom(), "Le nom de l'utilisateur est obligatoire."));
         employe.setEmail(blankToNull(user.email()));
+        employe.setTelephone(PhoneUtils.isValidFormat(requireText(user.telephone(), "Le numéro de téléphone est obligatoire")));
+    }
+
+    private void linkLivreur(Employe employe, Long livreurId) {
+        employeRepository.findByLivreurId(livreurId).ifPresent(existing -> {
+            if (employe.getId() == null || !existing.getId().equals(employe.getId())) {
+                throw new BadRequestException("Ce livreur est déjà lié à un autre employé.");
+            }
+        });
+
+        var livreur = livreurLookupApi.getByIdOrThrow(livreurId);
+        employe.setLivreurId(livreur.id());
+        employe.setPrenom(requireText(livreur.prenom(), "Le prénom du livreur est obligatoire."));
+        employe.setNom(requireText(livreur.nom(), "Le nom du livreur est obligatoire."));
+        employe.setTelephone(PhoneUtils.isValidFormat(requireText(livreur.telephone(), "Le numéro de téléphone est obligatoire")));
     }
 
 

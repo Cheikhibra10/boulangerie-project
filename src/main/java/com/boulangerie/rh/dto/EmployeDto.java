@@ -7,8 +7,8 @@ import java.time.LocalDate;
 public record EmployeDto(
         Long id,
         String matricule,
-        String nom,
         String prenom,
+        String nom,
         String telephone,
         String email,
         LocalDate dateEmbauche,

@@ -53,6 +53,6 @@ public final class PhoneUtils {
             throw new BadRequestException(
                     "Numéro de téléphone invalide: " + raw);
         }
-        return "+221" + national;
+        return national;
     }
 }

@@ -1,10 +1,7 @@
 package com.boulangerie.administration.dto;
 
 import com.boulangerie.administration.model.RoleUtilisateur;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 
@@ -23,6 +20,13 @@ public class RegisterUtilisateurRequestDto {
     @NotBlank(message = "L'email est obligatoire")
     @Email(message = "Format d'email invalide")
     private String email;
+
+    @Size(max = 12, message = "Le téléphone ne doit pas dépasser 12 caractères")
+    @Pattern(
+            regexp = "^(?:\\+221)?(?:7(?:0|1|2|5|6|7|8|9)\\d{7}|3\\d{8})$",
+            message = "Numéro de téléphone invalide"
+    )
+    private String telephone;
 
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères")

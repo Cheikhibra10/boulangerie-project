@@ -28,7 +28,7 @@ public abstract class PersonneDto extends AbstractAuditingDto {
 
     @Size(max = 12, message = "Le téléphone ne doit pas dépasser 12 caractères")
     @Pattern(
-            regexp = "^\\+2217(?:0|1|2|5|6|7|8|9)\\d{7}$|^\\+2213\\d{8}$",
+            regexp = "^(?:\\+221)?(?:7(?:0|1|2|5|6|7|8|9)\\d{7}|3\\d{8})$",
             message = "Numéro de téléphone invalide"
     )
     private String telephone;

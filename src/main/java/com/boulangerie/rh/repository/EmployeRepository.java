@@ -15,7 +15,7 @@ import java.util.Optional;
 public interface EmployeRepository extends JpaRepository<Employe, Long>,
         JpaSpecificationExecutor<Employe> {
     boolean existsByUtilisateurId(Long utilisateurId);
-
+    boolean existsByTelephone(String telephone);
     Optional<Employe> findByUtilisateurId(Long utilisateurId);
 
     @Query("""
@@ -25,4 +25,6 @@ public interface EmployeRepository extends JpaRepository<Employe, Long>,
            OR LOWER(e.matricule) LIKE LOWER(CONCAT('%', :q, '%'))
         """)
     List<Long> findIdsByNomOrPrenomOrMatricule(@Param("q") String q);
+
+    Optional<Employe> findByLivreurId(Long livreurId);
 }

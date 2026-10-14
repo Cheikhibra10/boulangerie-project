@@ -83,6 +83,7 @@ public class UtilisateurServiceImpl extends AbstractCrudService<Utilisateur, Uti
                     .setNom(request.getNom())
                     .setPrenom(request.getPrenom())
                     .setEmail(request.getEmail())
+                    .setTelephone(request.getTelephone())
                     .setRole(request.getRole())
                     .setKeycloakId(keycloakId)
                     .setActif(true);

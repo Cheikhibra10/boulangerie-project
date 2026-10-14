@@ -3,6 +3,8 @@ package com.boulangerie.administration.service.Impl;
 import com.boulangerie.administration.api.LivreurLookupApi;
 import com.boulangerie.administration.model.Livreur;
 import com.boulangerie.administration.repository.LivreurRepository;
+import com.boulangerie.shared.exception.BadRequestException;
+import com.boulangerie.shared.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,13 @@ public class LivreurLookupApiImpl implements LivreurLookupApi {
             return Map.of();
         }
        return livreurRepository.findAllById(ids).stream()
-                .collect(Collectors.toMap(Livreur::getId, livreur -> livreur.getNom() + " " + livreur.getPrenom()));
+                .collect(Collectors.toMap(Livreur::getId, livreur -> livreur.getPrenom() + " " + livreur.getNom()));
+    }
+
+    @Override
+    public LivreurInfo getByIdOrThrow(Long livreurId) {
+        return livreurRepository.findById(livreurId)
+                .map(LivreurInfo -> new LivreurInfo(LivreurInfo.getId(), LivreurInfo.getPrenom(), LivreurInfo.getNom(), LivreurInfo.getTelephone()))
+                .orElseThrow(() -> new EntityNotFoundException("Livreur not found with id: " + livreurId));
     }
 }

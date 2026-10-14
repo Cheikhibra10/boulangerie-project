@@ -1,7 +1,6 @@
 // shared/controller/GenericCrudController.java
 package com.boulangerie.shared.controller;
 
-import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.service.DefaultService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
