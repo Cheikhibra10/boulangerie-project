@@ -43,7 +43,7 @@ public final class PhoneUtils {
      * Returns the number in E.164 format (+221XXXXXXXXX).
      * Returns null if blank. Throws if invalid.
      */
-    public static String isValidFormat(String raw) {
+    public static String requiredValidFormat(String raw) {
         if (raw == null || raw.isBlank()) {
             return null;
         }
@@ -54,5 +54,11 @@ public final class PhoneUtils {
                     "Numéro de téléphone invalide: " + raw);
         }
         return national;
+    }
+
+    /** @deprecated use {@link #requiredValidFormat(String)} */
+    @Deprecated
+    public static String isValidFormat(String raw) {
+        return requiredValidFormat(raw);
     }
 }

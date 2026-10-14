@@ -18,6 +18,8 @@ public interface EmployeService {
 
     EmployeDto update(Long id, UpdateEmployeRequest request);
 
+    void delete(Long id);
+
     Page<EmployeDto> search(EmployeFilter filter, Pageable pageable);
 
     List<AutocompleteItemDto> autocomplete(String q);

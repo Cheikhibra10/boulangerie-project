@@ -15,10 +15,8 @@ import com.boulangerie.rh.specification.EmployeSpecifications;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.specification.SearchSpecifications;
-import com.boulangerie.shared.utils.DateUtils;
 import com.boulangerie.shared.utils.PhoneUtils;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.boulangerie.shared.utils.DateUtils.requireDate;
@@ -45,33 +44,32 @@ public class EmployeServiceImpl implements EmployeService {
 
     @Override
     public EmployeDto create(CreateEmployeRequest request) {
-        if (employeRepository.existsByTelephone(request.telephone())) {
-            throw new BadRequestException("Un employé avec ce numéro de téléphone existe déjà.");
-        }
         Employe employe = employeMapper.toEntity(request);
         employe.setDateEmbauche(requireDate(request.dateEmbauche(), "La date d'embauche est obligatoire"));
         employe.setStatut(StatutEmploye.ACTIF);
 
+        // Identity: utilisateur XOR livreur XOR manual (by design)
         if (request.utilisateurId() != null) {
             linkUtilisateur(employe, request.utilisateurId());
-        }else if(request.livreurId() != null){
+        } else if (request.livreurId() != null) {
             linkLivreur(employe, request.livreurId());
+        } else {
+            applyManualIdentity(
+                    employe,
+                    request.prenom(),
+                    request.nom(),
+                    request.email(),
+                    request.telephone()
+            );
         }
-        else {
-            applyManualIdentity(employe, request.prenom(), request.nom(), request.email(),request.telephone());
-        }
+
+        // Uniqueness on the telephone actually stored
+        assertTelephoneUnique(employe.getTelephone(), null);
 
         employe = employeRepository.saveAndFlush(employe);
         employe.assignMatriculeFromId();
 
         return employeMapper.toDto(employeRepository.save(employe));
-    }
-
-    private void applyManualIdentity(Employe employe, String prenom, String nom, String email, String telephone) {
-        employe.setPrenom(requireText(prenom, "Le prénom est obligatoire."));
-        employe.setNom(requireText(nom, "Le nom est obligatoire."));
-        employe.setEmail(blankToNull(email));
-        employe.setTelephone(PhoneUtils.isValidFormat(requireText(telephone, "Le telephone est obligatoire")));
     }
 
     @Override
@@ -84,9 +82,12 @@ public class EmployeServiceImpl implements EmployeService {
     public EmployeDto update(Long id, UpdateEmployeRequest request) {
         Employe employe = findOrThrow(id);
 
-        // Explicit link to an account
         if (request.utilisateurId() != null) {
             linkUtilisateur(employe, request.utilisateurId());
+        }
+
+        if (request.livreurId() != null) {
+            linkLivreur(employe, request.livreurId());
         }
 
         // Manual identity only when not linked to a user
@@ -101,23 +102,37 @@ public class EmployeServiceImpl implements EmployeService {
                 employe.setEmail(blankToNull(request.email()));
             }
         }
+
         if (request.telephone() != null) {
-            employe.setTelephone(PhoneUtils.isValidFormat(requireText(request.telephone(), "Le numéro de téléphone est obligatoire")));
+            String tel = PhoneUtils.requiredValidFormat(
+                    requireText(request.telephone(), "Le numéro de téléphone est obligatoire"));
+            assertTelephoneUnique(tel, employe.getId());
+            employe.setTelephone(tel);
         }
+
         if (request.dateSortie() != null) {
             employe.setDateSortie(request.dateSortie());
         }
         if (request.statut() != null) {
             employe.setStatut(request.statut());
         }
-        if (request.livreurId() != null) {
-            employe.setLivreurId(request.livreurId());
-        }
-
-        // mapper for any remaining simple fields if you still want it
-        // employeMapper.updateEntity(request, employe); — avoided here to keep one clear path
 
         return employeMapper.toDto(employe);
+    }
+
+    /**
+     * Soft delete: SORTI + dateSortie.
+     */
+    @Override
+    public void delete(Long id) {
+        Employe employe = findOrThrow(id);
+        if (employe.getStatut() == StatutEmploye.SORTI) {
+            return;
+        }
+        employe.setStatut(StatutEmploye.SORTI);
+        if (employe.getDateSortie() == null) {
+            employe.setDateSortie(LocalDate.now());
+        }
     }
 
     @Override
@@ -148,10 +163,27 @@ public class EmployeServiceImpl implements EmployeService {
                 .toList();
     }
 
+    // ── identity / links ─────────────────────────────────────
+
+    private void applyManualIdentity(
+            Employe employe,
+            String prenom,
+            String nom,
+            String email,
+            String telephone
+    ) {
+        employe.setPrenom(requireText(prenom, "Le prénom est obligatoire."));
+        employe.setNom(requireText(nom, "Le nom est obligatoire."));
+        employe.setEmail(blankToNull(email));
+        employe.setTelephone(PhoneUtils.requiredValidFormat(
+                requireText(telephone, "Le téléphone est obligatoire.")));
+    }
+
     private void linkUtilisateur(Employe employe, Long utilisateurId) {
         employeRepository.findByUtilisateurId(utilisateurId).ifPresent(existing -> {
             if (employe.getId() == null || !existing.getId().equals(employe.getId())) {
-                throw new BadRequestException("Cet utilisateur est déjà lié à un autre employé.");
+                throw new BadRequestException(
+                        "Cet utilisateur est déjà lié à un autre employé.");
             }
         });
 
@@ -160,13 +192,15 @@ public class EmployeServiceImpl implements EmployeService {
         employe.setPrenom(requireText(user.prenom(), "Le prénom de l'utilisateur est obligatoire."));
         employe.setNom(requireText(user.nom(), "Le nom de l'utilisateur est obligatoire."));
         employe.setEmail(blankToNull(user.email()));
-        employe.setTelephone(PhoneUtils.isValidFormat(requireText(user.telephone(), "Le numéro de téléphone est obligatoire")));
+        employe.setTelephone(PhoneUtils.requiredValidFormat(
+                requireText(user.telephone(), "Le numéro de téléphone est obligatoire.")));
     }
 
     private void linkLivreur(Employe employe, Long livreurId) {
         employeRepository.findByLivreurId(livreurId).ifPresent(existing -> {
             if (employe.getId() == null || !existing.getId().equals(employe.getId())) {
-                throw new BadRequestException("Ce livreur est déjà lié à un autre employé.");
+                throw new BadRequestException(
+                        "Ce livreur est déjà lié à un autre employé.");
             }
         });
 
@@ -174,9 +208,24 @@ public class EmployeServiceImpl implements EmployeService {
         employe.setLivreurId(livreur.id());
         employe.setPrenom(requireText(livreur.prenom(), "Le prénom du livreur est obligatoire."));
         employe.setNom(requireText(livreur.nom(), "Le nom du livreur est obligatoire."));
-        employe.setTelephone(PhoneUtils.isValidFormat(requireText(livreur.telephone(), "Le numéro de téléphone est obligatoire")));
+        employe.setTelephone(PhoneUtils.requiredValidFormat(
+                requireText(livreur.telephone(), "Le numéro de téléphone est obligatoire.")));
     }
 
+    /**
+     * @param excludeEmployeId current employé on update (null on create)
+     */
+    private void assertTelephoneUnique(String telephone, Long excludeEmployeId) {
+        if (telephone == null || telephone.isBlank()) {
+            return;
+        }
+        employeRepository.findByTelephone(telephone).ifPresent(existing -> {
+            if (!existing.getId().equals(excludeEmployeId)) {
+                throw new BadRequestException(
+                        "Un employé avec ce numéro de téléphone existe déjà.");
+            }
+        });
+    }
 
     private Employe findOrThrow(Long id) {
         return employeRepository.findById(id)

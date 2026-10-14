@@ -17,7 +17,7 @@ public interface EmployeRepository extends JpaRepository<Employe, Long>,
     boolean existsByUtilisateurId(Long utilisateurId);
     boolean existsByTelephone(String telephone);
     Optional<Employe> findByUtilisateurId(Long utilisateurId);
-
+    Optional<Employe> findByTelephone(String telephone);
     @Query("""
         SELECT e.id FROM Employe e
         WHERE LOWER(e.nom) LIKE LOWER(CONCAT('%', :q, '%'))

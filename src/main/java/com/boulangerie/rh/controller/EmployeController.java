@@ -68,4 +68,12 @@ public class EmployeController {
     public EmployeDto update(@PathVariable Long id, @Valid @RequestBody UpdateEmployeRequest request) {
         return employeService.update(id, request);
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Sortir un employé (statut SORTI)")
+    public void delete(@PathVariable Long id) {
+        employeService.delete(id);
+    }
 }
