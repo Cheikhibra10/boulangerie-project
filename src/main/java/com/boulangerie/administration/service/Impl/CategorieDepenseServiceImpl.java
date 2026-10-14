@@ -5,10 +5,9 @@ import com.boulangerie.administration.mapper.CategorieDepenseMapper;
 import com.boulangerie.administration.model.CategorieDepense;
 import com.boulangerie.administration.repository.CategorieDepenseRepository;
 import com.boulangerie.administration.service.CategorieDepenseService;
-import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
-import com.boulangerie.shared.service.impl.AbstractCrudService;
+import com.boulangerie.shared.service.AbstractCrudService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

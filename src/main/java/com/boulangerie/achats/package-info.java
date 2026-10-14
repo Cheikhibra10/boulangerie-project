@@ -12,6 +12,7 @@
                 "administration::model",
                 "administration::repository",
                 "administration::security",
+                "administration::mapper"
 
 
         }

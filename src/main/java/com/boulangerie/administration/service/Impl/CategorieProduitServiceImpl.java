@@ -6,8 +6,7 @@ import com.boulangerie.administration.model.CategorieProduit;
 import com.boulangerie.administration.repository.CategorieProduitRepository;
 import com.boulangerie.administration.service.CategorieProduitService;
 import com.boulangerie.shared.exception.BadRequestException;
-import com.boulangerie.shared.repository.GenericRepository;
-import com.boulangerie.shared.service.impl.AbstractCrudService;
+import com.boulangerie.shared.service.AbstractCrudService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

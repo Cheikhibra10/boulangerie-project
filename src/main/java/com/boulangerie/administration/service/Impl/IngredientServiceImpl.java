@@ -9,13 +9,10 @@ import com.boulangerie.administration.repository.RecetteIngredientRepository;
 import com.boulangerie.administration.service.IngredientService;
 import com.boulangerie.administration.specification.IngredientSpecifications;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
-import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.shared.exception.EntityNotFoundException;
-import com.boulangerie.shared.repository.GenericRepository;
-import com.boulangerie.shared.service.impl.AbstractCrudService;
+import com.boulangerie.shared.service.AbstractCrudService;
 import com.boulangerie.shared.specification.SearchSpecifications;
-import com.boulangerie.shared.utils.PageUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 

@@ -1,12 +1,11 @@
 // shared/service/AbstractCrudService.java
-package com.boulangerie.shared.service.impl;
+package com.boulangerie.shared.service;
 
 import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.EntityNotFoundException;
 import com.boulangerie.shared.mapper.EntityMapper;
 import com.boulangerie.shared.model.GenericEntity;
 import com.boulangerie.shared.repository.GenericRepository;
-import com.boulangerie.shared.service.DefaultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

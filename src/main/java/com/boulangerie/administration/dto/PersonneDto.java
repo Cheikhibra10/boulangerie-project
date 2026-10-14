@@ -2,6 +2,7 @@ package com.boulangerie.administration.dto;
 
 import com.boulangerie.shared.dto.AbstractAuditingDto;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,7 +26,11 @@ public abstract class PersonneDto extends AbstractAuditingDto {
     @Size(max = 100, message = "Le nom ne doit pas dépasser 100 caractères")
     private String nom;
 
-    @Size(max = 20, message = "Le téléphone ne doit pas dépasser 20 caractères")
+    @Size(max = 12, message = "Le téléphone ne doit pas dépasser 12 caractères")
+    @Pattern(
+            regexp = "^\\+2217(?:0|1|2|5|6|7|8|9)\\d{7}$|^\\+2213\\d{8}$",
+            message = "Numéro de téléphone invalide"
+    )
     private String telephone;
 
     private Boolean actif;

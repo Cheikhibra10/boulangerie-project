@@ -9,7 +9,7 @@ import com.boulangerie.administration.service.LivreurService;
 import com.boulangerie.administration.specification.LivreurSpecifications;
 import com.boulangerie.shared.dto.AutocompleteItemDto;
 import com.boulangerie.shared.exception.EntityNotFoundException;
-import com.boulangerie.shared.service.impl.AbstractCrudService;
+import com.boulangerie.shared.service.AbstractCrudService;
 import com.boulangerie.shared.specification.SearchSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

@@ -5,7 +5,7 @@
 //import com.boulangerie.administration.service.ClientService;
 //import com.boulangerie.shared.dto.PageResponse;
 //import com.boulangerie.shared.exception.EntityNotFoundException;
-//import com.boulangerie.shared.service.impl.AbstractCrudService;
+//import com.boulangerie.shared.service.AbstractCrudService;
 //import com.boulangerie.shared.utils.PageUtils;
 //import org.springframework.data.domain.Pageable;
 //import org.springframework.stereotype.Service;

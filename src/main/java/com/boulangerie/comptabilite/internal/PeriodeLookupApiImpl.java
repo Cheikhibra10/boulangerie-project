@@ -10,6 +10,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 class PeriodeLookupApiImpl implements PeriodeLookupApi {
     private final PeriodeRepository periodeRepository;
+
+    @Override
+    public PeriodeInfo getByIdOrThrow(Long periodeId) {
+       return periodeRepository.findById(periodeId)
+               .map(periode -> new PeriodeInfo(periode.getId(), periode.getDateDebut(), periode.getDateFin()))
+               .orElseThrow(() -> new EntityNotFoundException("Periode introuvable : " + periodeId));
+    }
+
     @Override
     public Long findPeriodeIdOrThrow(Long id) {
         if (!periodeRepository.existsById(id)) {

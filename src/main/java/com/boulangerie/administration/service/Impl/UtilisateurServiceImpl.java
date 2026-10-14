@@ -12,7 +12,7 @@ import com.boulangerie.shared.dto.PageResponse;
 import com.boulangerie.shared.exception.BadRequestException;
 import com.boulangerie.administration.security.keycloak.KeycloakUserService;
 import com.boulangerie.administration.security.keycloak.dto.KeycloakUserDto;
-import com.boulangerie.shared.service.impl.AbstractCrudService;
+import com.boulangerie.shared.service.AbstractCrudService;
 import com.boulangerie.shared.utils.PageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
